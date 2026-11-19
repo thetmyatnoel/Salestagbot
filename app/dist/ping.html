@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="my">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>SalesTag · ping</title>
+  <link rel="stylesheet" href="fonts/fonts.css">
+  <style>
+    :root { --bg: #F1F2F7; --panel: #fff; --ink: #1B1F2E; --muted: #5F6580; --line: #D6D9E4; --accent: #2F3E8F; --good: #2A7A4B; --bad: #B0372A; --warn: #A8680F; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #13151D; --panel: #1C1F2C; --ink: #E9EAF1; --muted: #9DA3BA; --line: #323749; --accent: #8F9CE9; --good: #6FCF97; --bad: #E58A7D; --warn: #E0A64B; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 16px; background: var(--bg); color: var(--ink); font: 18px/1.8 'IBM Plex Sans', 'Noto Sans Myanmar', 'Myanmar Text', system-ui, sans-serif; max-width: 640px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    p { margin: 4px 0; }
+    .muted { color: var(--muted); font-size: 15px; }
+    input, button { font: inherit; width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: inherit; min-height: 56px; }
+    button { background: var(--accent); color: #fff; border: 0; font-weight: 600; font-size: 20px; margin-top: 8px; }
+    button.alt { background: var(--panel); color: var(--ink); border: 1px solid var(--line); }
+    .big { font-size: 28px; font-weight: 700; margin: 10px 0; }
+    .ok { color: var(--good); } .bad { color: var(--bad); } .warn { color: var(--warn); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
+    th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    td.n { font-variant-numeric: tabular-nums; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; background: var(--panel); padding: 10px; border-radius: 12px; }
+  </style>
+</head>
+<body>
+  <h1>📡 SalesTag ping</h1>
+  <p>ဒီစာမျက်နှာက ဆိုင်ဖုန်းကနေ Google (Apps Script) ကို ရောက်မရောက် စစ်ပါသည်။ မနက်၊ နေ့လယ်၊ ညနေ · ၃ ရက်။</p>
+  <p class="muted">Phase 0 gate P3: a real browser POST (text/plain) to /exec?api=ping, following the redirect to script.googleusercontent.com. Run it from both shops' SIMs, three times a day for three days, and send the owner a screenshot or the copied result.</p>
+  <label class="muted" for="url">/exec URL</label>
+  <input id="url" type="url" autocomplete="off" spellcheck="false">
+  <button id="one" type="button">📡 စစ်မယ် · Ping</button>
+  <button id="three" type="button" class="alt">📡 ၃ ကြိမ် · Ping 3 times</button>
+  <div class="big" id="verdict">…</div>
+  <table id="log"><thead><tr><th>#</th><th>အချိန် time</th><th>ms</th><th>HTTP</th><th>ရလဒ် result</th></tr></thead><tbody></tbody></table>
+  <button id="copy" type="button" class="alt">📋 ရလဒ် ကူးမယ် · Copy results</button>
+  <pre id="env"></pre>
+  <script src="config.js"></script>
+  <script>
+    (function () {
+      var cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
+      var $ = function (id) { return document.getElementById(id); };
+      var rows = [], n = 0;
+      $('url').value = cfg.apiUrl || '';
+      function env() {
+        var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+        var con = navigator.connection || {};
+        return 'page: ' + location.host + '\nonline: ' + navigator.onLine + ' · standalone: ' + standalone + ' · net: ' + (con.effectiveType || '?') +
+          '\nUA: ' + navigator.userAgent + '\nlocal time: ' + new Date().toISOString();
+      }
+      $('env').textContent = env();
+      function row(r) {
+        rows.push(r);
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + r.n + '</td><td class="n">' + r.time + '</td><td class="n">' + r.ms + '</td><td class="n">' + r.http + '</td><td class="' + (r.ok ? 'ok' : 'bad') + '">' + r.text + '</td>';
+        $('log').querySelector('tbody').appendChild(tr);
+      }
+      function ping() {
+        var url = $('url').value.trim();
+        if (!url) { $('verdict').textContent = 'config.js ထဲ apiUrl ထည့်ပါ · set apiUrl in config.js'; $('verdict').className = 'big bad'; return Promise.resolve(); }
+        var sentAt = new Date(), t0 = Date.now();
+        n++;
+        $('verdict').textContent = '⏳ …';
+        $('verdict').className = 'big';
+        var finalHost = '';
+        return fetch(url + (url.indexOf('?') >= 0 ? '&' : '?') + 'api=ping', {
+          method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ clientTime: sentAt.toISOString(), page: location.host }),
+          redirect: 'follow', credentials: 'omit', cache: 'no-store'
+        }).then(function (res) {
+          finalHost = (res.url || '').replace(/^https?:\/\//, '').split('/')[0];
+          return res.text().then(function (text) {
+            var ms = Date.now() - t0, data = null;
+            try { data = JSON.parse(text); } catch (e) {}
+            if (!res.ok || !data || !data.ok) {
+              row({ n: n, time: sentAt.toTimeString().slice(0, 8), ms: ms, http: res.status, ok: false, text: '❌ ' + (data && data.error ? data.error : text.slice(0, 80)) + (finalHost ? ' · ' + finalHost : '') });
+              $('verdict').textContent = '❌ မရောက်ပါ · not reached (HTTP ' + res.status + ')';
+              $('verdict').className = 'big bad';
+              return;
+            }
+            var skew = data.clockSkewSec !== undefined ? data.clockSkewSec : null;
+            row({ n: n, time: sentAt.toTimeString().slice(0, 8), ms: ms, http: res.status, ok: true,
+                  text: '✅ v' + data.version + ' · server ' + data.serverTime + (skew !== null ? ' · skew ' + skew + ' s' : '') + ' · via ' + finalHost });
+            $('verdict').textContent = '✅ ရောက်ပါသည် · reached in ' + ms + ' ms' + (skew !== null && Math.abs(skew) > 300 ? ' · ⏰ clock off by ' + skew + ' s' : '');
+            $('verdict').className = 'big ' + (ms < 10000 ? 'ok' : 'warn');
+          });
+        }, function (err) {
+          var ms = Date.now() - t0;
+          row({ n: n, time: sentAt.toTimeString().slice(0, 8), ms: ms, http: '-', ok: false, text: '❌ ' + (err && err.message ? err.message : String(err)) });
+          $('verdict').textContent = '❌ မရောက်ပါ · not reached (' + (err && err.name ? err.name : 'error') + ')';
+          $('verdict').className = 'big bad';
+        });
+      }
+      $('one').addEventListener('click', function () { ping(); });
+      $('three').addEventListener('click', function () { ping().then(ping).then(ping); });
+      $('copy').addEventListener('click', function () {
+        var text = env() + '\n' + rows.map(function (r) { return r.n + ' ' + r.time + ' ' + r.ms + 'ms HTTP ' + r.http + ' ' + r.text; }).join('\n');
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { $('copy').textContent = '✅ ကူးပြီး · copied'; });
+        else { $('env').textContent = text; }
+      });
+      ping();
+    })();
+  </script>
+</body>
+</html>

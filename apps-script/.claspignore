@@ -1,0 +1,5 @@
+README.md
+.clasp.json.example
+.claspignore
+dist/**
+**/*.md

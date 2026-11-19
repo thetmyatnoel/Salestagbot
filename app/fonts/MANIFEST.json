@@ -1,0 +1,54 @@
+{
+  "fetchedAt": "2026-11-02T16:35:41.599Z",
+  "source": "https://fonts.googleapis.com/css2",
+  "files": [
+    {
+      "file": "NotoSansMyanmar-myanmar-c1453c36.woff2",
+      "family": "Noto Sans Myanmar",
+      "subset": "myanmar",
+      "weights": [
+        400,
+        600
+      ],
+      "url": "https://fonts.gstatic.com/s/notosansmyanmar/v27/AlZZ_y1ZtY3ymOryg38hOCSdOnFq0FP9_gnYM_ME0QeqLzzW6GJXXRE.woff2",
+      "sha256": "c1453c361ea1802114444e939196d1113c7a56b3647f2961114d913d51276fd1",
+      "bytes": 153980
+    },
+    {
+      "file": "NotoSansMyanmar-latin-9831ab28.woff2",
+      "family": "Noto Sans Myanmar",
+      "subset": "latin",
+      "weights": [
+        400,
+        600
+      ],
+      "url": "https://fonts.gstatic.com/s/notosansmyanmar/v27/AlZZ_y1ZtY3ymOryg38hOCSdOnFq0FP9_gnYM_ME0QeqLzzW9mJX.woff2",
+      "sha256": "9831ab28f0bc95c5f844b61324352b5d76bc56d289ecc09743b3d7770f42dae4",
+      "bytes": 31596
+    },
+    {
+      "file": "IBMPlexSans-latin-e2291e84.woff2",
+      "family": "IBM Plex Sans",
+      "subset": "latin",
+      "weights": [
+        400,
+        600
+      ],
+      "url": "https://fonts.gstatic.com/s/ibmplexsans/v23/zYXzKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1syxeKYY.woff2",
+      "sha256": "e2291e842cf5af167122a22881a740c7f2dda7716f1e8cd76680264f4a859470",
+      "bytes": 45712
+    },
+    {
+      "file": "IBMPlexSans-latin-ext-d160e209.woff2",
+      "family": "IBM Plex Sans",
+      "subset": "latin-ext",
+      "weights": [
+        400,
+        600
+      ],
+      "url": "https://fonts.gstatic.com/s/ibmplexsans/v23/zYXzKVElMYYaJe8bpLHnCwDKr932-G7dytD-Dmu1syxQKYbABA.woff2",
+      "sha256": "d160e20920ae4d6556518d352d3af27a74e9b0de3d8fe17b1c1044fc75aa2f81",
+      "bytes": 30964
+    }
+  ]
+}

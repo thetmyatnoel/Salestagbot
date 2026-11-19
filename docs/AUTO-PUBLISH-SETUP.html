@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Automatic Publishing Setup</title>
+<style>
+:root{
+  --bg:#fbfaf7; --panel:#ffffff; --ink:#1d1f23; --muted:#5d636d; --line:#e3e0d8;
+  --accent:#1f6f5c; --accent-soft:#e3f1ec; --warn:#8a4b00; --warn-soft:#fdf1e1;
+  --code-bg:#f1efe9; --done:#9aa1ab;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16181b; --panel:#1e2125; --ink:#e8e6e1; --muted:#a3a8b0; --line:#33373d;
+    --accent:#6cc4a8; --accent-soft:#1d3530; --warn:#f0b46a; --warn-soft:#3a2c1a;
+    --code-bg:#262a2f; --done:#6b7078;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16181b; --panel:#1e2125; --ink:#e8e6e1; --muted:#a3a8b0; --line:#33373d;
+  --accent:#6cc4a8; --accent-soft:#1d3530; --warn:#f0b46a; --warn-soft:#3a2c1a;
+  --code-bg:#262a2f; --done:#6b7078;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Segoe UI","Malgun Gothic",system-ui,-apple-system,sans-serif}
+main{max-width:820px;margin:0 auto;padding:28px 16px 80px}
+h1{font-size:1.7rem;line-height:1.25;margin:0 0 6px}
+h2{font-size:1.25rem;margin:0;display:flex;gap:10px;align-items:baseline}
+h2 .num{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--panel);font-size:.95rem;flex:none}
+h2 .time{font-size:.85rem;font-weight:400;color:var(--muted);margin-left:auto;white-space:nowrap}
+h3{font-size:1rem;margin:18px 0 6px}
+p{margin:8px 0}
+.lede{color:var(--muted);margin-bottom:18px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 18px 10px;margin:18px 0}
+.why{color:var(--muted);margin:6px 0 10px}
+ol.steps{list-style:none;padding:0;margin:8px 0;counter-reset:s}
+ol.steps>li{counter-increment:s;position:relative;padding:8px 0 8px 52px;border-top:1px solid var(--line)}
+ol.steps>li:first-child{border-top:0}
+ol.steps>li::before{content:counter(s);position:absolute;left:0;top:8px;width:24px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+ol.steps>li input[type=checkbox]{position:absolute;left:30px;top:13px;margin:0;width:15px;height:15px;accent-color:var(--accent)}
+ol.steps>li.done{color:var(--done)}
+ol.steps>li.done code, ol.steps>li.done .screen{opacity:.7}
+.screen{background:var(--accent-soft);border-radius:4px;padding:0 4px;font-weight:600}
+.ko{font-weight:400;color:var(--muted)}
+code{font-family:Consolas,"Cascadia Mono",monospace;font-size:.92em;background:var(--code-bg);border-radius:4px;padding:1px 5px;overflow-wrap:anywhere}
+.cmd{display:flex;gap:8px;align-items:stretch;margin:6px 0}
+.cmd code{flex:1;display:block;padding:8px 10px;font-size:.95rem}
+.cmd button{flex:none;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:0 12px;font:inherit;font-size:.85rem;cursor:pointer}
+.cmd button:hover{border-color:var(--accent)}
+.note,.warn{border-radius:8px;padding:10px 12px;margin:10px 0}
+.note{background:var(--accent-soft)}
+.warn{background:var(--warn-soft);color:var(--ink)}
+.warn strong{color:var(--warn)}
+table{width:100%;border-collapse:collapse;margin:8px 0;font-size:.95rem}
+th,td{text-align:left;vertical-align:top;border-top:1px solid var(--line);padding:8px 6px}
+th{color:var(--muted);font-weight:600}
+a{color:var(--accent)}
+.toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0 0;padding:0;list-style:none;font-size:.95rem}
+@media (max-width:560px){
+  h2 .time{display:none}
+  .cmd{flex-direction:column}
+  .cmd button{padding:6px 12px;align-self:flex-start}
+  th,td{padding:8px 4px}
+}
+</style>
+</head>
+<body>
+<main>
+<h1>Automatic publishing setup</h1>
+<p class="lede">Do these five points once, on this PC. Points 1 to 4 take about 30 minutes. Point 5 takes about 15 minutes and can wait until the phone app is ready. Afterwards Claude can publish your updates for you.</p>
+
+<div class="warn"><strong>Keep this page open in your browser.</strong> Point 1 asks you to close the Claude app. To open this page, open File Explorer, go to Desktop <span class="ko">(바탕 화면)</span>, Noel, docs, and double-click <code>AUTO-PUBLISH-SETUP.html</code>. If you restart the PC, open it again the same way. The ticks you set are kept.</div>
+
+<div class="note">
+<p><strong>The shop account.</strong> This guide means the Google account that owns the shop Sheet. It is the account you use for Extensions, Apps Script and Deploy. Use the same account in every point.</p>
+<p><strong>Command Prompt, not PowerShell.</strong> Type every command in Command Prompt <span class="ko">(명령 프롬프트)</span>. To open it, press the Windows key, type <code>cmd</code> and press Enter. PowerShell on this PC blocks these tools with a red error.</p>
+<p><strong>Korean screens.</strong> Windows on this PC is in Korean, so its own windows show Korean text. This guide gives the Korean text next to the English. Google's pages can also be in Korean, depending on your account's language. The buttons are in the same places.</p>
+</div>
+
+<ul class="toc">
+  <li><a href="#p1">1. Newer Node.js</a></li>
+  <li><a href="#p2">2. Apps Script API</a></li>
+  <li><a href="#p3">3. Tools and sign-in</a></li>
+  <li><a href="#p4">4. Script ID and web app address</a></li>
+  <li><a href="#p5">5. Firebase</a></li>
+  <li><a href="#end">When you finish</a></li>
+  <li><a href="#help">If something goes wrong</a></li>
+</ul>
+
+<section id="p1">
+<h2><span class="num">1</span>Install the newer Node.js<span class="time">about 10 min</span></h2>
+<p class="why">The two publishing tools need Node.js version 20 or newer. This PC has version 16.7. The installer below is Node.js 24, a long-term support version that both tools work with.</p>
+<ol class="steps">
+<li>Save your work. Close every Command Prompt, PowerShell and VS Code window.</li>
+<li>Quit the Claude app completely. At the bottom right of the screen, near the clock, find the Claude icon. If you do not see it, click the small <span class="screen">^</span> arrow there first. Right-click the Claude icon and choose <span class="screen">Exit</span> <span class="ko">(종료)</span>. Wait about 10 seconds until the icon disappears. Closing the window alone leaves the app running. Your conversation is kept, and after this point you may open Claude again at any time if you get stuck.</li>
+<li>In your browser, open this address. It downloads the file <code>node-v24.22.2-x64.msi</code>, about 33 MB, from the official Node.js site.
+  <div class="cmd"><code>https://nodejs.org/dist/v24.22.2/node-v24.22.2-x64.msi</code><button type="button" data-copy>Copy</button></div></li>
+<li>Open your Downloads folder <span class="ko">(다운로드)</span> and double-click <code>node-v24.22.2-x64.msi</code>. A window called <span class="screen">Node.js Setup</span> opens. Its screens are in English.</li>
+<li>On <span class="screen">Welcome to the Node.js Setup Wizard</span>, click <span class="screen">Next</span>.</li>
+<li>On <span class="screen">End-User License Agreement</span>, tick <span class="screen">I accept the terms in the License Agreement</span>, then click <span class="screen">Next</span>.</li>
+<li>On <span class="screen">Destination Folder</span>, leave <code>C:\Program Files\nodejs\</code> as it is and click <span class="screen">Next</span>.</li>
+<li>On <span class="screen">Custom Setup</span>, change nothing and click <span class="screen">Next</span>.</li>
+<li>On <span class="screen">Tools for Native Modules</span>, leave the checkbox <strong>empty</strong> and click <span class="screen">Next</span>. Ticking it downloads several gigabytes the tools do not need.</li>
+<li>On <span class="screen">Ready to install Node.js</span>, click <span class="screen">Install</span>. Windows asks in Korean whether to allow the app, for example <span class="screen">이 앱이 디바이스에 소프트웨어를 설치할 수 있도록 허용하시겠어요?</span> Click <span class="screen">예</span> (Yes).</li>
+<li>If a <span class="screen">Files in Use</span> window appears, choose <span class="screen">Close the applications and attempt to restart them.</span> and click <span class="screen">OK</span>.</li>
+<li>Wait for <span class="screen">Completed the Node.js Setup Wizard</span>, then click <span class="screen">Finish</span>. The old version 16 is replaced. You do not need to uninstall it first.</li>
+<li>Open a new Command Prompt. Type this and press Enter:
+  <div class="cmd"><code>node -v</code><button type="button" data-copy>Copy</button></div>
+  It must show <code>v24.22.2</code> or a higher number. If it still shows <code>v16.7.0</code>, restart the PC, open this page again, and check once more.</li>
+</ol>
+</section>
+
+<section id="p2">
+<h2><span class="num">2</span>Turn on the Apps Script API<span class="time">about 3 min</span></h2>
+<p class="why">This switch lets tools on this PC upload code to your Apps Script. It does not change how the bot runs. You can switch it off again at any time.</p>
+<ol class="steps">
+<li>Open a private window: press <code>Ctrl</code> + <code>Shift</code> + <code>N</code>. Chrome calls it an <span class="screen">Incognito</span> window <span class="ko">(시크릿 모드)</span>. It is dark, with a hat-and-glasses icon. It is the same kind of window that opened the shop Sheet before.</li>
+<li>In that private window, go to <code>accounts.google.com</code> and sign in with the shop account only. Do not add any other account in this window.</li>
+<li>In the same private window, open this address:
+  <div class="cmd"><code>https://script.google.com/home/usersettings</code><button type="button" data-copy>Copy</button></div></li>
+<li>Click the round picture at the top right. Check that it shows the shop account's email.</li>
+<li>Find the row <span class="screen">Google Apps Script API</span> and click it. A panel with a switch opens.</li>
+<li>Click the switch so it turns <span class="screen">On</span>. Close the panel and check that the row now says On.</li>
+<li>Keep this private window open for points 3, 4 and 5. If it gets closed, for example after a restart or when you do point 5 another day, open a new one and sign in again exactly as in steps 1 and 2. Never use a normal window for points 4 and 5. The switch can take a few minutes to start working. You do not need to wait for it.</li>
+</ol>
+</section>
+
+<section id="p3">
+<h2><span class="num">3</span>Install the tools and sign in to clasp<span class="time">about 10 min</span></h2>
+<p class="why">clasp is Google's tool for Apps Script, and the Firebase tool is for the phone app. Both get installed now. You sign in yourself, so Claude never types a password.</p>
+<ol class="steps">
+<li>In Command Prompt, type this and press Enter. It takes 1 to 3 minutes.
+  <div class="cmd"><code>npm install -g @google/clasp firebase-tools</code><button type="button" data-copy>Copy</button></div>
+  It is finished when you see a line starting with <span class="screen">added</span> and the blinking cursor comes back. Yellow lines with <span class="screen">npm warn deprecated</span> are normal.</li>
+<li>Close Command Prompt and open a new one. Type these two commands, pressing Enter after each:
+  <div class="cmd"><code>clasp --version</code><button type="button" data-copy>Copy</button></div>
+  <div class="cmd"><code>firebase --version</code><button type="button" data-copy>Copy</button></div>
+  The first should show <code>3.4.1</code> or higher, and the second <code>15</code> or higher.</li>
+<li>Type this and press Enter:
+  <div class="cmd"><code>clasp login</code><button type="button" data-copy>Copy</button></div>
+  Command Prompt shows <span class="screen">Authorize clasp by visiting this url:</span> and a long address, and a browser tab opens by itself. Leave Command Prompt open. It waits for you. Windows may also show <span class="screen">Windows Defender 방화벽에서 이 앱의 일부 기능을 차단했습니다.</span> for Node.js. Click <span class="screen">취소</span> (Cancel). Sign-in still works, because it only talks to this PC.</li>
+<li>In the browser tab, Google asks you to <span class="screen">Choose an account</span>. Click the shop account. If you are not sure which account is right, use the private-window method in the next step instead.</li>
+<li><em>Only if the previous step did not work:</em> close that tab. In Command Prompt, drag the mouse over the whole long address, from <code>https</code> to its end. It may wrap over several lines. Press Enter to copy it. Paste it into the address bar of your private window from point 2 and press Enter.</li>
+<li>Google shows a page saying clasp wants to access your Google Account, with a list of permissions. The list is long because clasp manages scripts and their deployments. If you see tick boxes, click <span class="screen">Select all</span>. Then click <span class="screen">Continue</span> or <span class="screen">Allow</span>.</li>
+<li>The browser shows <span class="screen">Logged in! You may close this page.</span> Command Prompt shows <span class="screen">You are logged in as</span> and an email. That email must be the shop account.</li>
+<li>If the email is wrong, type <code>clasp logout</code>, press Enter, and repeat from step 3 using the private-window method.</li>
+</ol>
+<div class="warn"><strong>Sign-ins are saved on this PC.</strong> clasp saves yours in <code>C:\Users\USER\.clasprc.json</code>. After point 5, the Firebase tool saves one in <code>C:\Users\USER\.config\configstore\firebase-tools.json</code>. Whoever has these files can change your scripts and your Google Cloud and Firebase projects. Never send, email or upload them. Also never send a screenshot of the Script Properties part of Project Settings, or of a <code>registerWebhook</code> or <code>webhookStatus</code> log. They show your bot token, Gemini key or webhook secret. How to remove the access is at the end of this page.</div>
+</section>
+
+<section id="p4">
+<h2><span class="num">4</span>Find the Script ID and the web app address<span class="time">about 5 min</span></h2>
+<p class="why">The Script ID tells clasp which project to update. The web app address is the <code>/exec</code> address Telegram already uses. It contains the Deployment ID, so every update goes to the same address and the webhook never needs changing. Neither is a password, but do not post them in public.</p>
+<h3>Script ID</h3>
+<ol class="steps">
+<li>In your private window with the shop account, go to <code>sheets.google.com</code> and click the shop Sheet. If it is not in the list, or Google says you need access, this window is signed in with the wrong account. Close all private windows and do point 2 steps 1 and 2 again.</li>
+<li>In the Sheet, click <span class="screen">Extensions</span>, then <span class="screen">Apps Script</span>. The editor opens in a new tab.</li>
+<li>On the far left of the editor is a narrow column of icons. Click the gear icon, <span class="screen">Project Settings</span>. It is the last icon.</li>
+<li>Under <span class="screen">IDs</span>, next to <span class="screen">Script ID</span>, click <span class="screen">Copy</span>.</li>
+<li>Open Notepad, paste it, and write <code>Script ID</code> next to it. It is a long code that usually starts with <code>1</code>. It is not the Sheet's own ID from the Sheet's address.</li>
+</ol>
+<h3>Web app address</h3>
+<ol class="steps">
+<li>In the same editor, click the blue <span class="screen">Deploy</span> button at the top right, then <span class="screen">Manage deployments</span>. Do not click <span class="screen">Test deployments</span> or <span class="screen">New deployment</span>.</li>
+<li>The window lists your active deployments on the left. If there is only one, it is already selected. Go to step 4.</li>
+<li><em>Only if there is more than one:</em> you need the one Telegram uses. Click <span class="screen">Done</span>. Click the gear icon <span class="screen">Project Settings</span> and scroll down to <span class="screen">Script Properties</span>. Read the value next to <code>WEBAPP_URL</code>. Do not copy or photograph the other rows, because <code>BOT_TOKEN</code>, <code>GEMINI_KEY</code> and <code>WEBHOOK_SECRET</code> are passwords. Open <span class="screen">Deploy</span>, <span class="screen">Manage deployments</span> again. Click each deployment on the left until the web app address on the right is exactly the same as <code>WEBAPP_URL</code>.</li>
+<li>On the right, under <span class="screen">Web app</span>, find the address that ends in <code>/exec</code> and click the <span class="screen">Copy</span> next to it. Paste it into Notepad and write <code>Web app address</code> next to it. It starts with <code>https://script.google.com/</code>.</li>
+<li>If the right side shows <span class="screen">Execute as</span> with an email, that email must be the shop account. If it shows a different email, stop and tell Claude before going further.</li>
+<li>Close the window with <span class="screen">Done</span> or the X without changing anything.</li>
+</ol>
+</section>
+
+<section id="p5">
+<h2><span class="num">5</span>Firebase for the phone app<span class="time">about 15 min, can wait</span></h2>
+<p class="why">Firebase Hosting serves the phone app's files for free. Creating the project means accepting Google's terms, so you do it yourself. Skip this point for now if you only want the bot updates automatic.</p>
+<h3>Create the project</h3>
+<ol class="steps">
+<li>Open a private window with only the shop account signed in, as in point 2 steps 1 and 2. Then open:
+  <div class="cmd"><code>https://console.firebase.google.com</code><button type="button" data-copy>Copy</button></div></li>
+<li>Click the button that creates a new project. Its label changes from time to time, for example <span class="screen">Create a project</span>, <span class="screen">Create a new Firebase project</span> or <span class="screen">Get started with a Firebase project</span>. Ignore tiles about Firebase Studio or building with AI.</li>
+<li>Type a project name, for example <code>SalesTagBot</code>. Under the name, Firebase shows a project ID. Click the small pencil next to it and type a clean ID, for example <code>salestagbot-shops</code>. Use 6 to 30 lowercase letters, digits and hyphens. Start with a letter, do not end with a hyphen, and do not use the words <code>google</code> or <code>ssl</code>. This ID <strong>can never be changed</strong>. Claude will use it for the app's web address, <code>https://ID.web.app</code>. If it is taken, try another.</li>
+<li>If it is your first Firebase project, tick <span class="screen">I accept the Firebase terms</span>. If a second box about using Firebase for your trade, business, craft or profession appears, tick it too. Click <span class="screen">Continue</span>.</li>
+<li>If a step about AI assistance or <span class="screen">Gemini in Firebase</span> appears, make sure its switch is off. Click the switch if it is on. Then click <span class="screen">Continue</span>.</li>
+<li>On the Google Analytics step, switch off <span class="screen">Enable Google Analytics for this project</span>. Click <span class="screen">Create project</span>.</li>
+<li>Wait for <span class="screen">Your Firebase project is ready</span>, then click <span class="screen">Continue</span>. The plan shown at the bottom left should say <span class="screen">Spark</span>, which is free. <strong>Never click Upgrade.</strong> The paid plan needs a bank card, and the app does not need it.</li>
+<li>Do not open <span class="screen">Hosting</span>, and do not click <span class="screen">Get started</span> there. That can create the app's address with random letters added, permanently. Claude creates the address from this PC instead. Write the project ID in Notepad.</li>
+</ol>
+<h3>Sign in to the Firebase tool</h3>
+<ol class="steps">
+<li>Use a Command Prompt opened from the Start menu, not a terminal inside the Claude app. Type this and press Enter:
+  <div class="cmd"><code>firebase login</code><button type="button" data-copy>Copy</button></div></li>
+<li>It asks <span class="screen">Enable Gemini in Firebase features? (Y/n)</span>. Type <code>n</code> and press Enter.</li>
+<li>It asks <span class="screen">Allow Firebase to collect CLI and Emulator Suite usage and error reporting information? (Y/n)</span>. Type <code>n</code> and press Enter.</li>
+<li>A browser tab opens. Choose the shop account. If the wrong account appears, use the private-window method from point 3: copy the address printed after <span class="screen">Visit this URL on this device to log in:</span> into your private window.</li>
+<li>On the page saying Firebase CLI wants to access your Google Account, click <span class="screen">Select all</span> if you see tick boxes. Then click <span class="screen">Continue</span> or <span class="screen">Allow</span>.</li>
+<li>The browser shows <span class="screen">Firebase CLI Login Successful</span>. Command Prompt shows <span class="screen">Success! Logged in as</span> and the shop account's email.</li>
+<li>Type this and press Enter. Your project ID must be in the list.
+  <div class="cmd"><code>firebase projects:list</code><button type="button" data-copy>Copy</button></div></li>
+</ol>
+</section>
+
+<section id="end">
+<h2><span class="num">✓</span>When you finish</h2>
+<ol class="steps">
+<li>Open the Claude app again from the Start menu and open this conversation. Restarting it lets Claude use the new Node.js.</li>
+<li>Paste these into the chat: the Script ID, the web app address, and your bot's Telegram username, which ends in <code>bot</code>, without the @. Add the Firebase project ID if you did point 5.</li>
+</ol>
+<p>Claude then saves a copy of the code that is online now and notes which version the bot runs, so it can switch the bot back in one step. It sets up the one-step publish, publishes once, and checks that the web app still answers. From then on you will not need to paste <code>Code.gs</code> again.</p>
+<p>Two things stay with you. Some updates add tabs or columns. For those, Claude tells you which function to run once in the editor, for example <code>setupSheet</code>. If Google then asks for permission, you click Allow yourself.</p>
+</section>
+
+<section id="help">
+<h2><span class="num">?</span>If something goes wrong</h2>
+<table>
+<thead><tr><th>You see</th><th>What to do</th></tr></thead>
+<tbody>
+<tr><td>Red text in PowerShell: <code>이 시스템에서 스크립트를 실행할 수 없으므로 ... 파일을 로드할 수 없습니다</code></td><td>Use Command Prompt instead. Press the Windows key, type <code>cmd</code>, press Enter.</td></tr>
+<tr><td><code>'clasp'은(는) 내부 또는 외부 명령, 실행할 수 있는 프로그램, 또는 배치 파일이 아닙니다.</code> or the same with <code>'firebase'</code></td><td>Close Command Prompt and open a new one. If it still happens, check point 1 step 13, then repeat point 3 step 1.</td></tr>
+<tr><td><code>EBADENGINE</code> or <code>incompatible with Node.js v16.7.0</code></td><td>The new Node.js was not active yet. Restart the PC, open this page again, check that <code>node -v</code> shows <code>v24.22.2</code>, then do point 3 again from step 1.</td></tr>
+<tr><td><span class="screen">You are logged in as</span> shows the wrong email</td><td>Type <code>clasp logout</code>, then <code>clasp login</code>, and use the private-window method.</td></tr>
+<tr><td>Firebase shows the wrong email</td><td>Type <code>firebase logout</code>, then <code>firebase login</code>, and use the private-window method.</td></tr>
+<tr><td>Your project ID is not in <code>firebase projects:list</code></td><td>The project was made in another Google account. In a private window with only the shop account, open the Firebase console and check whether the project is there. If it is not, do point 5 again in that window and tell Claude.</td></tr>
+<tr><td><code>Insufficient Permission</code> later on</td><td>Some permission boxes were left unticked. Type <code>clasp logout</code>, then <code>clasp login</code>, and click <span class="screen">Select all</span>.</td></tr>
+<tr><td><code>User has not enabled the Apps Script API</code></td><td>Repeat point 2 in a private window with the shop account, wait 10 minutes, and try again.</td></tr>
+<tr><td><code>admin_policy_enforced</code> or a message about your organization's policies</td><td>The shop account belongs to a company or school, and its administrator blocks clasp. Tell Claude. A normal Gmail address does not have this problem.</td></tr>
+<tr><td>Command Prompt keeps waiting after you allowed access</td><td>Look at the Command Prompt title bar. If it starts with <span class="screen">Select</span> <span class="ko">(선택)</span>, click the window and press <code>Esc</code> once. If it still waits, press <code>Ctrl</code> + <code>C</code>, run the login command again, and use only the new address it prints. An address from an earlier try does not work.</td></tr>
+<tr><td>The installer says <span class="screen">A later version of Node.js is already installed</span></td><td>Nothing is wrong if <code>node -v</code> in a new Command Prompt shows <code>v24.22.2</code> or a higher number. Close the installer and continue with point 2. If it shows <code>v16.7.0</code>, tell Claude.</td></tr>
+</tbody>
+</table>
+<h3>Removing the access later</h3>
+<ol class="steps">
+<li>In Command Prompt, type <code>clasp logout</code> and press Enter, then <code>firebase logout</code> and press Enter. This removes the saved sign-ins from this PC. <code>firebase logout</code> also cancels the Firebase tool's access at Google.</li>
+<li>In a private window with only the shop account signed in, open <code>https://myaccount.google.com/linkedapps</code>. Click <span class="screen">Access to your Google Account</span>, then the entry whose name starts with <span class="screen">clasp</span>, then <span class="screen">See details</span>, <span class="screen">Remove access</span> and <span class="screen">Confirm</span>. Do the same for <span class="screen">Firebase CLI</span> if it is still listed.</li>
+<li>To be fully sure no tool can change the code, switch <span class="screen">Google Apps Script API</span> off again on the page from point 2. The bot keeps working.</li>
+</ol>
+</section>
+</main>
+<script>
+(function(){
+  function copyText(text, btn){
+    var label = btn.textContent;
+    function show(msg){ btn.textContent = msg; setTimeout(function(){ btn.textContent = label; }, 1800); }
+    function fallback(){
+      var ok = false;
+      var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      show(ok ? 'Copied' : 'Select it and press Ctrl+C');
+    }
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(function(){ show('Copied'); }, fallback);
+      } else { fallback(); }
+    } catch (e) { fallback(); }
+  }
+  var buttons = document.querySelectorAll('[data-copy]');
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].addEventListener('click', function(ev){
+      var code = ev.currentTarget.parentNode.querySelector('code');
+      copyText(code.textContent.trim(), ev.currentTarget);
+    });
+  }
+  var KEY = 'autopublish-setup-ticks-v2';
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+  var items = document.querySelectorAll('ol.steps > li');
+  for (var j = 0; j < items.length; j++) {
+    (function(li){
+      var section = li.closest('section');
+      var id = (section ? section.id : '') + ':' + li.textContent.replace(/\s+/g, ' ').trim().slice(0, 80);
+      var box = document.createElement('input');
+      box.type = 'checkbox'; box.setAttribute('aria-label', 'Mark step as done');
+      if (saved[id]) { box.checked = true; li.classList.add('done'); }
+      box.addEventListener('change', function(){
+        li.classList.toggle('done', box.checked);
+        if (box.checked) { saved[id] = 1; } else { delete saved[id]; }
+        try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+      });
+      li.insertBefore(box, li.firstChild);
+    })(items[j]);
+  }
+})();
+</script>
+</body>
+</html>

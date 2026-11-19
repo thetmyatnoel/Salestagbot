@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="my">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Round 6 mockup</title>
+<meta name="description" content="SPEC-round-6.md revision 3 at phone width and the app's real sizes: the header with icon-only back, sync and settings; the seller's home; the sale form; the sold card and the item card as clean lists; the receipt page; the new-piece form; the measurement form with the figure; the buyers list, a buyer and the new-buyer form; the history; the owner's Settings with the AI switch and the shops; the Telegram review card; the restock and payment replies as clean lists.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --page: #E7E9F1; --page-ink: #1B1F2E; --page-muted: #5F6580;
+  --bg: #F1F2F7; --panel: #FFFFFF; --panel-2: #E8EAF2; --ink: #1B1F2E; --muted: #5F6580; --line: #D6D9E4;
+  --accent: #2F3E8F; --accent-soft: #E3E7F7; --accent-ink: #FFFFFF;
+  --good: #2A7A4B; --good-ink: #FFFFFF; --good-soft: #DDF1E3; --warn: #A8680F; --warn-soft: #F8EBD1; --bad: #B0372A; --bad-soft: #F6DEDA;
+  --tg-bg: #E4E9EF; --tg-bot: #FFFFFF; --tg-user: #D9F1C3; --tg-btn: #EEF1FA; --tg-btn-ink: #2F3E8F; --tg-header: #2F3E8F; --tg-header-ink: #FFFFFF;
+  --scan: #101320; --scan-ink: #FFFFFF; --mark: #C62828;
+  --shadow: 0 1px 2px rgba(27,31,46,.06), 0 14px 36px rgba(27,31,46,.10);
+  --r: 16px; --r-s: 12px; --tap: 56px; --key: 64px;
+  --sans: 'Noto Sans Myanmar', 'Myanmar Text', 'Myanmar Sangam MN', 'Padauk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Noto Sans Myanmar', monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0B0D13; --page-ink: #E9EAF1; --page-muted: #9DA3BA;
+    --bg: #13151D; --panel: #1C1F2C; --panel-2: #262A3A; --ink: #E9EAF1; --muted: #9DA3BA; --line: #323749;
+    --accent: #8F9CE9; --accent-soft: #2A3050; --accent-ink: #13151D;
+    --good: #6FCF97; --good-ink: #0E1A13; --good-soft: #1F3A2A; --warn: #E0A64B; --warn-soft: #3A2F1A; --bad: #E58A7D; --bad-soft: #3C2320;
+    --tg-bg: #0E1016; --tg-bot: #1F2333; --tg-user: #24402B; --tg-btn: #2A3050; --tg-btn-ink: #C9D0F5; --tg-header: #1F2333; --tg-header-ink: #E9EAF1;
+    --scan: #05060A; --scan-ink: #E9EAF1; --mark: #FF7A6E;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 14px 36px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"] {
+  --page: #0B0D13; --page-ink: #E9EAF1; --page-muted: #9DA3BA;
+  --bg: #13151D; --panel: #1C1F2C; --panel-2: #262A3A; --ink: #E9EAF1; --muted: #9DA3BA; --line: #323749;
+  --accent: #8F9CE9; --accent-soft: #2A3050; --accent-ink: #13151D;
+  --good: #6FCF97; --good-ink: #0E1A13; --good-soft: #1F3A2A; --warn: #E0A64B; --warn-soft: #3A2F1A; --bad: #E58A7D; --bad-soft: #3C2320;
+  --tg-bg: #0E1016; --tg-bot: #1F2333; --tg-user: #24402B; --tg-btn: #2A3050; --tg-btn-ink: #C9D0F5; --tg-header: #1F2333; --tg-header-ink: #E9EAF1;
+  --scan: #05060A; --scan-ink: #E9EAF1; --mark: #FF7A6E;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 14px 36px rgba(0,0,0,.45);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--page); color: var(--page-ink); font-family: var(--sans); font-size: 16px; line-height: 1.7; -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+.wrap { max-width: 1760px; margin: 0 auto; padding: 28px 16px 56px; }
+header.top { max-width: 900px; margin: 0 auto 28px; }
+header.top h1 { font-size: 26px; line-height: 1.4; margin: 0 0 6px; }
+header.top p { margin: 0 0 8px; color: var(--page-muted); }
+header.top code { font-family: var(--mono); font-size: 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 12px; font-size: 14px; color: var(--page-muted); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.sw { width: 22px; height: 14px; border-radius: 4px; display: inline-block; }
+.sw.need { border: 2px solid var(--accent); }
+.sw.save { background: var(--good); }
+.sw.warn { background: var(--warn-soft); border: 1px solid var(--warn); }
+.sw.mark { background: var(--mark); }
+.grid { display: flex; flex-wrap: wrap; gap: 32px 28px; justify-content: center; align-items: flex-start; }
+figure { margin: 0; width: 390px; max-width: 100%; }
+figcaption { margin: 12px 4px 0; font-size: 14px; color: var(--page-muted); line-height: 1.6; }
+figcaption b { color: var(--page-ink); }
+.ft { font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--page-muted); margin: 0 4px 8px; font-family: system-ui, sans-serif; }
+.tag { font-family: var(--mono); font-size: 12px; color: var(--page-muted); overflow-wrap: anywhere; }
+
+/* ---------- icons: the 13.2 glyphs as a sprite ---------- */
+.ic { width: 1.2em; height: 1.2em; flex: none; display: inline-block; vertical-align: -.2em; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ic.big { width: 24px; height: 24px; }
+
+/* ---------- a phone at the app's sizes (app.css: 18 px body, 20 px buttons, 56 px targets, 64 px keys) ---------- */
+.phone { width: 100%; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 30px; box-shadow: var(--shadow); overflow: hidden; font-size: 18px; line-height: 1.8; }
+.notch { height: 22px; display: flex; justify-content: center; align-items: center; background: var(--tg-header); }
+.notch i { width: 96px; height: 6px; border-radius: 6px; background: rgba(255,255,255,.35); display: block; }
+.phone.form .notch, .phone.tg .notch { background: var(--bg); }
+.phone.form .notch i, .phone.tg .notch i { background: var(--line); }
+.apptop { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--tg-header); color: var(--tg-header-ink); }
+.apptop .shop { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.iconbtn { position: relative; min-height: 44px; min-width: 44px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.12); color: inherit; flex: none; }
+.iconbtn .ic { width: 24px; height: 24px; }
+.chip.synced { color: #8FE3AE; }
+.chip.waiting { color: #FFD08A; }
+.chip.offline { color: rgba(255,255,255,.7); }
+.chip.red { color: #FFB3A8; background: rgba(176,55,42,.45); }
+.badge { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: var(--warn); color: #fff; font-family: var(--mono); font-size: 12px; line-height: 20px; text-align: center; font-weight: 700; }
+.main { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.b { font: inherit; border: 0; border-radius: var(--r-s); min-height: var(--tap); padding: 8px 14px; font-size: 20px; line-height: 1.6; background: var(--panel-2); color: var(--ink); display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center; }
+.b.primary { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.b.ghost { background: transparent; border: 1px solid var(--line); }
+.b.good { background: var(--good); color: var(--good-ink); font-weight: 700; }
+.b.small { min-height: 48px; font-size: 17px; }
+.b.danger { background: var(--bad-soft); color: var(--bad); }
+.row2b { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.jobs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.jobs .b { min-height: 64px; font-weight: 600; background: var(--panel); border: 1px solid var(--line); }
+.jobs .b.sell { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.jobs.compact { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.jobs.compact .b { min-height: 56px; padding: 4px; }
+.jobs.compact .b.sell { grid-column: span 2; font-size: 18px; }
+.jobs.compact .b.em { font-size: 24px; }
+.scan { position: relative; aspect-ratio: 1 / 1; max-height: 296px; width: 100%; background: var(--scan); border-radius: var(--r); overflow: hidden; color: var(--scan-ink); }
+.scan.strip { aspect-ratio: 16 / 9; max-height: 200px; }
+.scan .guide { position: absolute; left: 50%; top: 50%; width: 62%; aspect-ratio: 1 / 1; transform: translate(-50%, -50%); border: 3px solid rgba(255,255,255,.85); border-radius: 18px; box-shadow: 0 0 0 999px rgba(0,0,0,.28); }
+.scan.strip .guide { width: 34%; }
+.scan .hint { position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; font-weight: 600; font-size: 17px; }
+.scan .tools { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; }
+.scan .tools span { min-height: 44px; min-width: 44px; display: grid; place-items: center; background: rgba(0,0,0,.45); border-radius: 10px; }
+.muted { color: var(--muted); }
+.hintline { font-size: 15px; color: var(--muted); line-height: 1.6; }
+.sec h3 { margin: 4px 0 6px; font-size: 16px; color: var(--muted); font-weight: 600; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tile { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-s); padding: 8px 12px; min-height: 64px; display: flex; flex-direction: column; justify-content: center; line-height: 1.5; min-width: 0; }
+.tile .id { font-family: var(--mono); font-size: 14px; color: var(--muted); }
+.tile .nm { font-weight: 600; font-size: 17px; overflow-wrap: anywhere; }
+.tile .st { font-size: 14px; color: var(--muted); }
+.inbar { display: flex; gap: 8px; }
+.input { flex: 1; min-width: 0; min-height: var(--tap); border: 1px solid var(--line); background: var(--panel); border-radius: var(--r-s); padding: 10px 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; font-size: 18px; overflow: hidden; white-space: nowrap; }
+.input.filled { color: var(--ink); }
+.input.area { min-height: 96px; align-items: flex-start; white-space: normal; }
+.sqbtn { min-width: var(--tap); min-height: var(--tap); border-radius: var(--r-s); display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); flex: none; }
+.sqbtn .ic { width: 26px; height: 26px; }
+.handle { color: var(--muted); font-size: 16px; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.handles { display: flex; gap: 8px; }
+.handles .handle { flex: 1; }
+.bottombar { display: flex; gap: 8px; padding: 10px 12px 16px; border-top: 1px solid var(--line); background: var(--panel); }
+.bottombar .b { flex: 1; font-weight: 600; }
+.bottombar .b.primary { flex: 1.4; }
+
+/* ---------- a form (app.css .formpage, 7.6 and 13.13) ---------- */
+.fhead { display: flex; align-items: center; gap: 10px; padding: 8px 12px 4px; }
+.fhead .back { min-width: var(--tap); min-height: var(--tap); border-radius: var(--r-s); display: grid; place-items: center; background: var(--panel-2); flex: none; }
+.fhead .back .ic { width: 26px; height: 26px; }
+.fhead h2 { flex: 1; min-width: 0; margin: 0; font-size: 21px; line-height: 1.5; overflow-wrap: anywhere; }
+.fcol { padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+.fline { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-s); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.fline .top { display: flex; align-items: flex-start; gap: 8px; }
+.fline .name { flex: 1; min-width: 0; font-weight: 600; line-height: 1.6; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 5px; overflow-wrap: anywhere; }
+.fline .name .id { font-family: var(--mono); font-size: 16px; }
+.fline .del { min-width: var(--tap); min-height: var(--tap); border-radius: var(--r-s); background: var(--panel-2); display: grid; place-items: center; flex: none; }
+.fline .row2, .fline .row3 { display: flex; align-items: center; gap: 10px; }
+.fnum { min-height: var(--tap); border: 1px solid var(--line); background: var(--bg); border-radius: var(--r-s); padding: 6px 14px; font-family: var(--mono); font-weight: 600; font-size: 20px; display: flex; align-items: center; white-space: nowrap; }
+.fnum.wide { flex: 1; }
+.amt { margin-left: auto; font-family: var(--mono); font-weight: 700; font-size: 20px; white-space: nowrap; }
+.stepper { display: flex; gap: 8px; align-items: stretch; }
+.stepper span { min-width: var(--tap); min-height: var(--tap); border-radius: var(--r-s); background: var(--panel-2); display: grid; place-items: center; font-size: 26px; font-weight: 600; }
+.stepper .n { background: var(--panel); border: 2px solid var(--line); font-family: var(--mono); min-width: 64px; }
+.stock { font-size: 16px; color: var(--muted); }
+.one { color: var(--muted); }
+.label { font-weight: 600; font-size: 17px; line-height: 1.6; }
+.seg, .toggle { display: flex; flex-wrap: wrap; gap: 8px; }
+.seg span, .toggle span { flex: 1 1 auto; min-height: var(--tap); padding: 6px 12px; border-radius: var(--r-s); background: var(--panel); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 20px; text-align: center; line-height: 1.5; white-space: nowrap; }
+.seg span.on, .toggle span.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.bchip { display: inline-flex; align-items: center; gap: 10px; min-height: var(--tap); border-radius: 999px; padding: 4px 6px 4px 16px; background: var(--accent-soft); color: var(--ink); font-weight: 600; max-width: 100%; }
+.bchip .x { min-width: 44px; min-height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--panel); }
+.fneed, .fdone { border: 2px solid var(--accent); border-radius: var(--r-s); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; background: var(--panel); }
+.fdone { border: 1px solid var(--line); }
+.fbadbox { border: 2px solid var(--bad); }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chips span { min-height: var(--tap); padding: 4px 16px; border-radius: 999px; background: var(--panel-2); display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 18px; }
+.chips.days span { font-family: var(--sans); font-size: 20px; }
+.divider { display: flex; align-items: center; gap: 10px; color: var(--muted); font-weight: 600; font-size: 16px; }
+.divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.fbar { border-top: 1px solid var(--line); background: var(--panel); padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 6px; }
+.fbar .total { text-align: center; font-weight: 600; font-size: 17px; line-height: 1.5; }
+.fbar .total b { font-family: var(--mono); }
+.fmsg { color: var(--bad); font-weight: 600; font-size: 16px; text-align: center; }
+.save { min-height: 60px; border-radius: var(--r-s); background: var(--good); color: var(--good-ink); font-weight: 700; font-size: 21px; display: flex; align-items: center; justify-content: center; }
+.photo { position: relative; aspect-ratio: 4 / 3; border-radius: var(--r); background: linear-gradient(135deg, #2e7d32, #1b5e20); display: grid; place-items: center; overflow: hidden; color: #fff; }
+.photo .retake { position: absolute; right: 10px; bottom: 10px; min-height: 44px; display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,.5); color: #fff; font-size: 16px; border-radius: 10px; padding: 0 12px; }
+.vid { font-family: var(--mono); color: var(--accent); font-weight: 600; font-size: 17px; line-height: 1.5; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.kvf { display: flex; align-items: center; gap: 10px; }
+.kvf .label { min-width: 104px; }
+.mgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+.mgrid .field .label { font-size: 15px; font-weight: 600; }
+.mgrid .input { min-height: 48px; font-family: var(--mono); font-size: 17px; color: var(--ink); }
+
+/* ---------- clean lists (13.1, 13.9) ---------- */
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; }
+.vtitle { font-weight: 700; font-size: 20px; line-height: 1.5; overflow-wrap: anywhere; }
+.vsub { color: var(--muted); font-size: 15px; font-family: var(--mono); line-height: 1.5; overflow-wrap: anywhere; }
+.kv { margin: 6px 0 0; }
+.kvr { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.kvr:last-child { border-bottom: 0; }
+.kvr .k { color: var(--muted); font-size: 16px; flex: none; }
+.kvr .v { font-weight: 600; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+.kvr .v.n { font-family: var(--mono); }
+.owed { color: var(--warn); }
+.kvh { margin: 12px 0 0; font-size: 15px; font-weight: 700; color: var(--muted); display: flex; align-items: center; gap: 10px; }
+.kvh::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.tbl { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 16px; line-height: 1.5; margin-top: 4px; }
+.tbl th { text-align: left; color: var(--muted); font-weight: 600; font-size: 14px; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+.tbl td { padding: 8px 4px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+.tbl .r { text-align: right; font-family: var(--mono); white-space: nowrap; }
+.tbl .t { font-family: var(--mono); color: var(--muted); width: 54px; }
+.tbl .sm { display: block; font-size: 14px; color: var(--muted); }
+.tbl .chev { width: 26px; color: var(--muted); text-align: right; }
+.tbl tr.undone td { text-decoration: line-through; color: var(--muted); }
+.lrow { display: flex; align-items: center; gap: 10px; min-height: var(--tap); padding: 8px 2px; border-bottom: 1px solid var(--line); }
+.lrow .who { flex: 1; min-width: 0; line-height: 1.45; }
+.lrow .who b { display: block; overflow-wrap: anywhere; }
+.lrow .who span { display: block; color: var(--muted); font-family: var(--mono); font-size: 15px; }
+.lrow .amt2 { font-family: var(--mono); font-weight: 600; white-space: nowrap; font-size: 16px; }
+.lrow .ic { color: var(--muted); }
+.dayh { margin: 10px 0 0; font-weight: 700; font-size: 16px; }
+.kb { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.kb .r { display: flex; gap: 8px; }
+.kb .r span { flex: 1; min-height: var(--tap); border-radius: var(--r-s); background: var(--tg-btn); color: var(--tg-btn-ink); font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 19px; text-align: center; padding: 4px 8px; line-height: 1.4; }
+.switchrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: var(--tap); }
+.switch { width: 64px; height: 36px; border-radius: 999px; background: var(--good); position: relative; flex: none; }
+.switch::after { content: ''; position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border-radius: 50%; background: #fff; }
+.rcp-head { text-align: center; line-height: 1.5; }
+.rcp-head b { font-size: 20px; display: block; }
+.rcp-head span { display: block; color: var(--muted); font-size: 15px; }
+
+/* ---------- the figure (13.7.2) ---------- */
+.sketch { position: relative; width: 100%; max-width: 300px; margin: 0 auto; aspect-ratio: 2 / 3; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-s); }
+.sketch svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sketch .fig { fill: none; stroke: var(--muted); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.sketch .mk { fill: none; stroke: var(--mark); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.sketch.drawing { outline: 3px solid var(--accent); outline-offset: 2px; }
+.sktools { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.sktools .seg { flex: 1 1 100%; }
+.sktools .b { flex: 1 1 auto; }
+
+/* ---------- review r3: the sale bar's cells, a row's type tag, small pairs in a cell ---------- */
+.fsum { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; }
+.fsum span { display: flex; flex-direction: column; line-height: 1.35; min-width: 0; }
+.fsum .k { font-size: 14px; color: var(--muted); }
+.fsum .v { font-family: var(--mono); font-weight: 700; font-size: 18px; }
+.tbl .tagl { display: block; font-size: 14px; color: var(--muted); }
+.kvs { display: inline-flex; gap: 6px; margin-right: 12px; font-size: 14px; white-space: nowrap; }
+.kvs .k { color: var(--muted); }
+.kvs .v { font-family: var(--mono); font-weight: 600; }
+
+/* ---------- Telegram ---------- */
+.tg { background: var(--tg-bg); font-size: 15px; line-height: 1.7; }
+.tghead { background: var(--tg-header); color: var(--tg-header-ink); padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+.tghead .av { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.2); display: grid; place-items: center; font-weight: 700; }
+.tghead .nm { font-weight: 700; line-height: 1.3; }
+.tghead .st { font-size: 12px; opacity: .8; line-height: 1.3; }
+.chat { padding: 12px 10px 14px; display: flex; flex-direction: column; gap: 8px; }
+.bubble { max-width: 92%; border-radius: 14px; padding: 8px 12px; white-space: pre-line; box-shadow: 0 1px 1px rgba(0,0,0,.08); }
+.bubble.bot { background: var(--tg-bot); align-self: flex-start; border-bottom-left-radius: 4px; }
+.bubble.user { background: var(--tg-user); align-self: flex-end; border-bottom-right-radius: 4px; font-family: var(--mono); font-size: 14px; }
+.bubble.dim { color: var(--muted); }
+.tgkb { display: flex; flex-direction: column; gap: 5px; width: 92%; align-self: flex-start; }
+.tgkb .r { display: flex; gap: 5px; }
+.tgkb .r span { flex: 1; min-height: 42px; border-radius: 10px; background: var(--tg-btn); color: var(--tg-btn-ink); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 14px; font-weight: 600; padding: 2px 6px; line-height: 1.35; }
+.tgkb .r span.save { background: var(--good); color: var(--good-ink); font-size: 15px; }
+.note { font-size: 12px; color: var(--muted); font-family: system-ui, sans-serif; overflow-wrap: anywhere; }
+@media (max-width: 440px) {
+  .wrap { padding: 20px 16px 40px; }
+  figure { width: 100%; }
+  .phone { border-radius: 22px; }
+  .mgrid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></symbol>
+  <symbol id="i-cloud-check" viewBox="0 0 24 24"><path d="M11 18.004h-4.343c-2.572 -.004 -4.657 -2.011 -4.657 -4.487c0 -2.475 2.085 -4.482 4.657 -4.482c.393 -1.762 1.794 -3.2 3.675 -3.773c1.88 -.572 3.956 -.193 5.444 1c1.488 1.19 2.162 3.007 1.77 4.769h.99c1.388 0 2.585 .82 3.138 2.007"/><path d="M15 19l2 2l4 -4"/></symbol>
+  <symbol id="i-cloud-upload" viewBox="0 0 24 24"><path d="M7 18a4.6 4.4 0 0 1 0 -9a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-1"/><path d="M9 15l3 -3l3 3"/><path d="M12 12l0 9"/></symbol>
+  <symbol id="i-cloud-off" viewBox="0 0 24 24"><path d="M9.58 5.548c.24 -.11 .492 -.207 .752 -.286c1.88 -.572 3.956 -.193 5.444 1c1.488 1.19 2.162 3.007 1.77 4.769h.99c1.913 0 3.464 1.56 3.464 3.486c0 .957 -.383 1.824 -1.003 2.454m-2.997 1.033h-11.343c-2.572 -.004 -4.657 -2.011 -4.657 -4.487c0 -2.475 2.085 -4.482 4.657 -4.482c.13 -.582 .37 -1.128 .7 -1.62"/><path d="M3 3l18 18"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 7v-1a2 2 0 0 1 2 -2h2"/><path d="M4 17v1a2 2 0 0 0 2 2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v1"/><path d="M16 20h2a2 2 0 0 0 2 -2v-1"/><path d="M5 12l14 0"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6l16 0"/><path d="M4 12l16 0"/><path d="M4 18l16 0"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></symbol>
+  <symbol id="i-eraser" viewBox="0 0 24 24"><path d="M19 20h-10.5l-4.21 -4.3a1 1 0 0 1 0 -1.41l10 -10a1 1 0 0 1 1.41 0l5 5a1 1 0 0 1 0 1.41l-9.2 9.3"/><path d="M18 13.3l-6.3 -6.3"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M5 7h1a2 2 0 0 0 2 -2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2"/><path d="M9 13a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M3 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M15 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/><path d="M8.7 10.7l6.6 -3.4"/><path d="M8.7 13.3l6.6 3.4"/></symbol>
+  <symbol id="i-printer" viewBox="0 0 24 24"><path d="M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4"/><path d="M7 15a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M12 8l0 4l2 2"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/></symbol>
+  <symbol id="i-keyboard" viewBox="0 0 24 24"><path d="M2 8a2 2 0 0 1 2 -2h16a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-16a2 2 0 0 1 -2 -2z"/><path d="M6 10l0 .01"/><path d="M10 10l0 .01"/><path d="M14 10l0 .01"/><path d="M18 10l0 .01"/><path d="M6 14l0 .01"/><path d="M18 14l0 .01"/><path d="M10 14l4 .01"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M3 12h1m8 -9v1m8 8h1m-15.4 -6.4l.7 .7m12.1 -.7l-.7 .7"/><path d="M9 16a5 5 0 1 1 6 0a3.5 3.5 0 0 0 -1 3a2 2 0 0 1 -4 0a3.5 3.5 0 0 0 -1 -3"/><path d="M9.7 17l4.6 0"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6l-6 6"/></symbol>
+</svg>
+<div class="wrap">
+  <header class="top">
+    <h1>Round 6 at phone width (revision 3)</h1>
+    <p>What <code>docs/design-round-6/SPEC-round-6.md</code> revision 3 builds, drawn at the app's real sizes (18 px text, 20 px buttons, 56 px tap targets). Revision 3 is the owner's feedback (<code>FEEDBACK-1.md</code>, F1-F12 with F9b): emojis only on the job buttons and the ☰ menu, everything else plain text with Tabler-style outline icons; data as one label and one value per row; English for OK, Settings, Menu, Scan, Photo, Save, Cancel; back, sync and settings as icons only. Every Burmese label is the spec's text; NEW ones are drafts for a native speaker.</p>
+    <p>The seed: ဆိုင် ၁ (ရန်ကုန်), S1-0002 လုံချည် 18,000 (5 in stock), S1-0005 ထမီ 22,000 (2), S1-0001 ထမီ (one of a kind) 25,000, buyer ဒေါ်မြင့်; the accounts KBZPay, WavePay and a bank.</p>
+    <div class="legend">
+      <span><i class="sw need"></i> a row the seller must still answer</span>
+      <span><i class="sw save"></i> Save, the only green button of a form</span>
+      <span><i class="sw warn"></i> owed, or a warning</span>
+      <span><i class="sw mark"></i> the tailor's marks on the figure</span>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- ===================== 1. the header ===================== -->
+    <figure>
+      <div class="ft">1 · The header: icon-only back, sync and settings</div>
+      <div class="phone">
+        <div class="notch"><i></i></div>
+        <div class="apptop" title="home, synced"><span class="shop">ဆိုင် ၁ (ရန်ကုန်)</span><span class="iconbtn chip synced" aria-label="ပို့ပြီး"><svg class="ic"><use href="#i-cloud-check"/></svg></span><span class="iconbtn" aria-label="Settings"><svg class="ic"><use href="#i-settings"/></svg></span></div>
+        <div class="main"><div class="hintline">Home, scanner state: no back button. Sync: synced.</div></div>
+        <div class="apptop"><span class="iconbtn" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><span class="shop">ဝယ်သူများ</span><span class="iconbtn chip waiting" aria-label="၃ ခု ကျန်"><svg class="ic"><use href="#i-cloud-upload"/></svg><span class="badge">၃</span></span><span class="iconbtn" aria-label="Settings"><svg class="ic"><use href="#i-settings"/></svg></span></div>
+        <div class="main"><div class="hintline">A page: ← and the page's title. Sync: three waiting (badge).</div></div>
+        <div class="apptop"><span class="iconbtn" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><span class="shop">ဆိုင် ၁ (ရန်ကုန်)</span><span class="iconbtn chip offline" aria-label="အင်တာနက် မရှိ · ဖုန်းထဲ သိမ်းထား"><svg class="ic"><use href="#i-cloud-off"/></svg><span class="badge">၁</span></span><span class="iconbtn" aria-label="Settings"><svg class="ic"><use href="#i-settings"/></svg></span></div>
+        <div class="main"><div class="hintline">The home showing a card (← back to the scanner). Sync: offline, one waiting.</div></div>
+        <div class="apptop"><span class="iconbtn" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><span class="shop">မှတ်တမ်း</span><span class="iconbtn chip red" aria-label="၂ ရက် ကတည်းက မပို့ရသေး"><svg class="ic"><use href="#i-alert"/></svg></span><span class="iconbtn" aria-label="Settings"><svg class="ic"><use href="#i-settings"/></svg></span></div>
+        <div class="main"><div class="hintline">Sync: a problem (two days unsent); the red banner's ကြည့်မယ် opens the sync page with ←. Every icon-only control carries an aria-label.</div></div>
+        <div class="fhead"><span class="back" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><h2>ဝယ်သူအသစ်</h2></div>
+        <div class="main"><div class="hintline">A form covers the header: its own ← and title. No ✖️ ပိတ် any more.</div></div>
+        <div class="bottombar"><span class="b primary"><svg class="ic"><use href="#i-scan"/></svg>Scan</span><span class="b"><svg class="ic"><use href="#i-menu"/></svg>Menu</span></div>
+      </div>
+      <figcaption><b>Spec 13.3, 13.4.</b> ← shows on every page, every form, every sheet and the home's card state; Android's back gesture does the same (one navigation stack in history state); a form with typed values asks once. Every history entry carries its depth, so a back that lands several entries down closes every layer above it, and Scan from deep inside walks back in one step; a guard entry pushed at the first tap keeps Chrome's skipped entries from closing the app, and on the home a first back says "press again". The sync status is an icon in every state (synced, waiting with a count, offline, problem); the gear opens Settings. The bottom bar says Scan and Menu. The icons are inline SVG inside the app bundle the service worker precaches, so they work offline.</figcaption>
+    </figure>
+
+    <!-- ===================== 2. the home ===================== -->
+    <figure>
+      <div class="ft">2 · App home (scanner state)</div>
+      <div class="phone">
+        <div class="notch"><i></i></div>
+        <div class="apptop"><span class="shop">ဆိုင် ၁ (ရန်ကုန်)</span><span class="iconbtn chip synced" aria-label="ပို့ပြီး"><svg class="ic"><use href="#i-cloud-check"/></svg></span><span class="iconbtn" aria-label="Settings"><svg class="ic"><use href="#i-settings"/></svg></span></div>
+        <div class="main">
+          <div class="jobs">
+            <span class="b sell">🛒 ရောင်းမယ်</span>
+            <span class="b">🆕 ပစ္စည်းအသစ်</span>
+            <span class="b">📦 ကုန်ရောက်</span>
+            <span class="b">💸 ကုန်ကျ</span>
+          </div>
+          <div class="scan">
+            <div class="guide"></div>
+            <div class="tools"><span aria-label="မီး"><svg class="ic big"><use href="#i-bulb"/></svg></span><span aria-label="ပိတ်"><svg class="ic big"><use href="#i-x"/></svg></span></div>
+            <div class="hint">Tag ကို ဘောင်ထဲ ထားပါ</div>
+          </div>
+          <div class="hintline">Tag ဖတ်ရင် ရောင်းမည့် စာရင်း ပွင့်ပါမည်</div>
+          <span class="b"><svg class="ic"><use href="#i-keyboard"/></svg>နံပါတ် ရိုက်မယ်</span>
+          <div class="sec">
+            <h3>မကြာသေးမီ</h3>
+            <div class="tiles">
+              <div class="tile"><span class="id">S1-0002</span><span class="nm">လုံချည် ကချင် အပြာ</span><span class="st">18,000 · ၅</span></div>
+              <div class="tile"><span class="id">S1-0005</span><span class="nm">ထမီ ဇင်းမယ် အဝါ</span><span class="st">22,000 · ၂</span></div>
+              <div class="tile"><span class="id">S1-0001</span><span class="nm">ထမီ ချည်သား အနီ</span><span class="st">25,000 · ၁</span></div>
+              <div class="tile"><span class="id">S1-0003</span><span class="nm">အင်္ကျီ ရင်ဖုံး အဖြူ</span><span class="st">12,000 · ၃</span></div>
+            </div>
+          </div>
+          <div class="inbar"><span class="input">ပစ္စည်း အမည် ရိုက်ပါ</span><span class="sqbtn" aria-label="ရှာ"><svg class="ic"><use href="#i-search"/></svg></span></div>
+          <div class="handle"><svg class="ic"><use href="#i-history"/></svg>မှတ်တမ်း</div>
+        </div>
+        <div class="bottombar"><span class="b primary"><svg class="ic"><use href="#i-scan"/></svg>Scan</span><span class="b"><svg class="ic"><use href="#i-menu"/></svg>Menu</span></div>
+      </div>
+      <figcaption><b>Spec 1.1, 13.1.</b> The four job buttons keep their emojis (with the ☰ menu, the only emojis of the app). Everything else is plain: the recent tiles drop the category emoji, the search field has a magnifier, the history handle a clock icon. 🎤 appears in the bottom bar only while the AI switch is on and app_voice is TRUE.</figcaption>
+    </figure>
+
+    <!-- ===================== 3. the sale form ===================== -->
+    <figure>
+      <div class="ft">3 · Sale form (three lines, part payment)</div>
+      <div class="phone form">
+        <div class="notch"><i></i></div>
+        <div class="fhead"><span class="back" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><h2>ရောင်းမယ်</h2></div>
+        <div class="fcol">
+          <div class="scan strip">
+            <div class="guide"></div>
+            <div class="tools"><span aria-label="မီး"><svg class="ic big"><use href="#i-bulb"/></svg></span><span aria-label="ပိတ်"><svg class="ic big"><use href="#i-x"/></svg></span></div>
+          </div>
+          <span class="b"><svg class="ic"><use href="#i-keyboard"/></svg>နံပါတ် ရိုက်မယ်</span>
+          <div class="inbar"><span class="input">ပစ္စည်း အမည် ရိုက်ပါ</span><span class="sqbtn" aria-label="ရှာ"><svg class="ic"><use href="#i-search"/></svg></span></div>
+          <div class="fline">
+            <div class="top"><span class="name"><span class="id">S1-0002</span> · လုံချည် ကချင် အပြာ</span><span class="del" aria-label="ဖယ်"><svg class="ic big"><use href="#i-trash"/></svg></span></div>
+            <div class="row2"><span class="fnum">18,000 ကျပ်</span><span class="amt">36,000</span></div>
+            <div class="row3"><span class="stepper"><span>−</span><span class="n">၂</span><span>+</span></span><span class="stock">လက်ကျန် ၅</span></div>
+          </div>
+          <div class="fline">
+            <div class="top"><span class="name"><span class="id">S1-0005</span> · ထမီ ဇင်းမယ် အဝါ</span><span class="del" aria-label="ဖယ်"><svg class="ic big"><use href="#i-trash"/></svg></span></div>
+            <div class="row2"><span class="fnum">22,000 ကျပ်</span><span class="amt">22,000</span></div>
+            <div class="row3"><span class="stepper"><span>−</span><span class="n">၁</span><span>+</span></span><span class="stock">လက်ကျန် ၂</span></div>
+          </div>
+          <div class="fline">
+            <div class="top"><span class="name"><span class="id">S1-0001</span> · ထမီ ချည်သား အနီ</span><span class="del" aria-label="ဖယ်"><svg class="ic big"><use href="#i-trash"/></svg></span></div>
+            <div class="row2"><span class="fnum">25,000 ကျပ်</span><span class="amt">25,000</span></div>
+            <div class="row3"><span class="one">၁ ထည်တည်း</span></div>
+          </div>
+          <div class="divider">ဝယ်သူ</div>
+          <div><span class="bchip">ဒေါ်မြင့် · +95 912 345 678 <span class="x" aria-label="ဖယ်"><svg class="ic"><use href="#i-x"/></svg></span></span></div>
+          <div class="divider">ဘယ်လိုပေးလဲ?</div>
+          <div class="seg"><span class="on">ငွေသား</span><span>KBZPay</span><span>WavePay</span><span>ဘဏ်</span><span>ခွဲပေး</span><span><svg class="ic"><use href="#i-plus"/></svg>ဘဏ်အသစ်</span></div>
+          <div class="seg"><span>အကုန် ပေးပြီး 83,000</span><span class="on">မကျေသေး</span></div>
+          <div class="fdone">
+            <div class="label">ယခု ပေးငွေ</div>
+            <span class="fnum wide">30,000</span>
+            <div class="chips"><span>0</span><span>တစ်ဝက် 41,500</span></div>
+          </div>
+          <div class="fneed">
+            <div class="label">ကျန် 53,000 ကျပ် · ဘယ်တော့ ပေးလဲ?</div>
+            <div class="chips days"><span>၇ ရက်</span><span>၁၄ ရက်</span><span>၃၀ ရက်</span><span><svg class="ic"><use href="#i-calendar"/></svg>ရက်စွဲ ရွေးပါ</span><span>မသေချာ</span></div>
+          </div>
+        </div>
+        <div class="fbar">
+          <div class="fsum"><span><span class="k">စုစုပေါင်း</span><span class="v">83,000</span></span><span><span class="k">ပေးပြီး</span><span class="v">30,000</span></span><span><span class="k">ကျန်</span><span class="v owed">53,000</span></span></div>
+          <div class="save">Save</div>
+        </div>
+      </div>
+      <figcaption><b>Spec 1.3, revision 3.</b> The same form as revision 2 without emojis: the labels are the MSG texts through appPlain (Telegram keeps them as written), remove is a trash icon, add a plus, the date a calendar. ← replaces ✖️ ပိတ်; a changed form asks once before it closes. Save is the only green button and reads Save. The bar shows the total, paid and owed as three label/value cells, never one joined line.</figcaption>
+    </figure>
+
+    <!-- ===================== 4. the sold card ===================== -->
+    <figure>
+      <div class="ft">4 · After Save: the sold card as a clean list</div>
+      <div class="phone">
+        <div class="notch"><i></i></div>
+        <div class="apptop"><span class="iconbtn" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><span class="shop">ဆိုင် ၁ (ရန်ကုန်)</span><span class="iconbtn chip waiting" aria-label="၁ ခု ကျန်"><svg class="ic"><use href="#i-cloud-upload"/></svg><span class="badge">၁</span></span><span class="iconbtn" aria-label="Settings"><svg class="ic"><use href="#i-settings"/></svg></span></div>
+        <div class="main">
+          <div class="jobs compact">
+            <span class="b sell">🛒 ရောင်းမယ်</span>
+            <span class="b em" title="ပစ္စည်းအသစ်">🆕</span>
+            <span class="b em" title="ကုန်ရောက်">📦</span>
+            <span class="b em" title="ကုန်ကျ">💸</span>
+          </div>
+          <div class="card">
+            <div class="vtitle">ရောင်းပြီး</div>
+            <div class="vsub">R1-A-000231 · 14:32</div>
+            <table class="tbl">
+              <thead><tr><th>ပစ္စည်း</th><th class="r" style="width:70px">အရေအတွက်</th><th class="r" style="width:92px">ငွေ</th></tr></thead>
+              <tbody>
+                <tr><td>လုံချည် ကချင် အပြာ<span class="sm">လက်ကျန် ၃</span></td><td class="r">၂</td><td class="r">36,000</td></tr>
+                <tr><td>ထမီ ဇင်းမယ် အဝါ<span class="sm">လက်ကျန် ၁</span></td><td class="r">၁</td><td class="r">22,000</td></tr>
+                <tr><td>ထမီ ချည်သား အနီ</td><td class="r">၁</td><td class="r">25,000</td></tr>
+              </tbody>
+            </table>
+            <div class="kv">
+              <div class="kvr"><span class="k">စုစုပေါင်း</span><span class="v n">83,000</span></div>
+              <div class="kvr"><span class="k">ပေးပြီး</span><span class="v n">30,000</span></div>
+              <div class="kvr"><span class="k">ကျန်</span><span class="v n owed">53,000</span></div>
+              <div class="kvr"><span class="k">ပေးနည်း</span><span class="v">ငွေသား</span></div>
+              <div class="kvr"><span class="k">ဝယ်သူ</span><span class="v">ဒေါ်မြင့်</span></div>
+              <div class="kvr"><span class="k">ပေးမည့်ရက်</span><span class="v">၂၆ နိုဝင်ဘာ ၂၀၂၆</span></div>
+            </div>
+            <div class="kb"><div class="r"><span>မှားသွားတယ်</span><span>ဘောက်ချာ</span></div><div class="r"><span>ငွေလက်ခံ</span></div></div>
+          </div>
+          <div class="handle"><svg class="ic"><use href="#i-history"/></svg>မှတ်တမ်း</div>
+        </div>
+        <div class="bottombar"><span class="b primary"><svg class="ic"><use href="#i-scan"/></svg>Scan</span><span class="b"><svg class="ic"><use href="#i-menu"/></svg>Menu</span></div>
+      </div>
+      <figcaption><b>Spec 1.4, 13.9.</b> The core still writes the sold text (Telegram shows it); in the app the message carries a view (kind sold) and is drawn from the ledger: a table of the lines, then one fact per row. The buttons are the core's, plain. ဘောက်ချာ opens the receipt page, and back from it returns to this card. The ← in the header is real: a Save turns the form's layer into this card's layer. The old Photo handle under cards is gone (it silently changed the last scanned piece's photo).</figcaption>
+    </figure>
+
+    <!-- ===================== 5. the receipt ===================== -->
+    <figure>
+      <div class="ft">5 · Receipt page (Share and PDF / Print)</div>
+      <div class="phone">
+        <div class="notch"><i></i></div>
+        <div class="apptop"><span class="iconbtn" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><span class="shop">ဘောက်ချာ</span><span class="iconbtn chip synced" aria-label="ပို့ပြီး"><svg class="ic"><use href="#i-cloud-check"/></svg></span><span class="iconbtn" aria-label="Settings"><svg class="ic"><use href="#i-settings"/></svg></span></div>
+        <div class="main">
+          <div class="card">
+            <div class="rcp-head"><b>ဆိုင် ၁ (ရန်ကုန်)</b><span>အမှတ် ၁၂၃ ဗိုလ်ချုပ်လမ်း</span><span>09 123 456 789</span></div>
+            <div class="kv">
+              <div class="kvr"><span class="k">ဘောက်ချာ</span><span class="v n">R1-A-000231</span></div>
+              <div class="kvr"><span class="k">ရက်စွဲ</span><span class="v">၁၃ နိုဝင်ဘာ ၂၀၂၆ · 14:32</span></div>
+              <div class="kvr"><span class="k">ဝယ်သူ</span><span class="v">ဒေါ်မြင့်</span></div>
+            </div>
+            <table class="tbl">
+              <thead><tr><th>ပစ္စည်း</th><th class="r" style="width:56px">အရေအတွက်</th><th class="r" style="width:70px">စျေး</th><th class="r" style="width:76px">ငွေ</th></tr></thead>
+              <tbody>
+                <tr><td>လုံချည် ကချင် အပြာ</td><td class="r">၂</td><td class="r">18,000</td><td class="r">36,000</td></tr>
+                <tr><td>ထမီ ဇင်းမယ် အဝါ</td><td class="r">၁</td><td class="r">22,000</td><td class="r">22,000</td></tr>
+                <tr><td>ထမီ ချည်သား အနီ</td><td class="r">၁</td><td class="r">25,000</td><td class="r">25,000</td></tr>
+              </tbody>
+            </table>
+            <div class="kv">
+              <div class="kvr"><span class="k">စုစုပေါင်း</span><span class="v n">83,000</span></div>
+              <div class="kvr"><span class="k">ပေးပြီး (ငွေသား)</span><span class="v n">30,000</span></div>
+              <div class="kvr"><span class="k">ကျန်</span><span class="v n owed">53,000</span></div>
+              <div class="kvr"><span class="k">ပေးမည့်ရက်</span><span class="v">၂၆ နိုဝင်ဘာ ၂၀၂၆</span></div>
+              <div class="kvr"><span class="k">ငွေလွှဲရန်</span><span class="v">KBZPay 09 777 123 456 (ဒေါ်မြ)</span></div>
+            </div>
+            <div class="hintline" style="text-align:center;margin-top:8px">ကျေးဇူးတင်ပါသည်</div>
+          </div>
+          <span class="b primary"><svg class="ic"><use href="#i-share"/></svg>ဘောက်ချာ Share မယ်</span>
+          <span class="b"><svg class="ic"><use href="#i-printer"/></svg>PDF / Print</span>
+          <span class="b ghost"><svg class="ic"><use href="#i-undo"/></svg>မှားသွားတယ်</span>
+          <div class="hintline" style="text-align:center">15:02 အထိ ပြန်ဖျက်နိုင်ပါသည်</div>
+        </div>
+      </div>
+      <figcaption><b>Spec 13.10.</b> Built from buildReceipt and the shop's letterhead (the owner sets the address and phone in Settings). Share sends this text, and only this text, to the phone's share sheet (Viber, Telegram, Messenger): the seller picks the buyer there; nothing goes to the server. PDF / Print opens the phone's print dialog (a printer or "Save as PDF"), offline. Undo shows for 30 minutes; the owner of a basket also sees ပယ်ဖျက် (ဆိုင်ရှင်). Telegram's receipt message is unchanged.</figcaption>
+    </figure>
+
+    <!-- ===================== 6. the item card ===================== -->
+    <figure>
+      <div class="ft">6 · An item card as a clean list (quick mode, ☰ 🕘)</div>
+      <div class="phone">
+        <div class="notch"><i></i></div>
+        <div class="apptop"><span class="iconbtn" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><span class="shop">ဆိုင် ၁ (ရန်ကုန်)</span><span class="iconbtn chip synced" aria-label="ပို့ပြီး"><svg class="ic"><use href="#i-cloud-check"/></svg></span><span class="iconbtn" aria-label="Settings"><svg class="ic"><use href="#i-settings"/></svg></span></div>
+        <div class="main">
+          <div class="card">
+            <div class="vtitle">လုံချည် ကချင် အပြာ</div>
+            <div class="vsub">S1-0002 · လုံချည်</div>
+            <div class="kv">
+              <div class="kvr"><span class="k">ရောင်းစျေး</span><span class="v n">18,000 ကျပ်</span></div>
+              <div class="kvr"><span class="k">လက်ကျန်</span><span class="v n">၅</span></div>
+            </div>
+            <div class="stepper" style="margin-top:12px"><span>−</span><span class="n" style="flex:1">၁</span><span>+</span></div>
+            <span class="b good" style="margin-top:8px">ရောင်း ၁</span>
+            <div class="kb"><div class="r"><span>စျေးလျှော့</span><span>ကုန်ရောက်</span></div><div class="r"><span>ပြန်အမ်း</span><span>ဆိုင် ၂ (မန္တလေး) သို့</span></div></div>
+          </div>
+        </div>
+      </div>
+      <figcaption><b>Spec 13.9.</b> sendItemCard passes a view (kind item) in the app: price and stock one per row; a sold one-of-a-kind piece adds ဝယ်သူ, ပေးပြီး and ပေးနည်း as rows. The stepper and the core's buttons stay (plain). Under form mode a scan opens the sale form instead; this card is what ☰ 🕘 and 🔍 show.</figcaption>
+    </figure>
+
+    <!-- ===================== 7. the new-piece form ===================== -->
+    <figure>
+      <div class="ft">7 · New-piece form (count 3)</div>
+      <div class="phone form">
+        <div class="notch"><i></i></div>
+        <div class="fhead"><span class="back" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><h2>ပစ္စည်းအသစ် · S1-0007</h2></div>
+        <div class="fcol">
+          <div class="photo"><svg class="ic" style="width:72px;height:72px;stroke-width:1.4"><use href="#i-camera"/></svg><span class="retake"><svg class="ic"><use href="#i-camera"/></svg>Photo ပြန်ရိုက်</span></div>
+          <div class="field">
+            <div class="label">ပစ္စည်း အမည်</div>
+            <span class="input"></span>
+            <div class="hintline">အမည် မရိုက်ရင် ဓာတ်ပုံကို ကြည့်ပြီး နောက်မှ အမည် ပေးပါမည် (AI on)</div>
+          </div>
+          <div class="field">
+            <div class="label">အမျိုးအစား</div>
+            <div class="toggle"><span class="on">ထမီ</span><span>လုံချည်</span><span>အင်္ကျီ</span><span>ဝတ်စုံ</span><span>အခြား</span></div>
+          </div>
+          <div class="kvf"><span class="label">အရင်း</span><span class="fnum wide">12,000</span></div>
+          <div class="field">
+            <div class="kvf"><span class="label">ရောင်းစျေး</span><span class="fnum wide">25,000</span></div>
+            <div class="chips"><span>10,000</span><span>15,000</span><span>22,000</span><span>25,000</span></div>
+          </div>
+          <div class="toggle"><span>စျေး မသတ်မှတ်ရသေး</span></div>
+          <div class="vid">အမြတ် 13,000 ကျပ် · အရင်းပေါ် 108%</div>
+          <div class="field">
+            <div class="label">အရေအတွက်</div>
+            <span class="stepper"><span>−</span><span class="n">၃</span><span>+</span></span>
+            <div class="hintline">၃ ထည် · လက်ကျန်နဲ့ ရောင်းမည့် ပစ္စည်း ဖြစ်ပါမည်</div>
+          </div>
+          <div class="toggle"><span>နမူနာ: မဟုတ်</span></div>
+        </div>
+        <div class="fbar"><div class="save">Save</div></div>
+      </div>
+      <figcaption><b>Spec 1.5, 13.11.</b> Photo, then the form, now plain. With the AI switch on the name may stay empty: the photo AI names the piece after the next sync. With AI off no photo job is queued and the hint is gone; the piece keeps the name typed (or "ပစ္စည်း S1-0007").</figcaption>
+    </figure>
+
+    <!-- ===================== 8. the measurement form ===================== -->
+    <figure>
+      <div class="ft">8 · Measurement form: one note, the figure</div>
+      <div class="phone form">
+        <div class="notch"><i></i></div>
+        <div class="fhead"><span class="back" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><h2>ဒေါ်မြင့် · အတိုင်းအတာ</h2></div>
+        <div class="fcol">
+          <div class="field"><div class="label">ဘောက်ချာ နံပါတ် (မရှိရင် မထည့်ပါနဲ့)</div><span class="input filled">2532</span><div class="vid">V1-2532</div></div>
+          <div class="divider">အပေါ်ပိုင်း</div>
+          <div class="mgrid">
+            <div class="field"><span class="label">ပုခုံး</span><span class="input">52</span></div>
+            <div class="field"><span class="label">ရင်</span><span class="input">105</span></div>
+            <div class="field"><span class="label">ချိုင်း</span><span class="input">51</span></div>
+            <div class="field"><span class="label">လည်ပင်း</span><span class="input">36</span></div>
+          </div>
+          <div class="hintline">… the other groups as today (လက်, ခါး · တင်, ထမိန်, ဘောင်းဘီ)</div>
+          <div class="divider">ကိုယ်ပုံ</div>
+          <div class="seg"><span class="on">အမျိုးသမီး</span><span>အမျိုးသား</span></div>
+          <div class="sktools">
+            <div class="seg"><span class="on"><svg class="ic"><use href="#i-pencil"/></svg>ဆွဲ</span><span><svg class="ic"><use href="#i-eraser"/></svg>ဖျက်</span></div>
+            <span class="b small"><svg class="ic"><use href="#i-undo"/></svg>မျဉ်း ပြန်ဖျက်</span>
+            <span class="b small primary">OK</span>
+            <span class="b small ghost"><svg class="ic"><use href="#i-trash"/></svg>ရှင်း</span>
+          </div>
+          <div class="sketch drawing" aria-label="ကိုယ်ပုံ">
+            <svg viewBox="0 0 200 300" aria-hidden="true">
+              <path class="fig" d="M84 28a16 16 0 1 0 32 0a16 16 0 1 0 -32 0"/>
+              <path class="fig" d="M93 44l0 8M107 44l0 8"/>
+              <path class="fig" d="M93 52L70 60C62 63 60 70 60 78L55 120L50 162L49 176L57 176L59 162L65 122L71 88C72 98 74 106 76 112C78 124 79 134 80 142C74 156 70 168 70 180L74 270L126 270L130 180C130 168 126 156 120 142C121 134 122 124 124 112C126 106 128 98 129 88L135 122L141 162L143 176L151 176L150 162L145 120L140 78C140 70 138 63 130 60L107 52Z"/>
+              <path class="fig" d="M84 270L82 286L96 286L96 270M104 270L104 286L118 286L116 270"/>
+              <path class="mk" d="M72 104C88 110 112 110 128 104"/>
+              <path class="mk" d="M80 142C92 146 108 146 120 142"/>
+              <path class="mk" d="M150 96l-18 10M150 96l-4 6M150 96l-7 -1"/>
+              <path class="mk" d="M152 88c6 -2 10 2 8 7"/>
+              <path class="mk" d="M74 250L126 250"/>
+            </svg>
+          </div>
+          <div class="divider">အထွေထွေ</div>
+          <div class="field"><span class="label">မှတ်ချက်</span><span class="input area filled">No Bra · ပုံ ပို့ပေးမယ်</span></div>
+        </div>
+        <div class="fbar"><div class="save">Save</div></div>
+      </div>
+      <figcaption><b>Spec 13.7.</b> One note: the MeasureFields "မှတ်ချက်" row as a 300-character box (the second box is gone; an old note moves into it). The paper sheet's figure, a woman or a man. Drawn here in draw mode: outside it the figure is inert and a finger scrolls the form; ဆွဲ enters draw mode (the pad outlined, the tools above it: pen or eraser, undo the last stroke, OK to leave), and ရှင်း (clear) is a separate button that asks first. At most 300 px wide. The drawing is saved with the session as strokes and, as a PNG, through the photo path into the session's picture: it comes back when the form opens again, prints on the measurement PDF, and Telegram's card says it is there. Drawing and saving work offline.</figcaption>
+    </figure>
+
+    <!-- ===================== 9. the buyers list ===================== -->
+    <figure>
+      <div class="ft">9 · Buyers: list, search and +</div>
+      <div class="phone">
+        <div class="notch"><i></i></div>
+        <div class="apptop"><span class="iconbtn" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><span class="shop">ဝယ်သူများ</span><span class="iconbtn chip synced" aria-label="ပို့ပြီး"><svg class="ic"><use href="#i-cloud-check"/></svg></span><span class="iconbtn" aria-label="Settings"><svg class="ic"><use href="#i-settings"/></svg></span></div>
+        <div class="main">
+          <div class="inbar"><span class="input"><svg class="ic"><use href="#i-search"/></svg>နာမည် ဒါမှမဟုတ် ဖုန်းနံပါတ် ရိုက်ပါ</span><span class="sqbtn" aria-label="ဝယ်သူအသစ်"><svg class="ic"><use href="#i-plus"/></svg></span></div>
+          <div>
+            <div class="lrow"><span class="who"><b>ဒေါ်မြင့်</b><span>+95 912 345 678</span></span><span class="amt2 owed">ကျန် 500,000</span><svg class="ic"><use href="#i-chev"/></svg></div>
+            <div class="lrow"><span class="who"><b>ဒေါ်စန်း</b><span>+95 977 712 3456</span></span><span class="amt2 owed">ကျန် 12,500</span><svg class="ic"><use href="#i-chev"/></svg></div>
+            <div class="lrow"><span class="who"><b>ဦးသန့်</b><span>+95 925 004 1188</span></span><svg class="ic"><use href="#i-chev"/></svg></div>
+            <div class="lrow"><span class="who"><b>ဒေါ်နီနီ</b><span>+95 944 455 5666</span></span><svg class="ic"><use href="#i-chev"/></svg></div>
+            <div class="lrow"><span class="who"><b>မစုစု</b><span>&nbsp;</span></span><svg class="ic"><use href="#i-chev"/></svg></div>
+          </div>
+          <div class="hintline">နောက်ထပ် ၁၂ ယောက် · ရှာပါ</div>
+        </div>
+      </div>
+      <figcaption><b>Spec 13.6.</b> ☰ 👤 ဝယ်သူများ opens this page. This shop's recent buyers first, then the rest by name; one row each: name, phone, and what is owed when anything is. The search finds a name, or a phone from four digits. + opens the new-buyer form.</figcaption>
+    </figure>
+
+    <!-- ===================== 10. a buyer ===================== -->
+    <figure>
+      <div class="ft">10 · A buyer as a clean list</div>
+      <div class="phone">
+        <div class="notch"><i></i></div>
+        <div class="apptop"><span class="iconbtn" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><span class="shop">ဝယ်သူ</span><span class="iconbtn chip synced" aria-label="ပို့ပြီး"><svg class="ic"><use href="#i-cloud-check"/></svg></span><span class="iconbtn" aria-label="Settings"><svg class="ic"><use href="#i-settings"/></svg></span></div>
+        <div class="main">
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:10px"><div class="vtitle" style="flex:1">ဒေါ်မြင့်</div><span class="b small ghost"><svg class="ic"><use href="#i-pencil"/></svg>ပြင်မယ်</span></div>
+            <div class="kv">
+              <div class="kvr"><span class="k">ဖုန်း</span><span class="v n">+95 912 345 678</span></div>
+              <div class="kvr"><span class="k">မှတ်ချက်</span><span class="v">ဘောက်ချာ ဖုန်းနဲ့ ပို့</span></div>
+            </div>
+            <div class="kvh">ငွေ</div>
+            <div class="kv">
+              <div class="kvr"><span class="k">ဝယ်ပြီး</span><span class="v n">1,000,000</span></div>
+              <div class="kvr"><span class="k">ပေးပြီး</span><span class="v n">500,000</span></div>
+              <div class="kvr"><span class="k">ကျန်</span><span class="v n owed">500,000</span></div>
+              <div class="kvr"><span class="k">နောက်ဆုံး လာချိန်</span><span class="v">၁၂ အောက်တိုဘာ</span></div>
+              <div class="kvr"><span class="k">လာသည့် အကြိမ်</span><span class="v n">၁</span></div>
+            </div>
+          </div>
+          <div class="row2b"><span class="b primary">ငွေလက်ခံ</span><span class="b">စရံ</span></div>
+          <div class="row2b"><span class="b">အတိုင်းအတာ</span><span class="b">စာရင်း PDF</span></div>
+          <div class="card">
+            <div class="kvh" style="margin-top:0">ဝယ်ယူမှု မှတ်တမ်း</div>
+            <table class="tbl">
+              <thead><tr><th style="width:92px">ရက်စွဲ</th><th>အကြောင်း</th><th class="r" style="width:90px">ငွေ</th><th class="chev"></th></tr></thead>
+              <tbody>
+                <tr><td>၁၂ အောက်တိုဘာ</td><td>မင်္ဂလာ ဝတ်စုံ ရွှေရောင်<span class="tagl">ရောင်း</span><span class="kvs"><span class="k">ပေးပြီး</span><span class="v">500,000</span></span><span class="kvs"><span class="k">ပေးနည်း</span><span class="v">ငွေသား</span></span></td><td class="r">1,000,000</td><td class="chev"><svg class="ic"><use href="#i-chev"/></svg></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <figcaption><b>Spec 13.6.</b> The owner's example card, one fact per row: phone, note; bought, paid, owed (in warn colour), deposit (only when held), last visit, visits. The sales are a table (a basket is one row): the item first, its type as a muted tag, and what was paid and how as small label/value pairs, never the joined line the owner showed; the date is the full day and month and may wrap. A sale opens its receipt. The actions are buttons: receive a payment (while owed), take a deposit, measurements, the statement PDF; ပြင်မယ် edits name, phone and note, which sync with a new Rev.</figcaption>
+    </figure>
+
+    <!-- ===================== 11. new buyer ===================== -->
+    <figure>
+      <div class="ft">11 · New buyer (a refused Save)</div>
+      <div class="phone form">
+        <div class="notch"><i></i></div>
+        <div class="fhead"><span class="back" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><h2>ဝယ်သူအသစ်</h2></div>
+        <div class="fcol">
+          <div class="field"><span class="label">နာမည်</span><span class="input filled">ဒေါ်မြမြ</span></div>
+          <div class="field"><span class="label">ဖုန်း</span><span class="input filled fbadbox">09 912 345 678</span></div>
+          <div class="fdone">
+            <div class="label">ဒီဖုန်းက ဒေါ်မြင့် ပါ</div>
+            <div><span class="bchip">ဒေါ်မြင့် · +95 912 345 678 <span class="x"><svg class="ic"><use href="#i-chev"/></svg></span></span></div>
+          </div>
+          <div class="field"><span class="label">မှတ်ချက်</span><span class="input area"></span></div>
+        </div>
+        <div class="fbar"><div class="fmsg">ဒီဖုန်းက ဒေါ်မြင့် ပါ</div><div class="save">Save</div></div>
+      </div>
+      <figcaption><b>Spec 13.6.</b> Name (required), phone (the phone keyboard), note. Save checks first: a phone another buyer has shows that buyer as a chip (tap it to open her page, or change the number); an exact name asks "ဒီလူလား?" with a button to create anyway. Saved: one customer entry in the outbox, the buyer's page opens.</figcaption>
+    </figure>
+
+    <!-- ===================== 12. history ===================== -->
+    <figure>
+      <div class="ft">12 · History: what this phone recorded</div>
+      <div class="phone">
+        <div class="notch"><i></i></div>
+        <div class="apptop"><span class="iconbtn" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><span class="shop">မှတ်တမ်း</span><span class="iconbtn chip waiting" aria-label="၁ ခု ကျန်"><svg class="ic"><use href="#i-cloud-upload"/></svg><span class="badge">၁</span></span><span class="iconbtn" aria-label="Settings"><svg class="ic"><use href="#i-settings"/></svg></span></div>
+        <div class="main">
+          <div class="dayh">ဒီနေ့ · ၁၃ နိုဝင်ဘာ</div>
+          <table class="tbl">
+            <thead><tr><th class="t">အချိန်</th><th>အကြောင်း</th><th class="r" style="width:82px">ငွေ</th><th class="chev"></th></tr></thead>
+            <tbody>
+              <tr><td class="t">14:32</td><td>လုံချည် ကချင် အပြာ +၂<span class="tagl">ရောင်း <svg class="ic" aria-label="မပို့ရသေး"><use href="#i-cloud-upload"/></svg></span></td><td class="r">83,000</td><td class="chev"><svg class="ic"><use href="#i-chev"/></svg></td></tr>
+              <tr><td class="t">13:05</td><td>အထည်ဖိုး<span class="tagl">ကုန်ကျ</span></td><td class="r">20,000</td><td class="chev"><svg class="ic"><use href="#i-chev"/></svg></td></tr>
+              <tr class="undone"><td class="t">12:20</td><td>အင်္ကျီ ရင်ဖုံး အဖြူ<span class="tagl">ရောင်း</span></td><td class="r">ပယ်ဖျက်ပြီး</td><td class="chev"><svg class="ic"><use href="#i-chev"/></svg></td></tr>
+              <tr><td class="t">11:40</td><td>လုံချည် ပိုး အနက်<span class="tagl">ကုန်ရောက်</span></td><td class="r">+၅ ထည်</td><td class="chev"><svg class="ic"><use href="#i-chev"/></svg></td></tr>
+              <tr><td class="t">09:12</td><td>ထမီ ပိုးထည် အစိမ်း<span class="tagl">ပစ္စည်းအသစ်</span></td><td class="r">+၃ ထည်</td><td class="chev"><svg class="ic"><use href="#i-chev"/></svg></td></tr>
+            </tbody>
+          </table>
+          <div class="dayh">မနေ့က · ၁၂ နိုဝင်ဘာ</div>
+          <table class="tbl">
+            <tbody>
+              <tr><td class="t">17:48</td><td>ဒေါ်စန်း<span class="tagl">ငွေလက်ခံ</span></td><td class="r" style="width:82px">12,500</td><td class="chev"><svg class="ic"><use href="#i-chev"/></svg></td></tr>
+              <tr><td class="t">16:02</td><td>ထမီ ဇင်းမယ် အဝါ<span class="tagl">ရောင်း</span></td><td class="r" style="width:82px">22,000</td><td class="chev"><svg class="ic"><use href="#i-chev"/></svg></td></tr>
+            </tbody>
+          </table>
+          <span class="b ghost">နောက်ထပ် ကြည့်မယ်</span>
+        </div>
+      </div>
+      <figcaption><b>Spec 13.8.</b> No more bot chat: this phone's own records from its ledger, newest first, a table per day (time, what, amount). Each row names the item (or the buyer, or the expense) first and its type as a muted tag under it. A basket is one row; an undone one is struck (also when the owner voided it from Telegram); one not yet sent shows the cloud icon. A sale opens its receipt; any other row opens its entry, with ↩ မှားသွားတယ် while the 30 minutes last. Seven days, then "နောက်ထပ် ကြည့်မယ်".</figcaption>
+    </figure>
+
+    <!-- ===================== 13. the owner's Settings ===================== -->
+    <figure>
+      <div class="ft">13 · Settings (the owner): AI and the shops</div>
+      <div class="phone">
+        <div class="notch"><i></i></div>
+        <div class="apptop"><span class="iconbtn" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><span class="shop">Settings</span><span class="iconbtn chip synced" aria-label="ပို့ပြီး"><svg class="ic"><use href="#i-cloud-check"/></svg></span><span class="iconbtn" aria-label="Settings"><svg class="ic"><use href="#i-settings"/></svg></span></div>
+        <div class="main">
+          <div class="card">
+            <div class="switchrow"><span class="vtitle">AI</span><span class="switch" role="switch" aria-checked="true" aria-label="AI"></span></div>
+            <div class="hintline">AI ဖွင့်ထားရင် စာအုပ်က လက်ရေး စာအုပ် ဓာတ်ပုံကို စာရင်း ဖတ်ပေးပါသည်၊ အသံနဲ့ မှတ်နိုင်ပါသည်၊ Photo ကြည့်ပြီး ပစ္စည်းအမည် ပေးပါသည်</div>
+            <div class="kv">
+              <div class="kvr"><span class="k">စာအုပ်</span><span class="v">ဖွင့်</span></div>
+              <div class="kvr"><span class="k">အသံ</span><span class="v">ပိတ်</span></div>
+              <div class="kvr"><span class="k">Photo အမည်</span><span class="v">ဖွင့်</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="kvh" style="margin-top:0">ဆိုင်များ</div>
+            <div class="lrow"><span class="who"><b>ဆိုင် ၁ (ရန်ကုန်)</b><span>အမှတ် ၁၂၃ ဗိုလ်ချုပ်လမ်း</span><span>09 123 456 789</span></span><svg class="ic"><use href="#i-chev"/></svg></div>
+            <div class="lrow" style="border-bottom:0"><span class="who"><b>ဆိုင် ၂ (မန္တလေး)</b><span>လိပ်စာ မထည့်ရသေး</span></span><svg class="ic"><use href="#i-chev"/></svg></div>
+          </div>
+          <div class="card">
+            <div class="kv">
+              <div class="kvr"><span class="k">ဝန်ထမ်း</span><span class="v">ဒေါ်မြ</span></div>
+              <div class="kvr"><span class="k">ဆိုင်</span><span class="v">ဆိုင် ၁ (ရန်ကုန်)</span></div>
+              <div class="kvr"><span class="k">ဖုန်း အမည်</span><span class="v">iPhone app</span></div>
+              <div class="kvr"><span class="k">ဘောက်ချာ စာလုံး</span><span class="v n">A</span></div>
+              <div class="kvr"><span class="k">စာလုံး အရွယ်</span><span class="v"><span class="seg"><span class="on">A</span><span>A+</span><span>A++</span></span></span></div>
+              <div class="kvr"><span class="k">ဓာတ်ပုံမပါ ကတ် (ပိုမြန်)</span><span class="v">ပိတ်</span></div>
+              <div class="kvr"><span class="k">ဗားရှင်း</span><span class="v n">6.0.0</span></div>
+            </div>
+          </div>
+          <span class="b danger">ဖုန်း ပြန်ချိတ်ဆက်</span>
+        </div>
+      </div>
+      <figcaption><b>Spec 13.11, 13.12.</b> One AI switch (the Settings row ai), the owner's for every phone and the bot, with a one-line hint of what each part does and one row per part (here voice is off by its own Sheet row): on shows 📒 in ☰, 🎤 and the photo's AI name; off shows none of them and sends nothing to the AI (Telegram obeys it too); a seller sees it greyed. The shops: name, address and phone of each shop (the ids stay S1 and S2), saved as owner-only setting entries, so every phone and the receipts follow after the next sync. In the Sheet the same rows are marked as one Shops block (notes and one conditional-format colour). Every row is one label and one value; a shop's address and phone each have their own line.</figcaption>
+    </figure>
+
+    <!-- ===================== 14. the Telegram review card ===================== -->
+    <figure>
+      <div class="ft">14 · Telegram review card (the backup, unchanged)</div>
+      <div class="phone tg">
+        <div class="notch"><i></i></div>
+        <div class="tghead"><span class="av">S</span><span><span class="nm" style="display:block">SalesTag</span><span class="st" style="display:block">bot</span></span></div>
+        <div class="chat">
+          <div class="bubble bot dim">⬇️ အောက်မှာ ဆက်လုပ်ပါ</div>
+          <div class="bubble user">/start S1-0001</div>
+          <div class="bubble bot">🛒 ရောင်းမည့် စာရင်း · ၃ ခု
+1. 🧣 S1-0002 · လုံချည် ကချင် အပြာ × ၂ · 36,000
+2. 👗 S1-0005 · ထမီ ဇင်းမယ် အဝါ × ၁ · 22,000
+3. 👗 S1-0001 · ထမီ ချည်သား အနီ × ၁ · 25,000
+စုစုပေါင်း 83,000 ကျပ်
+👤 ဒေါ်မြင့် · +95 912 345 678
+💰 ငွေသား
+ပေးပြီး 30,000 · ကျန် 53,000
+📅 ကျန် 53,000 · ၂၆ နိုဝင်ဘာ ၂၀၂၆</div>
+          <div class="tgkb">
+            <div class="r"><span>1. S1-0002 × ၂</span><span>2. S1-0005 × ၁</span></div>
+            <div class="r"><span>3. S1-0001 × ၁</span></div>
+            <div class="r"><span>➕ ပစ္စည်း ထပ်ထည့်</span></div>
+            <div class="r"><span>👤 ဝယ်သူ</span><span>💰 ဘယ်လိုပေးလဲ?</span></div>
+            <div class="r"><span>💳 ယခု ပေးငွေ</span><span>📅 ပေးမည့်ရက်</span></div>
+            <div class="r"><span class="save">✅ သိမ်း</span></div>
+            <div class="r"><span>✖️ မလုပ်တော့</span></div>
+          </div>
+          <div class="note">SS|S1-0002|l|&lt;id&gt; · SS|S1-0002|add · SS|S1-0002|o|buyer · o|method · o|paid · o|due · SC|S1-0002|ok · SS|S1-0002|z (all ≤ 25 bytes)</div>
+        </div>
+      </div>
+      <figcaption><b>Spec 2.1, 13.1.</b> Telegram is the owner's channel and keeps its texts: the card already reads one fact per line, and its buttons keep their emojis, the only icons Telegram has. A scan without ➕ still pauses the card (2.2). New Telegram text in revision 3: the measurement card's line for a drawing, and the AI-off answer.</figcaption>
+    </figure>
+
+
+    <!-- ===================== 15. the group view (review r3) ===================== -->
+    <figure>
+      <div class="ft">15 · After Save: a restock and a payment as clean lists</div>
+      <div class="phone">
+        <div class="notch"><i></i></div>
+        <div class="apptop"><span class="iconbtn" aria-label="နောက်သို့"><svg class="ic"><use href="#i-back"/></svg></span><span class="shop">ဆိုင် ၂ (မန္တလေး)</span><span class="iconbtn chip waiting" aria-label="၁ ခု ကျန်"><svg class="ic"><use href="#i-cloud-upload"/></svg><span class="badge">၁</span></span><span class="iconbtn" aria-label="Settings"><svg class="ic"><use href="#i-settings"/></svg></span></div>
+        <div class="main">
+          <div class="jobs compact">
+            <span class="b sell">🛒 ရောင်းမယ်</span>
+            <span class="b em" title="ပစ္စည်းအသစ်">🆕</span>
+            <span class="b em" title="ကုန်ရောက်">📦</span>
+            <span class="b em" title="ကုန်ကျ">💸</span>
+          </div>
+          <div class="card">
+            <div class="vtitle">ကုန်ရောက်</div>
+            <div class="vsub">11:40</div>
+            <table class="tbl">
+              <thead><tr><th>ပစ္စည်း</th><th class="r" style="width:56px">ထည်</th><th class="r" style="width:76px">လက်ကျန်</th></tr></thead>
+              <tbody>
+                <tr><td>လုံချည် ပိုး အနက်<span class="sm">S2-0003</span></td><td class="r">+၅</td><td class="r">၆</td></tr>
+                <tr><td>ထမီ ချည်သား အပြာ<span class="sm">S2-0004</span></td><td class="r">+၁၀</td><td class="r">၁၂</td></tr>
+              </tbody>
+            </table>
+            <div class="kb"><div class="r"><span>မှားသွားတယ်</span></div></div>
+          </div>
+          <div class="hintline">A payment taken from a buyer's page:</div>
+          <div class="card">
+            <div class="vtitle">ငွေလက်ခံ</div>
+            <div class="vsub">17:48</div>
+            <div class="kv">
+              <div class="kvr"><span class="k">ဝယ်သူ</span><span class="v">ဒေါ်စန်း</span></div>
+              <div class="kvr"><span class="k">ငွေ</span><span class="v n">12,500</span></div>
+              <div class="kvr"><span class="k">ပေးနည်း</span><span class="v">KBZPay</span></div>
+              <div class="kvr"><span class="k">ကျန်</span><span class="v n">0</span></div>
+            </div>
+            <div class="kb"><div class="r"><span>မှားသွားတယ်</span></div></div>
+          </div>
+          <div class="handle"><svg class="ic"><use href="#i-history"/></svg>မှတ်တမ်း</div>
+        </div>
+      </div>
+      <figcaption><b>Spec 13.9 (review r3).</b> The restock, expense, payment and deposit replies carry a group view in the app, so two of the four job buttons no longer end on a joined text line: a restock is a table (item, pieces added, stock now), a payment or a deposit one fact per row (the buyer, the amount, how, what is still owed or held). Telegram keeps its texts.</figcaption>
+    </figure>
+  </div>
+</div>
+</body>
+</html>

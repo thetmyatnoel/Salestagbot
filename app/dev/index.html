@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en" data-font="1">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SalesTag app · dev page</title>
+  <!--
+    app/dev/index.html: the maintainer's test bench. Loads the UNBUNDLED core and app files plus the
+    simulator's mock AI, in-memory ports, demo seed and fake sync server, so the whole app runs in a
+    desktop browser against demo data with no deploy and no keys. Serve the project root over HTTP
+    (for example `npx http-server -p 8080` or `python -m http.server 8080` in C:\Users\USER\Desktop\Noel)
+    and open http://localhost:8080/app/dev/ . Add #idb to the URL to use real IndexedDB instead of the
+    memory adapter (then "wipe" from the app's settings resets it; the fake server resets on reload).
+    Opened straight from disk (file:///.../app/dev/index.html) it works too in Chrome: every script is a
+    classic <script src>, the memory adapter needs no IndexedDB. Unattended: ?enroll=sister&open=S1-0002
+    (see autopilot() below).
+  -->
+  <link rel="stylesheet" href="../fonts/fonts.css">
+  <link rel="stylesheet" href="../app.css">
+  <style>
+    body { display: flex; gap: 24px; padding: 16px; align-items: flex-start; font-size: 14px; line-height: 1.5; }
+    .frame { position: relative; width: 390px; height: 780px; flex: none; border: 10px solid #1B1F2E; border-radius: 34px; overflow: hidden; box-shadow: var(--shadow); transform: translateZ(0); background: var(--bg); }
+    .frame #app { position: absolute; inset: 0; max-width: none; }
+    .frame .toast { top: 70px; }
+    .bench { flex: 1; min-width: 320px; max-width: 560px; display: flex; flex-direction: column; gap: 12px; }
+    .bench h1 { font-size: 18px; margin: 0; }
+    .bench .panel { padding: 10px 12px; }
+    .bench button { min-height: 36px; font-size: 14px; padding: 4px 10px; margin: 2px 4px 2px 0; }
+    .bench label { display: inline-flex; align-items: center; gap: 6px; margin-right: 12px; }
+    .bench input[type=number] { width: 90px; min-height: 36px; padding: 4px 8px; font-size: 14px; display: inline-block; }
+    .bench .code { font-size: 22px; min-height: 40px; display: inline-block; width: auto; padding: 2px 12px; background: var(--accent-soft); color: var(--accent); border-radius: 8px; letter-spacing: .1em; }
+    .bench pre { font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 220px; overflow: auto; margin: 6px 0 0; background: var(--panel-2); padding: 8px; border-radius: 8px; }
+    .bench .muted { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <div id="app">
+      <header class="top">
+        <button id="back" class="iconbtn" type="button" aria-label="back" hidden></button>
+        <div class="shop" id="shopName">SalesTag</div>
+        <button class="chip iconbtn never" id="chip" type="button" aria-label="sync">…</button>
+        <button id="gear" class="iconbtn" type="button" aria-label="settings">⚙</button>
+      </header>
+      <div id="banner" class="banner" hidden></div>
+      <main class="main" id="main"></main>
+      <nav class="bottom" id="bottom" hidden>
+        <button class="primary" id="btnScan" type="button">Scan</button>
+        <button id="btnVoice" type="button" hidden>ပြော</button>
+        <button id="btnMenu" type="button">Menu</button>
+      </nav>
+    </div>
+    <div id="overlay" class="overlay" hidden></div>
+    <div id="toast" class="toast" hidden></div>
+    <input id="photoInput" class="sr" type="file" accept="image/*" capture="environment" tabindex="-1">
+  </div>
+
+  <div class="bench">
+    <h1>Dev bench · fake server over the demo sheet</h1>
+    <div class="panel">
+      <div><strong>1. Enrollment code</strong> (the bot's 📲 button) for:
+        <button id="codeSister">Sister · S1</button><button id="codeBrother">Brother · S2</button><button id="codeOwner">Owner</button></div>
+      <div>Code: <span class="code" id="codeOut">—</span> <span class="muted">type it in the app (it also fills the field for you)</span></div>
+    </div>
+    <div class="panel">
+      <div><strong>2. Network</strong>
+        <label><input type="checkbox" id="offline"> offline</label>
+        <label>latency <input type="number" id="latency" value="250" min="0" step="50"> ms</label>
+        <label><input type="checkbox" id="aiFail"> Gemini outage</label>
+        <label><input type="checkbox" id="appVoice"> Settings app_voice</label>
+        <label><input type="checkbox" id="saleFlow" checked> Settings sale_flow = form (off: quick)</label>
+      </div>
+    </div>
+    <div class="panel">
+      <div><strong>3. Telegram route</strong> (rows made by the bot; the phone pulls them)
+        <button id="tgSell">Sister sells S1-0002 in Telegram</button>
+        <button id="tgRestock">Brother restocks S2-0003 +5</button>
+        <button id="tgPrice">Owner sets S1-0004 price 50,000</button>
+        <button id="tgSummary">21:00 summary</button></div>
+    </div>
+    <div class="panel">
+      <div><strong>4. Devices</strong> <span id="devices"></span></div>
+      <div id="deviceButtons"></div>
+    </div>
+    <div class="panel">
+      <div><strong>Server</strong> · ledger rows <span id="rows">0</span> · seq <span id="seq">0</span> · quarantine <span id="quar">0</span> · errors <span id="errs">0</span></div>
+      <pre id="lastRows"></pre>
+      <div><strong>Owner's Telegram chat</strong></div>
+      <pre id="ownerChat">—</pre>
+      <div><strong>Phone</strong></div>
+      <pre id="phoneStats">—</pre>
+      <div><strong>Page errors</strong></div>
+      <pre id="pageErrors">none</pre>
+      <button id="reload">Reset everything (reload)</button>
+    </div>
+  </div>
+
+  <script>
+    // Page errors land in the bench (and in --dump-dom output of a headless run), not only in the console.
+    window.DEV_ERRORS = [];
+    window.addEventListener('error', function (e) {
+      var where = e.filename ? ' @ ' + String(e.filename).split('/').pop() + ':' + e.lineno : '';
+      window.DEV_ERRORS.push((e.message || (e.target && e.target.src) || 'load error') + where);
+      var box = document.getElementById('pageErrors'); if (box) box.textContent = window.DEV_ERRORS.join(' | ');
+    }, true);
+    window.addEventListener('unhandledrejection', function (e) {
+      window.DEV_ERRORS.push('unhandled rejection: ' + (e.reason && e.reason.stack || e.reason));
+      var box = document.getElementById('pageErrors'); if (box) box.textContent = window.DEV_ERRORS.join(' | ');
+    });
+  </script>
+  <script src="../../apps-script/core_config.js"></script>
+  <script src="../../apps-script/core_burmese.js"></script>
+  <script src="../../apps-script/core_messages.js"></script>
+  <script src="../../apps-script/core_ai_prompt.js"></script>
+  <script src="../../apps-script/core_ledger.js"></script>
+  <script src="../../apps-script/core_report.js"></script>
+  <script src="../../apps-script/core_bot.js"></script>
+  <script src="../../apps-script/core_sync.js"></script>
+  <script src="../../apps-script/core_orders.js"></script>
+  <script src="../../poc/sim_mock_ai.js"></script>
+  <script src="../../poc/sim_ports.js"></script>
+  <script src="../../poc/sim_seed.js"></script>
+  <script src="../../poc/sim_sync.js"></script>
+  <script src="../vendor/jsQR.js"></script>
+  <script src="../app_i18n.js"></script>
+  <script src="../app_store.js"></script>
+  <script src="../app_ports.js"></script>
+  <script src="../app_sync.js"></script>
+  <script src="../app_scan.js"></script>
+  <script src="../app_media.js"></script>
+  <script src="../app_icons.js"></script>
+  <script src="../app_ui.js"></script>
+  <script src="../app_forms.js"></script>
+  <script src="../app_sketch.js"></script>
+  <script src="../app_screens.js"></script>
+  <script>
+    // A form covers the browser window from <body> (7.7); #overlay and #toast live in the frame, whose transform makes it
+    // its own stacking context, so a keypad, the date sheet or a toast opened from a form would sit behind it. While a
+    // form is open they move to <body> (above the form: z-index 34 and 40 over 32), and back into the frame after it.
+    function devFormLayers(doc) {
+      var frame = doc.querySelector('.frame'), moved = [doc.getElementById('overlay'), doc.getElementById('toast')];
+      function place() {
+        var host = doc.querySelector('body > .formpage') ? doc.body : frame;
+        moved.forEach(function (el) { if (el && el.parentNode !== host) host.appendChild(el); });
+      }
+      if (typeof MutationObserver === 'function') new MutationObserver(place).observe(doc.body, { childList: true });
+      place();
+      return place;
+    }
+    devFormLayers(document);
+  </script>
+  <script>
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      var world = seedSimWorld(createSimWorld());
+      simSeedLists(world);              // the Lists tab has rows, as after setupSheet (SPEC-round-4.md 9.3)
+      world.settings.sale_flow = 'form';    // the app's forms, as setupSheet seeds it (seedSimWorld says quick for the suites)
+      var server = createFakeServer(world);
+      var dev = { offline: false, latency: 250 };
+      var U = SIM_USERS;
+      function transport(api, body) {
+        return new Promise(function (resolve, reject) {
+          setTimeout(function () {
+            if (dev.offline) return reject(new Error('offline (dev toggle)'));
+            try { resolve(server.handle(api, body)); } catch (err) { reject(err); }
+          }, dev.latency);
+        });
+      }
+      var useIdb = location.hash === '#idb';
+      var adapter = useIdb ? createIdbAdapter({ name: 'salestag-dev' }) : createMemoryAdapter();
+      window.DEV = { world: world, server: server, dev: dev, adapter: adapter };
+      bootApp({ apiUrl: 'fake://sim-server', botUsername: 'ShopTagBot', appName: 'SalesTag (dev)', version: 'dev' },
+              { adapter: adapter, transport: transport, noServiceWorker: true, noHistory: true }).then(function (app) {
+        window.DEV.app = app;
+        refresh();
+        autopilot(app);
+      });
+
+      // Autopilot for unattended checks (headless Chrome screenshots): ?enroll=sister|brother|owner mints a
+      // code and enrolls through the app's own form; &open=S1-0002 then opens that tag as a scan would;
+      // &screen=sync|settings|history switches screen; &latency=0 skips the fake network delay.
+      function query() {
+        var q = {};
+        location.search.replace(/^\?/, '').split('&').forEach(function (kv) {
+          if (!kv) return;
+          var p = kv.split('=');
+          q[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || '');
+        });
+        return q;
+      }
+      function autopilot(app) {
+        var q = query();
+        if (q.latency !== undefined) { dev.latency = Number(q.latency) || 0; $('latency').value = String(dev.latency); }
+        if (!q.enroll || !U[q.enroll] || app.store.meta.deviceId) return;
+        mint(U[q.enroll], q.enroll + ' phone');
+        appDoEnroll();
+        var waited = 0;
+        var poll = setInterval(function () {
+          waited += 100;
+          if (waited > 20000) { clearInterval(poll); return; }
+          if (app.enrollBusy || !app.store.meta.deviceId || app.screen !== 'home') return;
+          clearInterval(poll);
+          if (q.open) appOpenTagId(q.open);
+          if (q.screen) appOpenScreen(q.screen);
+          refresh();
+        }, 100);
+      }
+
+      function mint(user, label) {
+        var m = server.mintEnrollCode(user, label);
+        $('codeOut').textContent = m.display;
+        var input = document.getElementById('codeInput');
+        if (input) input.value = m.display;
+      }
+      $('codeSister').addEventListener('click', function () { mint(U.sister, 'Sister phone'); });
+      $('codeBrother').addEventListener('click', function () { mint(U.brother, 'Brother phone'); });
+      $('codeOwner').addEventListener('click', function () { mint(U.owner, 'Owner phone'); });
+      $('offline').addEventListener('change', function (e) {
+        dev.offline = e.target.checked;
+        if (window.DEV.app) { window.DEV.app.phone.online = !dev.offline; if (!dev.offline) window.DEV.app.sync.syncNow('dev-online'); appRenderHeader(); }
+      });
+      $('latency').addEventListener('change', function (e) { dev.latency = Number(e.target.value) || 0; });
+      $('aiFail').addEventListener('change', function (e) { world.aiFail = e.target.checked; });
+      $('appVoice').addEventListener('change', function (e) {
+        world.settings.app_voice = e.target.checked ? 'TRUE' : 'FALSE';
+        if (window.DEV.app) window.DEV.app.sync.syncNow('settings');   // the settings hash changed: the phone pulls them
+      });
+      $('saleFlow').addEventListener('change', function (e) {
+        world.settings.sale_flow = e.target.checked ? 'form' : 'quick';
+        if (window.DEV.app) window.DEV.app.sync.syncNow('settings');   // the settings hash changed: the phone pulls them
+      });
+      $('tgSell').addEventListener('click', function () {
+        world.sim.start(U.sister, 'S1-0002');
+        world.sim.tapLast(U.sister, 'ရောင်း ၁');
+        if (saleFlow(world.ports) === 'form') world.sim.tapLastByKey(U.sister, 'btn_save');   // the review card: Save (round 6)
+        refresh();
+      });
+      $('tgRestock').addEventListener('click', function () { world.sim.start(U.brother, 'S2-0003'); world.sim.tapLast(U.brother, 'ကုန်ရောက်'); world.sim.tapLast(U.brother, '+၅'); refresh(); });
+      $('tgPrice').addEventListener('click', function () { world.sim.start(U.owner, 'S1-0004'); world.ports.store.updateItem('S1-0004', { price: 50000 }); refresh(); });
+      $('tgSummary').addEventListener('click', function () { alert(buildDailySummary(world.ports, dayKey(world.ports.clock.now())) + '\n' + server.summaryLines().join('\n')); });
+      $('reload').addEventListener('click', function () { location.reload(); });
+
+      function refresh() {
+        $('rows').textContent = world.ledger.length;
+        $('seq').textContent = server.props.LEDGER_SEQ;
+        $('quar').textContent = server.quarantine.length;
+        $('errs').textContent = world.errors.length;
+        $('lastRows').textContent = world.ledger.slice(-6).map(function (r) {
+          return r.seq + ' ' + r.day + ' ' + r.shop + ' ' + r.type + ' ' + (r.itemId || '') + ' qty ' + r.qty + ' amt ' + r.amount + ' ' + (r.deviceId || '') + (r.receiptNo ? ' ' + r.receiptNo : '');
+        }).join('\n') || '—';
+        $('ownerChat').textContent = (world.chats[U.owner.id] || []).slice(-4).map(function (m) { return (m.from === 'bot' ? '🤖 ' : '👤 ') + m.text; }).join('\n') || '—';
+        $('devices').textContent = server.devices.map(function (d) { return d.status + ' ' + (d.label || d.id.slice(0, 6)) + (d.receiptLetter ? ' (' + d.receiptLetter + ')' : ''); }).join(' · ') || 'none';
+        var box = $('deviceButtons');
+        while (box.firstChild) box.removeChild(box.firstChild);
+        server.devices.filter(function (d) { return d.status !== 'PENDING'; }).forEach(function (d) {
+          ['drain', 'activate', 'revoke'].forEach(function (action) {
+            var b = document.createElement('button');
+            b.textContent = action + ' ' + (d.receiptLetter || d.id.slice(0, 6));
+            b.addEventListener('click', function () { server.deviceAction(d.id, action); refresh(); });
+            box.appendChild(b);
+          });
+        });
+        if (window.DEV.app) {
+          var st = window.DEV.app.store.stats();
+          $('phoneStats').textContent = JSON.stringify(st, null, 1);
+        }
+      }
+      world.listeners.push(function () { refresh(); });
+      setInterval(refresh, 2000);
+    })();
+  </script>
+</body>
+</html>

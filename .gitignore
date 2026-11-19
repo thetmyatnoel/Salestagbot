@@ -1,0 +1,14 @@
+# Private notes of the family: never in the repository
+acc.txt
+survey.txt
+
+# Local machine state
+node_modules/
+.firebase/
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# The publish log is written on this PC by tools/publish.js (deployment ids and times); not source
+tools/publish-log.jsonl

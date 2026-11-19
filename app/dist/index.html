@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="my" data-font="1">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2F3E8F">
+  <meta name="color-scheme" content="light dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ဆိုင်">
+  <meta name="referrer" content="no-referrer">
+  <title>SalesTag · ဆိုင်</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="fonts/fonts.css">
+  <link rel="stylesheet" href="app.css?v=1.0.0+29f689e93e">
+  <!-- Everything this page loads comes from its own origin or the Apps Script URL in config.js: no CDN, no third-party script. -->
+</head>
+<body>
+  <div id="app">
+    <header class="top">
+      <button id="back" class="iconbtn" type="button" aria-label="back" hidden></button>
+      <div class="shop" id="shopName">SalesTag</div>
+      <button class="chip iconbtn never" id="chip" type="button" aria-label="sync">…</button>
+      <button id="gear" class="iconbtn" type="button" aria-label="settings">⚙</button>
+    </header>
+    <div id="banner" class="banner" hidden></div>
+    <main class="main" id="main"></main>
+    <nav class="bottom" id="bottom" hidden>
+      <button class="primary" id="btnScan" type="button">Scan</button>
+      <button id="btnVoice" type="button" hidden>ပြော</button>
+      <button id="btnMenu" type="button">Menu</button>
+    </nav>
+  </div>
+  <div id="overlay" class="overlay" hidden></div>
+  <div id="toast" class="toast" hidden></div>
+  <input id="photoInput" class="sr" type="file" accept="image/*" capture="environment" tabindex="-1">
+  <noscript><p style="padding:20px">JavaScript ဖွင့်ပေးပါ · This app needs JavaScript.</p></noscript>
+  <script src="config.js"></script>
+  <script src="app.29f689e93e.js"></script>
+  <script>
+    (function () {
+      var cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
+      cfg.version = '1.0.0+29f689e93e';
+      if (typeof bootApp === 'function') bootApp(cfg);
+      else document.getElementById('main').textContent = 'app bundle missing: run node tools/build_app.js';
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+# The tree is kept byte for byte (CRLF line endings as written on Windows): no conversion on commit or checkout,
+# so a clone runs the suites on the same bytes this PC does.
+* -text
+*.woff2 binary
+*.png binary
+*.jpg binary
+*.pdf binary
+*.ico binary

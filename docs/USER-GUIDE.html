@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="my">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shop Tag Bot User Guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;700&display=swap">
+<style>
+  :root {
+    --ink: #1B1F2E; --muted: #5F6580; --line: #D6D9E4; --accent: #2F3E8F; --soft: #E8ECF8; --chip: #EEF1FA;
+    --good: #2A7A4B; --warn: #A8680F; --bad: #B0372A; --paper: #FFFFFF;
+    --my: "Myanmar Text", "Noto Sans Myanmar", "Padauk", sans-serif;
+    --en: "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  @page { size: A4; margin: 15mm 16mm 18mm; }
+  * { box-sizing: border-box; }
+  html, body { background: var(--paper); color: var(--ink); }
+  body { margin: 0 auto; max-width: 720px; padding: 24px 16px 48px; font-family: var(--my); font-size: 15px; line-height: 1.9; }
+  @media print { body { max-width: none; padding: 0; } }
+  h1, h2, h3 { margin: 0; line-height: 1.5; text-wrap: balance; }
+  h1 { font-size: 26px; font-weight: 700; }
+  h2 { font-size: 20px; font-weight: 700; color: var(--accent); margin-top: 8px; padding-top: 10px; border-top: 2px solid var(--accent); }
+  h3 { font-size: 16.5px; font-weight: 700; margin-top: 22px; }
+  .en { font-family: var(--en); color: var(--muted); font-size: 12.5px; line-height: 1.5; display: block; }
+  h1 .en { font-size: 15px; margin-top: 2px; }
+  h2 .en { font-size: 13px; font-weight: 500; }
+  h3 .en { font-size: 12px; font-weight: 500; }
+  p { margin: 6px 0; }
+  .lead { color: var(--muted); font-size: 14px; }
+  .note { font-family: var(--en); font-size: 12px; color: var(--muted); border-left: 3px solid var(--line); padding-left: 10px; margin: 14px 0 0; line-height: 1.5; }
+  .part { break-before: page; margin-top: 26px; }
+  .part.first { break-before: auto; }
+  ol.steps { margin: 6px 0 0; padding-left: 28px; list-style-type: myanmar; }
+  ol.steps > li { padding-left: 4px; margin: 4px 0; }
+  ol.steps > li::marker { color: var(--accent); font-weight: 700; }
+  .b { display: inline-block; font-family: var(--my); font-size: 14px; line-height: 1.6; border: 1px solid #C9D0F5; background: var(--chip); color: var(--accent); border-radius: 8px; padding: 0 8px; white-space: nowrap; vertical-align: baseline; }
+  .say { display: inline-block; font-style: normal; background: #F3F4F8; border-radius: 6px; padding: 0 8px; }
+  .quick { border: 2px solid var(--accent); border-radius: 14px; padding: 14px 16px 12px; margin: 18px 0 6px; background: var(--soft); }
+  .quick h2 { border: 0; padding: 0; margin: 0 0 6px; font-size: 18px; }
+  .quick .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 6px; }
+  .quick .step { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 10px 8px; text-align: center; }
+  .quick .step .ico { font-size: 34px; line-height: 1.2; }
+  .quick .step .my { display: block; font-weight: 700; font-size: 15px; }
+  .quick .done { text-align: center; margin: 10px 0 0; font-weight: 700; color: var(--good); }
+  @media (max-width: 480px) { .quick .row { grid-template-columns: 1fr; } }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 14px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 7px 8px; text-align: left; vertical-align: top; }
+  th { font-size: 12px; font-family: var(--en); color: var(--muted); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+  td .en { margin-top: 1px; }
+  .rules { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin: 16px 0 0; }
+  .rules p { margin: 4px 0; }
+  .rules .k { color: var(--accent); font-weight: 700; }
+  .fine { font-family: var(--en); font-size: 11.5px; color: var(--muted); margin-top: 30px; border-top: 1px solid var(--line); padding-top: 8px; line-height: 1.5; }
+  .summary { font-family: var(--my); background: #F3F4F8; border-radius: 10px; padding: 10px 14px; white-space: pre-wrap; font-size: 13.5px; line-height: 1.8; }
+  .plain { border: 2px solid var(--warn); border-radius: 10px; padding: 10px 14px; margin: 16px 0 0; background: #FFF8EC; }
+  .plain p { margin: 4px 0; }
+  .plain .k { color: var(--warn); font-weight: 700; }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>ဆိုင် Tag Bot · အသုံးပြုနည်း လမ်းညွှန်<span class="en">Shop Tag Bot · User guide</span></h1>
+  <p class="lead">ဆိုင်ဝန်ထမ်း၊ ဒီဇိုင်နာ နှင့် ဆိုင်ရှင် အတွက်။ ဆိုင်ဝန်ထမ်းတွေက ဖုန်းအက်ပ် (ဆိုင် icon) နဲ့ ရောင်းပါသည်။ Telegram က ဆိုင်ရှင်ရဲ့ လမ်းကြောင်း ဖြစ်ပြီး အက်ပ် မသုံးနိုင်တဲ့အခါ ရောင်းဖို့ အရန် ဖြစ်ပါသည်။<span class="en">For sellers, designers and the owner. Sellers sell with the phone app (the ဆိုင် icon). Telegram is the owner's channel, and the sellers' backup when the app cannot be used.</span></p>
+  <p class="note">The Burmese wording in this guide is a draft written for the family to correct. App buttons are written as the app shows them: without emoji, and with the English words OK, Settings, Menu, Scan, Photo, Save, Cancel, Share, PDF, Print and AI; emojis stay only on the four job buttons of the home and on the Menu. Telegram buttons keep their emojis. The names are the defaults; if the Messages tab in the sheet is changed, update them here too. The names on the account, expense-category, fabric and item-category buttons come from the Lists tab (Part C, 6).</p>
+</header>
+
+<section class="quick">
+  <h2>အမြန် မှတ်ထားရန် · ဖုန်းအက်ပ်မှာ ရောင်းနည်း<span class="en">The three-step card: selling in the app</span></h2>
+  <div class="row">
+    <div class="step"><div class="ico">📷</div><span class="my">၁။ Tag ကို Scan လုပ်ပါ</span><span class="en">Scan the tag: the sale form opens with the piece</span></div>
+    <div class="step"><div class="ico">🛒</div><span class="my">၂။ ဝယ်သူ တစ်ယောက်ရဲ့ ပစ္စည်း နောက်ထပ် ရှိရင် ဆက် Scan လုပ်ပါ</span><span class="en">More pieces for the same buyer: scan them into the same form</span></div>
+    <div class="step"><div class="ico">👆</div><span class="my">၃။ <span class="b">Save</span> ကို နှိပ်ပါ</span><span class="en">Tap Save</span></div>
+  </div>
+  <p class="done">ငွေသား · နာမည် မလို · အကုန် ပေးရင်:<br>Scan → <span class="b">Save</span><br>Save နှိပ်မှ မှတ်တမ်း ဝင်ပါသည်။<span class="en">Cash, no name, paid in full: scan, then Save. The sale is recorded only at Save.</span></p>
+</section>
+
+<!-- ===================== PART A: SELLERS (THE APP) ===================== -->
+<section class="part first">
+  <h2>အပိုင်း က · ဆိုင်ဝန်ထမ်း · ဖုန်းအက်ပ် · နေ့စဉ် အသုံးပြုနည်း<span class="en">Part A · Sellers · the phone app, everyday use</span></h2>
+
+  <h3>မစတင်ခင်<span class="en">Before you start</span></h3>
+  <ol class="steps">
+    <li>ဖုန်းမှာ ဆိုင် အက်ပ် ထည့်ပြီး Telegram ထဲက <span class="b">📲 အက်ပ်</span> ကုဒ်နဲ့ ချိတ်ဆက်ထားရပါမည်။ Noel (သို့) ဆိုင်ရှင်က လုပ်ပေးပါမည်။<span class="en">The ဆိုင် app must be installed on the phone and connected with the code from 📲 အက်ပ် in Telegram. Noel or the owner sets it up.</span></li>
+    <li>အက်ပ်ကို home screen က <span class="say">ဆိုင်</span> icon ကနေ အမြဲ ဖွင့်ပါ။ အင်တာနက် မရှိလည်း ရောင်းလို့ ရပါသည်။ လိုင်း ရရင် Sheet ကို အလိုလို ပို့ပါမည်။<span class="en">Always open it from the ဆိုင် icon. It sells without internet; the rows go to the sheet by themselves once there is a connection.</span></li>
+    <li>ပထမဆုံး <span class="b">Scan</span> နှိပ်တဲ့အခါ ဖုန်းက ကင်မရာ သုံးခွင့် မေးပါမည်: <span class="b">Allow</span> (ခွင့်ပြု) ကို နှိပ်ပါ။ Scan ခလုတ် အောက်မှာလည်း ဒီအတိုင်း ရေးထားပါသည်။ မှားပြီး <span class="b">Block</span> နှိပ်မိရင် ကင်မရာ မပွင့်တော့ပါ: ဖုန်းရဲ့ Settings → Apps → ဆိုင် အက်ပ် → Camera မှာ ပြန်ဖွင့်ပါ (သို့) ဆိုင်ရှင်ကို ပြောပါ။ အဲဒီအတောအတွင်း <span class="b">နံပါတ် ရိုက်မယ်</span> နဲ့ Tag နံပါတ် ရိုက်ပြီး ဆက်ရောင်းလို့ ရပါသည်။<span class="en">The first time you tap Scan the phone asks to use the camera: tap Allow (the line under the Scan button says so). If Block was tapped by mistake the camera stays off: turn it back on in the phone's Settings → Apps → the ဆိုင် app → Camera, or tell the owner. Meanwhile နံပါတ် ရိုက်မယ် types the tag number and selling goes on.</span></li>
+    <li>Telegram လည်း ဖုန်းမှာ ထားပါ: အက်ပ် မသုံးနိုင်ရင် Telegram နဲ့ ရောင်းပါ (အပိုင်း ခ)။<span class="en">Keep Telegram on the phone too: when the app cannot be used, sell in Telegram (Part B).</span></li>
+    <li>အစစ် မရောင်းခင် simulator မှာ လေ့ကျင့်နိုင်ပါသည် (အပိုင်း င)။<span class="en">Practise first in the simulator (Part E).</span></li>
+  </ol>
+
+  <h3>ပင်မ စာမျက်နှာ<span class="en">The home screen</span></h3>
+  <table>
+    <thead><tr><th>မြင်ရတာ · What you see</th><th>လုပ်တာ · What it does</th></tr></thead>
+    <tbody>
+      <tr><td><span class="b">🛒 ရောင်းမယ်</span></td><td>ရောင်းမယ် ဖောင် (ကင်မရာ ပွင့်ပြီးသား) (၁)<span class="en">The sale form, its camera already on (1)</span></td></tr>
+      <tr><td><span class="b">🆕 ပစ္စည်းအသစ်</span></td><td>ပစ္စည်းအသစ် မှတ်ပုံတင် ဖောင် (၁၀)<span class="en">The new-piece form (10)</span></td></tr>
+      <tr><td><span class="b">📦 ကုန်ရောက်</span></td><td>ကုန်ရောက် ဖောင် (၁၁)<span class="en">The restock form (11)</span></td></tr>
+      <tr><td><span class="b">💸 ကုန်ကျ</span></td><td>ကုန်ကျစရိတ် ဖောင် (၁၂)<span class="en">The expense form (12)</span></td></tr>
+      <tr><td>ကင်မရာ · <span class="b">Scan</span></td><td>Tag ကို ဖတ်ပါ။ ပစ္စည်း Tag ဆိုရင် ရောင်းမယ် ဖောင် တန်းပွင့်ပါမည်၊ Tag အလွတ် ဆိုရင် ပစ္စည်းအသစ် ဖောင်။<span class="en">Reads a tag: a piece's tag opens the sale form at once, a blank tag the new-piece form.</span></td></tr>
+      <tr><td><span class="b">နံပါတ် ရိုက်မယ်</span></td><td>Tag ကွဲနေရင် Tag နံပါတ် ရိုက်ပါ (ဥပမာ <span class="say">S1-0042</span>)။<span class="en">A torn tag: type its number.</span></td></tr>
+      <tr><td>မကြာသေးမီ · <span class="say">ပစ္စည်း အမည် ရိုက်ပါ</span></td><td>Tag မပါရင် ပစ္စည်းကို နှိပ်ပါ (သို့) အမည် ရိုက်ပြီး ရှာပါ။ Scan လုပ်သလို ဖြစ်ပါသည်။<span class="en">No tag: tap a recent piece, or search it by name. It works like a scan.</span></td></tr>
+      <tr><td><span class="b">မှတ်တမ်း</span></td><td>ဒီဖုန်းက မှတ်ခဲ့တာတွေ (၉)<span class="en">What this phone recorded (9)</span></td></tr>
+      <tr><td><span class="b">Menu</span></td><td>ပင်မ မီနူး: <span class="b">📊 ဒီနေ့</span> <span class="b">💰 ငွေလက်ခံ</span> <span class="b">📥 စရံ</span> <span class="b">👤 ဝယ်သူများ</span> <span class="b">📏 အတိုင်းအတာ</span> <span class="b">📦 ကုန်ရောက်</span> စသည် (quick ဆိုရင် <span class="b">📦 ကုန်ရောက်</span> က Tag တစ်ခုချင်း မေးပါသည်၊ ၁၁)<span class="en">The main menu: today, receive payment, deposit, buyers, measurements, restock and more (under quick, 📦 there asks for one tag at a time: 11)</span></td></tr>
+      <tr><td><span class="b">←</span> (ဘယ်ဘက် အပေါ်)</td><td>နောက်ပြန် (၄)။ ပင်မ စာမျက်နှာ (ကင်မရာ) မှာ မရှိပါ။<span class="en">Back (4). Not shown on the home's camera screen.</span></td></tr>
+      <tr><td>တိမ်ပုံ icon (အပေါ်)</td><td>အမှန်ခြစ် = အကုန် ပို့ပြီး · မြှားနဲ့ ဂဏန်း = ပို့ရန် ကျန် · မျဉ်းဖြတ် = အင်တာနက် မရှိ · တြိဂံ = ၂ ရက် မပို့ရသေး။ နှိပ်ရင် ပို့ခြင်း စာမျက်နှာ။<span class="en">The sync icon (a cloud): ticked = all sent; an arrow and a number = rows waiting; crossed out = offline; a triangle = a row has waited two days unsent. A tap opens the sync page.</span></td></tr>
+      <tr><td>ဂီယာပုံ icon (Settings)</td><td>ဆက်တင်: AI, ဆိုင်များ (ဆိုင်ရှင်သာ), စာလုံး အရွယ်, ဗားရှင်း<span class="en">Settings: AI, the shops (owner only), font size, version</span></td></tr>
+    </tbody>
+  </table>
+  <p class="lead">Save ပြီးရင် ပင်မ စာမျက်နှာမှာ အဖြေ ကတ် ကြီး ပေါ်ပြီး အပေါ်မှာ ခလုတ် ၄ ခု အတန်း တစ်တန်း ကျန်ပါသည်: နောက် ဝယ်သူ အတွက် <span class="b">🛒 ရောင်းမယ်</span> ကို တစ်ချက် နှိပ်ပါ။<span class="en">After a Save the home shows the reply card large, with the four job buttons in one row above it: for the next buyer, one tap on 🛒.</span></p>
+
+  <h3>၁။ ရောင်းတဲ့အခါ · ဖောင် တစ်ခုတည်း<span class="en">1. Making a sale: one form</span></h3>
+  <ol class="steps">
+    <li>Tag ကို Scan လုပ်ပါ (သို့) <span class="b">🛒 ရောင်းမယ်</span> နှိပ်ပြီး Scan လုပ်ပါ။ <span class="say">ရောင်းမယ်</span> ဖောင် ပွင့်ပြီး ပစ္စည်းက စာကြောင်း တစ်ကြောင်း ဖြစ်ပါမည်: Tag နံပါတ်နဲ့ အမည်၊ စျေး၊ အရေအတွက်၊ <span class="say">လက်ကျန်</span>။<span class="en">Scan the tag (or tap 🛒 and scan). The sale form opens with the piece as a line: tag and name, price, count, stock.</span></li>
+    <li>ဝယ်သူ တစ်ယောက်က ပစ္စည်း အများ ဝယ်ရင် ဖောင် ပွင့်နေတုန်း ကျန်တဲ့ Tag တွေကို ဆက် Scan လုပ်ပါ (ဖောင် အပေါ်က ကင်မရာ)။ တစ်ခုချင်း စာကြောင်း ဖြစ်ပါမည်၊ ၁၀ ခုအထိ။<span class="en">One buyer, several pieces: scan the other tags while the form is open (the camera at the top of the form). Each becomes a line, up to ten.</span></li>
+    <li>ထည် အရေအတွက်: စာကြောင်းပေါ်က <span class="b">−</span> နဲ့ <span class="b">+</span> ကို နှိပ်ပါ။ တစ်ထည်တည်း ပစ္စည်းမှာ <span class="say">၁ ထည်တည်း</span> လို့ ပြပြီး − + မပါပါ။<span class="en">The count: − and + on the line. A one-of-a-kind piece shows ၁ ထည်တည်း and has no − +.</span></li>
+    <li>စျေးလျှော့ရင်: စျေး ကွက် (<span class="say">18,000 ကျပ်</span>) ကို နှိပ်ပါ။ ဂဏန်း ခလုတ်ခုံ ပွင့်ပါမည်။ တစ်ထည် စျေးကို ရိုက်ပြီး <span class="b">OK</span> နှိပ်ပါ။ စျေးဟောင်းကို မျဉ်းဖြတ် ပြပါမည်။<span class="en">A bargained price: tap the price box; the keypad opens; type the price of one piece and tap OK. The old price shows struck through.</span></li>
+    <li>မှားထည့်မိရင်: စာကြောင်းရဲ့ အမှိုက်ပုံး icon (ဖယ်) ကို နှိပ်ပါ။<span class="en">A line added by mistake: tap its bin icon.</span></li>
+    <li><span class="say">ဝယ်သူ</span>: နာမည် မလိုရင် ဘာမှ မလုပ်ပါနဲ့။ လိုရင် နာမည် (သို့) ဖုန်းနံပါတ် ရိုက်ပြီး ပေါ်လာတဲ့ နာမည်ကို နှိပ်ပါ၊ မကြာသေးမီ ဝယ်သူကို နှိပ်ပါ၊ (သို့) <span class="b">နာမည်အသစ်</span> နှိပ်ပြီး နာမည်နဲ့ ဖုန်း ရိုက်ပါ (၈)။<span class="en">The buyer: leave it empty for no name. Otherwise type a name or a phone and tap the person, tap a recent buyer, or tap နာမည်အသစ် and type the name and phone (see 8).</span></li>
+    <li><span class="say">ဘယ်လိုပေးလဲ?</span>: <span class="b">ငွေသား</span> (ရွေးပြီးသား)၊ Pay အကောင့်ကို နာမည်နဲ့ (ဥပမာ <span class="b">KBZPay</span> <span class="b">WavePay</span>)၊ <span class="b">ဘဏ်</span> (ပြီးရင် အကောင့်)၊ <span class="b">ခွဲပေး</span> (၅)၊ <span class="b">ဘဏ်အသစ်</span> (၁၅)။<span class="en">How paid: cash (already chosen), a Pay account by its name, bank (then the account), mixed (see 5), new bank (see 15).</span></li>
+    <li><span class="b">အကုန် ပေးပြီး …</span> (ရွေးပြီးသား)၊ (သို့) မပြည့်သေးရင် <span class="b">မကျေသေး</span> (၆)။<span class="en">Paid in full (already chosen), or မကျေသေး when it is not (see 6).</span></li>
+    <li>အောက်ဆုံးမှာ <span class="say">စုစုပေါင်း</span> ပြပါသည်။ <span class="b">Save</span> ကို နှိပ်ပါ။ ဒါနဲ့ မှတ်တမ်း ဝင်ပါပြီ။<span class="en">The bar at the bottom shows the total. Tap Save: the sale is recorded.</span></li>
+  </ol>
+  <p class="lead">ဖောင် ဥပမာ (ပစ္စည်း ၂ ခု):<span class="en">The form as the seller sees it (two pieces):</span></p>
+  <div class="summary"><span class="b">←</span>  ရောင်းမယ်
+S1-0002 · လုံချည် ကချင် အပြာ
+<span class="b">18,000 ကျပ်</span>                36,000
+<span class="b">−</span> ၂ <span class="b">+</span>          လက်ကျန် ၅
+S1-0005 · ထမီ ဇင်းမယ် အဝါ
+<span class="b">22,000 ကျပ်</span>                22,000
+<span class="b">−</span> ၁ <span class="b">+</span>          လက်ကျန် ၂
+ဝယ်သူ   <span class="say">နာမည် ဒါမှမဟုတ် ဖုန်းနံပါတ် ရိုက်ပါ</span>
+ဘယ်လိုပေးလဲ?
+<span class="b">ငွေသား</span> <span class="b">KBZPay</span> <span class="b">WavePay</span> <span class="b">ဘဏ်</span> <span class="b">ခွဲပေး</span> <span class="b">ဘဏ်အသစ်</span>
+<span class="b">အကုန် ပေးပြီး 58,000</span> <span class="b">မကျေသေး</span>
+စုစုပေါင်း 58,000
+<span class="b">Save</span></div>
+  <div class="plain">
+    <p><span class="k">ရှင်းရှင်း မှတ်ထားရန်</span> · စာရင်းထဲ ရှိပြီးသား ပစ္စည်းကို ထပ် Scan လုပ်ရင် ထပ်မထည့်ပါ၊ အရေအတွက်လည်း မတိုးပါ။ <span class="say">S1-0002 ထည့်ပြီးသားပါ · အရေအတွက် တိုးရင် + ကို နှိပ်ပါ</span> ပေါ်ပါမည်။ တစ်ထည် ထပ်ရောင်းရင် အဲဒီ စာကြောင်းရဲ့ <span class="b">+</span> ကို နှိပ်ပါ။ Telegram မှာတော့ ကွာပါသည်: စာရင်းထဲ ရှိပြီးသား ပစ္စည်း (တစ်ထည်တည်း ပစ္စည်း မဟုတ်ရင်) ကို ➕ မနှိပ်ဘဲ ထပ် scan လုပ်ရင် အဲဒီ ပစ္စည်း ကတ်ရဲ့ အပေါ်ဆုံးမှာ <span class="b">➕ စာရင်းထဲ ထည့်</span> ပေါ်ပြီး နှိပ်ရင် တစ်ထည် ထပ်တိုးပါသည် (အပိုင်း ခ ၁)။<span class="en">Plainly: scanning a piece that is already in the list does not add another one, and does not raise its count. The app says "S1-0002 ထည့်ပြီးသားပါ · အရေအတွက် တိုးရင် + ကို နှိပ်ပါ". To sell one more of it, tap + on its line. Telegram differs: a piece already in the list (not a one-of-a-kind piece), scanned again without ➕, gets ➕ စာရင်းထဲ ထည့် on top of its card, and that tap adds one more (Part B, 1).</span></p>
+  </div>
+  <div class="rules">
+    <p><span class="k">မှတ်ထားရန်</span> · <span class="b">Save</span> မနှိပ်ခင် ဘာမှ မမှတ်ပါ။ အရောင်း တစ်ခုမှာ ဆိုင် တစ်ဆိုင်ရဲ့ ပစ္စည်းသာ ပါနိုင်ပါသည်။<span class="en">Nothing is recorded before Save. One sale holds the pieces of one shop only.</span></p>
+    <p><span class="k">မှတ်ထားရန်</span> · မသိမ်းရသေးတဲ့ စာရင်းကို မိနစ် ၃၀ ထားပေးပါသည်။ <span class="b">🛒 ရောင်းမယ်</span> နှိပ်ရင် <span class="say">မသိမ်းရသေးသော စာရင်း ပြန်ပေါ်လာပါပြီ</span> နဲ့ ပြန်ပေါ်ပါမည် (<span class="b">အသစ်</span> = စာရင်း အလွတ်)။ နောက် ဝယ်သူရဲ့ ပစ္စည်းကို Scan လုပ်ရင် စာရင်းအသစ် ဖြစ်ပြီး အဟောင်းကို <span class="b">ပြန်ထည့်</span> နဲ့ ပြန်ယူနိုင်ပါသည်။<span class="en">An unsaved list is kept for 30 minutes: 🛒 brings it back (အသစ် starts empty). Scanning the next buyer's piece starts a fresh list; ပြန်ထည့် brings the old lines back. One Save never sells a list nobody looked at.</span></p>
+    <p><span class="k">မှတ်ထားရန်</span> · အရေအတွက်က လက်ကျန်ထက် ပိုရင် <span class="say">လက်ကျန် … ထည်သာ ရှိပါသည်</span> သတိပေးပါသည်၊ ရောင်းလို့တော့ ရပါသည်။ ဆိုင်ရှင် စျေး မသတ်မှတ်ရသေးတဲ့ ပစ္စည်းမှာ <span class="say">စျေး မသတ်မှတ်ရသေး</span> ပြပါမည်: ဝယ်သူနဲ့ သဘောတူ စျေးကို ရိုက်ပါ။<span class="en">A count above the stock warns but still sells. A piece without a price shows စျေး မသတ်မှတ်ရသေး: type the price agreed with the buyer.</span></p>
+  </div>
+
+  <h3>၂။ Save ပြီးရင် · ရောင်းပြီး ကတ်<span class="en">2. After Save: the sold card</span></h3>
+  <div class="summary">ရောင်းပြီး                     R1-A-000231 · 14:32
+ပစ္စည်း                  အရေအတွက်        ငွေ
+လုံချည် ကချင် အပြာ          ၂        36,000
+   လက်ကျန် ၃
+ထမီ ဇင်းမယ် အဝါ             ၁        22,000
+   လက်ကျန် ၁
+စုစုပေါင်း                           58,000
+ပေးပြီး                              58,000
+ပေးနည်း                              ငွေသား
+<span class="b">မှားသွားတယ်</span> <span class="b">ဘောက်ချာ</span></div>
+  <ol class="steps">
+    <li><span class="b">မှားသွားတယ်</span>: မိနစ် ၃၀ အတွင်း အရောင်း တစ်ခုလုံး (ပစ္စည်း အားလုံး) ကို ပြန်ဖျက်ပါသည်။ နှိပ်ရင် အရင် မေးပါသည်: <span class="say">ဒီမှတ်တမ်းကို ပြန်ဖျက်မလား?</span> → <span class="b">ပြန်ဖျက်မယ်</span> (အနီ) နှိပ်မှ ပြန်ဖျက်ပြီး <span class="b">မဖျက်ပါ</span> နှိပ်ရင် ဘာမှ မဖြစ်ပါ။ မတော်တဆ ထိမိရင် စိတ်မပူပါနဲ့။<span class="en">Undo: within 30 minutes it reverses the whole sale, every piece of it. It asks first (ဒီမှတ်တမ်းကို ပြန်ဖျက်မလား?): only the red ပြန်ဖျက်မယ် undoes; မဖျက်ပါ does nothing, so a stray tap is harmless.</span></li>
+    <li><span class="b">ဘောက်ချာ</span>: ဘောက်ချာ စာမျက်နှာ (၃)။<span class="en">Receipt: the receipt page (3).</span></li>
+    <li>ငွေ ကျန်ရင် <span class="say">ကျန်</span>၊ <span class="say">ဝယ်သူ</span>၊ <span class="say">ပေးမည့်ရက်</span> ပါပြီး <span class="b">ငွေလက်ခံ</span> ခလုတ် ပါပါမည် (၇)။ ရောင်းနေတုန်း အကောင့်အသစ် ထည့်ခဲ့ရင် <span class="b">နံပါတ် ထည့်</span> (၁၅)၊ ဖုန်း မရှိသေးတဲ့ ဝယ်သူဆိုရင် <span class="b">ဖုန်း ထည့်</span>။<span class="en">While money is owed it shows owed, buyer and promised day, and a ငွေလက်ခံ button (7). A new account added in this sale adds နံပါတ် ထည့် (15); a buyer without a phone adds ဖုန်း ထည့်.</span></li>
+    <li>ငွေ ကျန်တဲ့ ဝယ်သူမှာ စရံ ရှိရင် အရင် မေးပါမည်: <span class="say">… ၏ စရံ … ကျပ် ရှိပါသည်။ သုံးမလား?</span> · <span class="b">စရံ သုံးမယ်</span> (သို့) <span class="b">မသုံးဘူး</span>။<span class="en">A buyer who still owes and holds a deposit is asked first whether to use it.</span></li>
+  </ol>
+
+  <h3>၃။ ဘောက်ချာ<span class="en">3. The receipt</span></h3>
+  <ol class="steps">
+    <li>ရောင်းပြီး ကတ်ပေါ်က <span class="b">ဘောက်ချာ</span> ကို နှိပ်ပါ (မှတ်တမ်း (၉) နဲ့ ဝယ်သူ စာမျက်နှာ (၈) ကနေလည်း ဖွင့်နိုင်ပါသည်)။ ဘောက်ချာ စာမျက်နှာ ပွင့်ပါမည်: ဆိုင် အမည်၊ လိပ်စာ၊ ဖုန်း၊ ဘောက်ချာ နံပါတ်၊ ရက်စွဲ၊ ဝယ်သူ၊ ပစ္စည်းများ၊ စုစုပေါင်း၊ ပေးပြီး၊ ကျန်၊ ပေးမည့်ရက်၊ <span class="say">ငွေလွှဲရန်</span>။<span class="en">Tap ဘောက်ချာ on the sold card (or open it from the history or a buyer's page). The receipt page shows the shop's name, address and phone, the number, date, buyer, pieces, total, paid, owed, promised day and where to transfer.</span></li>
+    <li><span class="b">ဘောက်ချာ Share မယ်</span>: ဖုန်းရဲ့ Share ပွင့်ပါမည်။ Viber၊ Telegram (သို့) Messenger ကို ရွေးပြီး ဝယ်သူဆီ ပို့ပါ။ ဘောက်ချာ စာသား သက်သက်သာ သွားပါသည်။<span class="en">Share: the phone's share sheet opens; pick Viber, Telegram or Messenger and send it to the buyer. Only the receipt's text goes, to whoever you pick.</span></li>
+    <li><span class="b">PDF / Print</span>: ဖုန်းရဲ့ Print စာမျက်နှာ ပွင့်ပါမည်: printer ကို ရွေးပါ (သို့) "Save as PDF" နဲ့ PDF ဖိုင် လုပ်ပါ။ အင်တာနက် မလိုပါ။<span class="en">PDF / Print: the phone's print page opens: pick a printer, or "Save as PDF" for a file. No internet needed.</span></li>
+    <li>မိနစ် ၃၀ အတွင်း ဒီမှာလည်း <span class="b">မှားသွားတယ်</span> ရှိပါသည်။ ပြန်ဖျက်ပြီးသား ဘောက်ချာမှာ <span class="say">ပယ်ဖျက်ပြီး</span> ပြပြီး ခလုတ် မပါပါ။ ငွေ နောက်မှ လက်ခံပြီးသား အရောင်း (၇) မှာ <span class="b">မှားသွားတယ်</span> မပါတော့ဘဲ <span class="say">ဒီအရောင်းမှာ ငွေလက်ခံ/စရံ ပါပြီးလို့ ပြင်လို့ မရတော့ပါ။</span> ကို မှိန်မှိန် ပြပါမည်: အရောင်း မှားနေရင် ဆိုင်ရှင်ကို ပြောပါ (အပိုင်း ဂ ၄-က)။ <span class="b">←</span> နှိပ်ရင် ရောင်းပြီး ကတ် ပြန်ရောက်ပါမည်။<span class="en">Within 30 minutes the undo is here too. An undone sale shows ပယ်ဖျက်ပြီး and no buttons. A sale that a payment was taken against later (7) has no undo: the page shows the grey line ဒီအရောင်းမှာ ငွေလက်ခံ/စရံ ပါပြီးလို့ ပြင်လို့ မရတော့ပါ။ instead; if the sale is wrong, tell the owner (Part C, 4a). ← returns to the sold card.</span></li>
+  </ol>
+
+  <h3>၄။ နောက်ပြန် (←) · မှားသွားရင်<span class="en">4. Back (←) and mistakes</span></h3>
+  <ol class="steps">
+    <li><span class="b">←</span> (ဘယ်ဘက် အပေါ်) က တစ်ဆင့် နောက်ပြန် သွားပါသည်။ Android ဖုန်းရဲ့ နောက်ပြန် ခလုတ် (သို့) ပွတ်ဆွဲ လည်း အတူတူပါ။ iPhone မှာ <span class="b">←</span> ကိုသာ သုံးပါ။<span class="en">← at the top left goes back one step. The Android back button or gesture does the same. On an iPhone use ←.</span></li>
+    <li>ဖောင်မှာ ရိုက်ထားတာ ရှိပြီး နောက်ပြန် နှိပ်ရင် <span class="say">ရိုက်ထားတာတွေ မသိမ်းဘဲ ပိတ်မလား?</span> လို့ တစ်ခါ မေးပါမည်။ OK = မသိမ်းဘဲ ပိတ်၊ Cancel = ဖောင်ထဲ ဆက်နေ။ ဘာမှ မပြောင်းရသေးတဲ့ ဖောင်က တန်းပိတ်ပါသည်။<span class="en">Back on a form with typed values asks once whether to close without saving: OK closes, Cancel stays. An untouched form closes at once.</span></li>
+    <li>ဖောင်မှာ တစ်ခုခု ရိုက်ထားပြီး <span class="b">←</span> နှိပ်ရင် အက်ပ်က မေးပါသည်: <span class="say">ရိုက်ထားတာတွေ မသိမ်းရသေးပါ · ထွက်မလား?</span> → <span class="b">မသိမ်းဘဲ ထွက်မယ်</span> (အနီ၊ အပေါ်) ဆိုရင် ဖောင် ပိတ်ပြီး ဘာမှ မမှတ်ပါ၊ <span class="b">ဆက်ဖြည့်မယ်</span> (အောက်) ဆိုရင် ဖောင်မှာပဲ ဆက်နေပါသည်။ ဖုန်းရဲ့ နောက်ပြန်ကို ထပ်နှိပ်ရင်လည်း <span class="b">ဆက်ဖြည့်မယ်</span> နဲ့ အတူတူပါ။ ဘာမှ မရိုက်ရသေးတဲ့ ဖောင် ဆိုရင် မမေးဘဲ ပိတ်ပါသည်။<span class="en">← on a form with something typed asks: မသိမ်းဘဲ ထွက်မယ် (red, on top) closes it without recording anything; ဆက်ဖြည့်မယ် (below) stays in the form, and so does the phone's back pressed again. An untouched form closes without asking.</span></li>
+    <li>ပင်မ စာမျက်နှာ (ကင်မရာ) မှာ ဖုန်းရဲ့ နောက်ပြန်ကို တစ်ခါ နှိပ်ရင် <span class="say">ထွက်ရန် နောက်တစ်ခါ ထပ်နှိပ်ပါ</span> ပေါ်ပါမည်။ နောက်တစ်ခါ ထပ်နှိပ်မှ အက်ပ်က ထွက်ပါသည်။<span class="en">On the home's camera screen a first back shows "press again to leave"; only the second back leaves the app.</span></li>
+    <li>မှတ်ပြီးသား အရောင်း မှားရင် မိနစ် ၃၀ အတွင်း ရောင်းပြီး ကတ်၊ ဘောက်ချာ (သို့) မှတ်တမ်းပေါ်က <span class="b">မှားသွားတယ်</span> ကို နှိပ်ပြီး ပြန်ရောင်းပါ။ ၃၀ မိနစ် ကျော်သွားရင် ဆိုင်ရှင်ကို ပြောပါ။<span class="en">A recorded sale that is wrong: undo within 30 minutes (sold card, receipt or history) and sell again. After 30 minutes, tell the owner.</span></li>
+    <li>အက်ပ် အသစ် ဖွင့်ပြီး ဘာမှ မနှိပ်ခင် ကင်မရာက Tag ဖတ်ပြီး ဖောင် ပွင့်သွားရင် ပထမ နောက်ပြန်က အက်ပ်ကို ပိတ်သွားနိုင်ပါသည်။ စာရင်း မပျောက်ပါ: <span class="b">🛒 ရောင်းမယ်</span> နှိပ်ရင် ပြန်ပေါ်ပါမည်။<span class="en">Right after opening the app, if the camera opened a form before any tap, the first back may close the app. The list is not lost: 🛒 brings it back.</span></li>
+  </ol>
+
+  <h3>၅။ တစ်ချို့ ငွေသား၊ တစ်ချို့ အကောင့်ထဲ (ခွဲပေး)<span class="en">5. Part cash, part into an account (mixed payment)</span></h3>
+  <ol class="steps">
+    <li><span class="say">ဘယ်လိုပေးလဲ?</span> မှာ <span class="b">ခွဲပေး</span> ကို နှိပ်ပါ (Pay/ဘဏ် အကောင့် ရှိမှ ပေါ်ပါသည်)။<span class="en">On "how paid" tap ခွဲပေး (shown when the shop has a Pay or bank account).</span></li>
+    <li><span class="say">ဘယ်အကောင့်နဲ့ ခွဲပေးလဲ?</span> · ငွေဝင်တဲ့ အကောင့်ကို နှိပ်ပါ။ တစ်ခုတည်း ရှိရင် ရွေးပြီးသား ဖြစ်ပါသည်။<span class="en">Tap the account the transfer went into; with one account it is already chosen.</span></li>
+    <li><span class="say">… နဲ့ ဘယ်လောက်လဲ?</span> ကွက်ကို နှိပ်ပြီး အကောင့်ထဲ ဝင်တဲ့ ပမာဏ ရိုက်ပါ (သို့) <span class="b">တစ်ဝက် …</span>။ ကျန်တာ ငွေသား ဖြစ်ပါမည်။<span class="en">Tap the box and type the part that went into the account, or တစ်ဝက်. The rest is cash.</span></li>
+    <li><span class="b">Save</span>။ ဘောက်ချာ တစ်စောင်တည်းမှာ နှစ်ပိုင်းလုံး ပါပါသည်။ မှားရင် မိနစ် ၃၀ အတွင်း <span class="b">မှားသွားတယ်</span> (နှစ်ပိုင်းလုံး ပြန်ဖျက်)။<span class="en">Save. One receipt carries both parts. Wrong? Undo within 30 minutes (both parts are undone).</span></li>
+  </ol>
+
+  <h3>၆။ ငွေ အပြည့် မပေးသေးရင် · ကျန်ငွေ ပေးမည့်ရက်<span class="en">6. Not paid in full: part payment and the promised date</span></h3>
+  <ol class="steps">
+    <li><span class="b">မကျေသေး</span> ကို နှိပ်ပါ။ ဖြေရမယ့် အကွက်တွေကို ဘောင်ခတ်ပြပါမည်။<span class="en">Tap မကျေသေး. The rows still to answer are outlined.</span></li>
+    <li><span class="say">ယခု ပေးငွေ</span>: ကွက်ကို နှိပ်ပြီး ပေးသွားတဲ့ ငွေ ရိုက်ပါ၊ (သို့) <span class="b">0</span> (ဘာမှ မပေးသေး)၊ <span class="b">တစ်ဝက် …</span>။<span class="en">Paid now: tap the box and type the amount, or 0 (nothing yet) or Half.</span></li>
+    <li>ဝယ်သူ: <span class="say">မကျေသေးရင် ဝယ်သူ နာမည် လိုပါသည်</span>။ ဝယ်သူကို ရွေးပါ (သို့) <span class="b">နာမည်အသစ်</span>။<span class="en">Buyer: money owed needs a name; pick the buyer or add a new one.</span></li>
+    <li><span class="say">ကျန် … ကျပ် · ဘယ်တော့ ပေးလဲ?</span> · <span class="b">၇ ရက်</span> <span class="b">၁၄ ရက်</span> <span class="b">၃၀ ရက်</span>၊ <span class="b">ရက်စွဲ ရွေးပါ</span> (ပြက္ခဒိန်: ဒီနေ့ကနေ တစ်နှစ်အထိ၊ ရက် ရွေးပြီး <span class="b">OK</span>)၊ မသိရင် <span class="b">မသေချာ</span>။<span class="en">When is the rest paid: in 7, 14 or 30 days (the owner can change these, Part C, 7), a day picked on the calendar (today to a year ahead, then OK), or "not sure".</span></li>
+    <li><span class="b">Save</span>။ မဖြေရသေးတဲ့ အကွက် ရှိရင် Save က မမှတ်ဘဲ ဘာလိုလဲ အောက်မှာ ပြောပြီး အဲဒီ အကွက်ကို ပြပါမည်။ အောက်ဆုံးမှာ <span class="say">စုစုပေါင်း</span> <span class="say">ပေးပြီး</span> <span class="say">ကျန်</span> ပြပါသည်။<span class="en">Save. With a row unanswered, Save records nothing, says what is missing and shows that row. The bar shows total, paid and owed.</span></li>
+    <li>ရောင်းပြီး ကတ်နဲ့ ဘောက်ချာမှာ ပေးပြီး၊ ကျန်၊ ပေးမည့်ရက် ပါပါမည်။<span class="en">The sold card and the receipt show paid, owed and the promised day.</span></li>
+  </ol>
+
+  <h3>၇။ ဝယ်သူက အကြွေး ပြန်ဆပ်ရင် · စရံ လက်ခံရင်<span class="en">7. The customer comes back to pay; taking a deposit</span></h3>
+  <ol class="steps">
+    <li><span class="b">Menu</span> → <span class="b">💰 ငွေလက်ခံ</span> → အကြွေး ကျန်သူ နာမည်ကို နှိပ်ပါ → <span class="b">အကုန် …</span> (သို့) <span class="b">အခြား</span> ပြီး ပမာဏ ရိုက်ပါ။<span class="en">Menu → receive payment → tap the customer → All, or Other and type the amount.</span></li>
+    <li>ငွေ ကျန်နေတုန်း ရောင်းပြီး ကတ် (သို့) ဝယ်သူ စာမျက်နှာက <span class="b">ငွေလက်ခံ</span> ကို နှိပ်ရင် အဲဒီ အရောင်း (သို့) ဝယ်သူကို တန်းမေးပါမည်။<span class="en">ငွေလက်ခံ on the sold card or the buyer's page goes straight to that sale or buyer.</span></li>
+    <li>စရံ: <span class="b">Menu</span> → <span class="b">📥 စရံ</span> (သို့) ဝယ်သူ စာမျက်နှာက <span class="b">စရံ</span> → ပမာဏ → ဘာအတွက်လဲ (ရိုက်ပါ သို့ <span class="b">ကျော်</span>)။<span class="en">A deposit: Menu → deposit (or စရံ on the buyer's page), then the amount, then what it is for (type it or skip).</span></li>
+    <li>ပစ္စည်း ပေးတဲ့နေ့မှာ ဝယ်သူ နာမည်နဲ့ ပုံမှန် ရောင်းပါ (၆)။ စရံ ရှိရင် သုံးမလား မေးပါမည် (၂)။<span class="en">On delivery day sell as usual with the customer's name (6); the app offers the deposit (2).</span></li>
+    <li>ဒီ ကတ်တွေမှာ ရိုက်ရမယ်ဆိုရင် မေးခွန်း ပါတဲ့ ကွက် တစ်ကွက်နဲ့ <span class="b">OK</span> ပေါ်ပါမည်၊ ဂဏန်းဆိုရင် ဂဏန်း ခလုတ်ခုံ ပွင့်ပါမည်။ အက်ပ်မှာ စာ လွတ်လပ်စွာ ရိုက်ပို့တဲ့ ကွက် မရှိတော့ပါ။<span class="en">Where these cards need typing, one labelled box with OK appears (numbers open the keypad). The app has no free text box any more.</span></li>
+  </ol>
+
+  <h3>၈။ ဝယ်သူများ<span class="en">8. Buyers</span></h3>
+  <ol class="steps">
+    <li><span class="b">Menu</span> → <span class="b">👤 ဝယ်သူများ</span>: ဝယ်သူ စာရင်း (နာမည်၊ ဖုန်း၊ ငွေ ကျန်ရင် <span class="say">ကျန် …</span>)။ အပေါ်က ရှာ ကွက်မှာ နာမည် (သို့) ဖုန်းနံပါတ် ရိုက်ပါ။<span class="en">Menu → buyers: the list of buyers (name, phone, what is owed). Search by name or phone in the box at the top.</span></li>
+    <li>ဝယ်သူအသစ်: <span class="b">+</span> ကို နှိပ်ပါ။ <span class="say">နာမည်</span>၊ <span class="say">ဖုန်း</span> (Viber နံပါတ် ဆိုရင် ပိုကောင်း)၊ <span class="say">မှတ်ချက်</span> ရိုက်ပြီး <span class="b">Save</span>။<span class="en">A new buyer: tap +, type the name, the phone (a Viber number is best) and a note, then Save.</span></li>
+    <li>ဖုန်းနံပါတ် တူတဲ့ ဝယ်သူ ရှိရင် <span class="say">ဒီဖုန်းက … ပါ</span> ပြပါမည်: အဲဒီလူ ဆိုရင် သူ့နာမည်ကို နှိပ်ပါ။ နာမည် တူရင် <span class="say">ဒီနာမည်နဲ့ ဝယ်သူ ရှိပြီးသားပါ · ဒီလူလား?</span>: အဲဒီလူကို နှိပ်ပါ (သို့) <span class="b">"…" အသစ် ဖန်တီး</span>။ ဝယ်သူ နှစ်ခါ မဖြစ်အောင်ပါ။ ရောင်းမယ် ဖောင်ထဲမှာလည်း ဒီအတိုင်း မေးပါသည်။<span class="en">A phone that a buyer already has shows that buyer: tap the name if it is them. The same name asks "is it this person?": tap them, or create the new name. This keeps one person from being added twice; the sale form asks the same way.</span></li>
+    <li>နာမည်ကို နှိပ်ရင် ဝယ်သူ စာမျက်နှာ: <span class="say">ဖုန်း</span> (နှိပ်ရင် ဖုန်းခေါ်)၊ <span class="say">မှတ်ချက်</span>၊ <span class="say">ငွေ</span>: <span class="say">ဝယ်ပြီး</span> <span class="say">ပေးပြီး</span> <span class="say">ကျန်</span> <span class="say">စရံ</span> <span class="say">နောက်ဆုံး လာချိန်</span> <span class="say">လာသည့် အကြိမ်</span>။<span class="en">Tap a name for the buyer's page: phone (a tap calls), note, then money: bought, paid, owed, deposit, last visit, number of visits.</span></li>
+    <li>ခလုတ်: <span class="b">ငွေလက်ခံ</span> (ကျန်ရင်)၊ <span class="b">စရံ</span>၊ <span class="b">အတိုင်းအတာ</span> (၁၄)၊ <span class="b">စာရင်း PDF</span> (ဝယ်သူကို ပေးဖို့ စာရင်း)၊ <span class="b">ပြင်မယ်</span> (နာမည်၊ ဖုန်း၊ မှတ်ချက် ပြင်)။<span class="en">Buttons: receive payment (while owed), deposit, measurements (14), a statement PDF for the customer, and ပြင်မယ် to edit the name, phone or note.</span></li>
+    <li><span class="say">ဝယ်ယူမှု မှတ်တမ်း</span>: ရက်စွဲ၊ အကြောင်း၊ ငွေ ဇယား။ ပစ္စည်း အများ ပါတဲ့ အရောင်းက တစ်ကြောင်းတည်း (<span class="say">… +၂</span>)။ အရောင်းကို နှိပ်ရင် ဘောက်ချာ ပွင့်ပါမည်။<span class="en">The purchase history: date, what, amount. A sale of several pieces is one row ("… +၂"). A sale row opens its receipt.</span></li>
+  </ol>
+  <div class="summary"><span class="b">←</span>  ဝယ်သူ
+ဒေါ်မြင့်                            <span class="b">ပြင်မယ်</span>
+ဖုန်း                       +95 912 345 678
+ငွေ
+ဝယ်ပြီး                           1,000,000
+ပေးပြီး                             500,000
+ကျန်                                500,000
+နောက်ဆုံး လာချိန်                ၁၂ အောက်တိုဘာ
+လာသည့် အကြိမ်                              ၁
+<span class="b">ငွေလက်ခံ</span> <span class="b">စရံ</span> <span class="b">အတိုင်းအတာ</span> <span class="b">စာရင်း PDF</span>
+ဝယ်ယူမှု မှတ်တမ်း
+ရက်စွဲ           အကြောင်း                    ငွေ
+၁၂ အောက်တိုဘာ  မင်္ဂလာ ဝတ်စုံ ရွှေရောင်   1,000,000
+                ရောင်း
+                ပေးပြီး 500,000   ပေးနည်း ငွေသား</div>
+
+  <h3>၉။ မှတ်တမ်း<span class="en">9. History</span></h3>
+  <ol class="steps">
+    <li>ပင်မ စာမျက်နှာက <span class="b">မှတ်တမ်း</span> ကို နှိပ်ပါ။ ဒီဖုန်းက မှတ်ခဲ့တာတွေ နောက်ဆုံး မှတ်တာ အရင် ပေါ်ပါမည်: ရက် တစ်ရက် ဇယား တစ်ခု (<span class="say">ဒီနေ့</span>၊ <span class="say">မနေ့က</span> …)။<span class="en">Tap မှတ်တမ်း on the home: what this phone recorded, newest first, one table per day.</span></li>
+    <li>ကော်လံ: <span class="say">အချိန်</span>၊ <span class="say">အကြောင်း</span> (ပစ္စည်း၊ အမျိုးအစား (သို့) ဝယ်သူ နာမည်၊ အောက်မှာ <span class="say">ရောင်း</span> <span class="say">ကုန်ရောက်</span> <span class="say">ပစ္စည်းအသစ်</span> <span class="say">ကုန်ကျ</span> <span class="say">ငွေလက်ခံ</span> <span class="say">စရံ</span>)၊ <span class="say">ငွေ</span>။<span class="en">Columns: time, what (the piece, the category or the buyer, with the kind of entry under it), amount.</span></li>
+    <li>တိမ်ပုံ icon = Sheet ကို မပို့ရသေး။ <span class="say">ပယ်ဖျက်ပြီး</span> = ပြန်ဖျက်ပြီးသား။<span class="en">A cloud icon: not sent to the sheet yet. ပယ်ဖျက်ပြီး: undone.</span></li>
+    <li>အရောင်း တစ်ကြောင်းကို နှိပ်ရင် ဘောက်ချာ (၃)။ တခြား တစ်ကြောင်းကို နှိပ်ရင် <span class="say">မှတ်တမ်း အသေးစိတ်</span>: ပြန်ဖျက်လို့ ရသေးရင် <span class="b">မှားသွားတယ်</span> နဲ့ <span class="say">… အထိ ပြန်ဖျက်နိုင်ပါသည်</span>။<span class="en">A sale opens its receipt (3); any other row opens its details, with the undo and its time limit while allowed.</span></li>
+    <li>၇ ရက်စာ ပြပါသည်၊ <span class="b">နောက်ထပ် ကြည့်မယ်</span> နဲ့ ထပ်ကြည့်ပါ။ Telegram နဲ့ မှတ်တာ၊ တခြား ဖုန်းက မှတ်တာ၊ အတိုင်းအတာ တွေ ဒီမှာ မပါပါ။<span class="en">Seven days at a time; နောက်ထပ် ကြည့်မယ် shows more. Entries made in Telegram or on another phone, and measurements, are not listed.</span></li>
+  </ol>
+
+  <h3>၁၀။ ပစ္စည်းအသစ် မှတ်ပုံတင်ခြင်း (ဒီဇိုင်နာ)<span class="en">10. Registering a new piece (designer)</span></h3>
+  <p class="lead">Tag အလွတ် (ဓာတ်ပုံ မရှိသေးသော Tag) တစ်ထပ် ဆိုင်မှာ ရှိပါသည်။ ပစ္စည်းအသစ် တစ်ခု ပြီးတိုင်း Tag အလွတ် တစ်ခု ချိတ်ပါ။<span class="en">A stack of blank tags is kept in the shop. Tie one to every finished piece.</span></p>
+  <ol class="steps">
+    <li>Tag အလွတ်ကို ပစ္စည်းမှာ ချိတ်ပြီး Scan လုပ်ပါ (သို့) <span class="b">🆕 ပစ္စည်းအသစ်</span> နှိပ်ပြီး Scan လုပ်ပါ။ <span class="say">ပစ္စည်းအသစ် · S1-0007</span> ဖောင် ပွင့်ပါမည်။<span class="en">Tie a blank tag to the piece and scan it (or tap 🆕 and scan). The new-piece form opens.</span></li>
+    <li><span class="b">Photo</span> ကို နှိပ်ပြီး ပစ္စည်း ဓာတ်ပုံ ရိုက်ပါ (ပြန်ရိုက်ချင်ရင် <span class="b">Photo ပြန်ရိုက်</span>)။<span class="en">Tap Photo and take a picture of the piece (Photo ပြန်ရိုက် to take it again).</span></li>
+    <li><span class="say">ပစ္စည်း အမည်</span> ရိုက်ပါ။ AI ဖွင့်ထားရင် မရိုက်လည်း ရပါသည်: <span class="say">အမည် မရိုက်ရင် ဓာတ်ပုံကို ကြည့်ပြီး နောက်မှ အမည် ပေးပါမည်</span> (ဓာတ်ပုံ ပို့ပြီးမှ)။ ဒီအတောအတွင်း <span class="say">ပစ္စည်း S1-0007</span> လို့ ပေါ်ပါမည်။<span class="en">Type the name. With AI on it may stay empty: the AI names the piece from the photo once it is sent; until then it reads ပစ္စည်း S1-0007.</span></li>
+    <li><span class="say">အမျိုးအစား</span>: <span class="b">ထမီ</span> <span class="b">လုံချည်</span> <span class="b">အင်္ကျီ</span> <span class="b">ဝတ်စုံ</span> … <span class="b">အခြား</span> ထဲက တစ်ခုကို နှိပ်ပါ (ဆိုင်ရှင်နဲ့ ဝန်ထမ်းတွေ ထည့်ထားတဲ့ အမျိုးအစားတွေလည်း ပါပြီး <span class="b">အခြား</span> က အမြဲ နောက်ဆုံး)။ ဘာမှ မရွေးရင် <span class="b">အခြား</span> ဖြစ်ပါသည်။ ထပ်နှိပ်ရင် ရွေးထားတာ ပြန်ဖြုတ်ပါသည်။<span class="en">Category: tap one of the chips (the categories the owner and the staff added are there too; အခြား always comes last). None chosen is အခြား. A second tap on the chosen chip clears it.</span></li>
+    <li>မရှိရင် နောက်ဆုံး ခလုတ် <span class="b">အမျိုးအစားအသစ်</span> (+ ပုံ) ကို နှိပ်ပါ။ နာမည် ကွက် ပွင့်ပါမည် (<span class="say">ပစ္စည်း အမျိုးအစား နာမည် ရိုက်ပါ (ဥပမာ ပိုးအင်္ကျီ)</span>): နာမည် ရိုက်ပါ (စာလုံး ၄၀ အထိ)။ <span class="b">Save</span> နှိပ်မှ အမျိုးအစား စာရင်းထဲ ဝင်ပြီး ဒီပစ္စည်းမှာ သုံးပါသည်၊ နောက် ပစ္စည်းတွေမှာ ခလုတ် ဖြစ်ပါမည်။ ရှိပြီးသား နာမည် ဆိုရင် ကွက် အောက်မှာ <span class="say">"ထမီ" ရှိပြီးသား · အဲဒါကို သုံးပါမယ်</span> ပြပြီး အသစ် မထည့်ပါ။ လက်မခံတာ: ဆိုင်ရှင် ပိတ်ထားတဲ့ နာမည် (<span class="say">"…" ကို ပိတ်ထားပါတယ် · တခြား နာမည် ရိုက်ပါ</span>)၊ နမူနာ ဆိုတဲ့ စကားလုံး ပါတဲ့ နာမည် (<span class="say">နမူနာ က အမျိုးအစား မဟုတ်ပါ · နမူနာ ခလုတ်ကို သုံးပါ</span>)၊ ဂဏန်း (သို့) ငွေပမာဏ သက်သက်၊ စာလုံး မပါတဲ့ နာမည်။<span class="en">A missing category: tap the last chip, အမျိုးအစားအသစ် (with a plus). A name field opens: type the name (up to 40 characters). Only Save adds it to the list and uses it for this piece; from then on it is a chip. A name that exists is used, not added twice (the line under the field says so). Refused: a name the owner closed, any name with the word နမူနာ (a sample is the switch below), a number or an amount alone, and a name with no letter in it.</span></li>
+    <li><span class="say">အရင်း</span> (အထည် + လက်ခ)၊ မသိရင် ကွက်လပ် ထားပါ (ကွက်ထဲမှာ <span class="say">မသိရင် ချန်ထားပါ</span> လို့ မှိန်မှိန် ရေးထားပါသည်)။ <span class="say">ရောင်းစျေး</span>: ခလုတ် (သို့) ကွက်ကို နှိပ်ပြီး ရိုက်ပါ။ <span class="say">အမြတ် … ကျပ် · အရင်းပေါ် …%</span> ပြပါမည် (အရင်းထက် နည်းရင် သတိပေး)။<span class="en">Cost (fabric plus labour), empty if unknown. Selling price: a button, or tap the box and type it. The profit and the markup on cost show (a price below cost warns).</span></li>
+    <li>စျေး မသိသေးရင် <span class="b">စျေး မသတ်မှတ်ရသေး</span> ကို နှိပ်ပါ။ ဆိုင်ရှင်ဆီ message သွားပြီး ဆိုင်ရှင်က စျေး သတ်မှတ်ပါမည် (အပိုင်း ဂ ၄)။<span class="en">Price not decided: tap စျေး မသတ်မှတ်ရသေး. The owner gets a message and sets it (Part C, 4).</span></li>
+    <li><span class="say">အရေအတွက်</span>: တစ်မျိုးတည်း အများ ချုပ်ထားရင် <span class="b">+</span> နဲ့ ထည်ပါ (ဥပမာ ၅)။ <span class="say">၅ ထည် · လက်ကျန်နဲ့ ရောင်းမည့် ပစ္စည်း ဖြစ်ပါမည်</span>။ တစ်ထည်တည်း ဆိုရင် ၁ ထားပါ။<span class="en">Count: several of the same piece, set the count with + (for example 5): it becomes a piece sold by count with that stock. One of a kind: leave 1.</span></li>
+    <li><span class="say">နမူနာ</span> ခလုတ် (ညာဘက် ကော်လံရဲ့ အောက်ဆုံး၊ ဖုန်းမှာ ဖောင်ရဲ့ အောက်ဆုံး): ဒီဇိုင်းဌာနက လုပ်တဲ့ နမူနာ ဆိုရင် <span class="b">ပိတ်</span> ကို နှိပ်ပြီး <span class="b">ဖွင့်</span> (အစိမ်း) ဖြစ်အောင် ပြောင်းပါ။ ခလုတ် အောက်မှာ <span class="say">ဒီဇိုင်းဌာနက လုပ်တဲ့ နမူနာ ဆိုရင် ဖွင့်ပါ၊ အစီရင်ခံစာမှာ သီးသန့် ပြပါမည်</span> လို့ အမြဲ ရေးထားပါသည်။ နမူနာ ပစ္စည်းရဲ့ အမည် ဘေးမှာ <span class="say">နမူနာ</span> တံဆိပ် အသေး ပါပါသည် (ပင်မ နဲ့ ဖောင်တွေရဲ့ မကြာသေးမီ ပစ္စည်းများ၊ ရောင်းမယ် ဖောင်ရဲ့ စာကြောင်း၊ ပစ္စည်း ကတ်)။ <span class="say">နမူနာ</span> တံဆိပ် ဆိုတာ နမူနာ ပစ္စည်း၊ <span class="b">အခြား</span> ခလုတ် ဆိုတာ အမျိုးအစား: မတူပါ (အပိုင်း ခ ၂)။<span class="en">The နမူနာ switch (the last row of the right-hand column; on a phone, the last row of the form): for a sample made by the design department, tap ပိတ် so that it reads ဖွင့် (green). The line under it always says what it is for. A sample carries a small နမူနာ badge after its name (the recent pieces of the home and of the forms, its line in the sale form, its item card). The badge နမူနာ is a sample; the chip အခြား is a category; they are not the same (Part B, 2).</span></li>
+    <li><span class="b">Save</span>။ <span class="say">မှတ်ပြီးပါပြီ · S1-0007</span> နဲ့ ပစ္စည်း ကတ် ပေါ်ပါမည်။ ကတ်ပေါ်က <span class="b">မှားသွားတယ်</span> ကို မိနစ် ၃၀ အတွင်း နှိပ်ရင် Tag က အလွတ် ပြန်ဖြစ်ပြီး ပြန်မှတ်နိုင်ပါသည်။ ရောင်းပြီးသွားရင် ပြန်မဖျက်နိုင်ပါ။<span class="en">Save. The piece's card follows. Its undo, within 30 minutes, makes the tag blank again to register anew; once sold it cannot be undone.</span></li>
+  </ol>
+  <p class="lead">ရှိပြီးသား ပစ္စည်းရဲ့ ဓာတ်ပုံ ပြောင်းချင်ရင် Telegram မှာ: Tag ကို scan လုပ်၊ START နှိပ်၊ ဓာတ်ပုံ အသစ် ပို့ပါ။ အက်ပ်မှာ မရပါ။<span class="en">To replace the photo of a registered piece, use Telegram: scan, START, send a new photo. The app does not do it.</span></p>
+
+  <h3>၁၁။ ကုန်ရောက်ရင်<span class="en">11. Restock</span></h3>
+  <ol class="steps">
+    <li><span class="b">📦 ကုန်ရောက်</span> (ပင်မ (သို့) Menu) ကို နှိပ်ပါ။ <span class="say">ကုန်ရောက်</span> ဖောင် ပွင့်ပါမည်။ ရောက်လာတဲ့ ပစ္စည်း Tag တွေကို Scan လုပ်ပါ။<span class="en">Tap 📦 ကုန်ရောက် (home or Menu). Scan the tags of the pieces that arrived.</span></li>
+    <li>စာကြောင်းတိုင်း: <span class="b">၁</span> <span class="b">၅</span> <span class="b">၁၀</span> <span class="b">၂၀</span> (သို့) <span class="b">−</span> <span class="b">+</span> နဲ့ ရောက်တဲ့ ထည် ရွေးပါ။ <span class="say">လက်ကျန် ၁ → ၆</span> ပြပါမည်။<span class="en">Each line: pick the number of pieces with the buttons or − and +. It shows the stock before and after.</span></li>
+    <li><span class="b">Save</span>။ မှားရင် မိနစ် ၃၀ အတွင်း <span class="b">မှားသွားတယ်</span> (အကုန် ပြန်ဖျက်)။<span class="en">Save. Wrong? Undo within 30 minutes (all lines at once).</span></li>
+    <li>တစ်ထည်တည်း ပစ္စည်းကို ကုန်ရောက် မမှတ်နိုင်ပါ: <span class="say">… က တစ်ထည်တည်း ပစ္စည်းပါ · ကုန်ရောက် မမှတ်နိုင်ပါ</span>။<span class="en">A one-of-a-kind piece cannot be restocked.</span></li>
+    <li>ဆိုင်ရှင်က sale_flow ကို quick ပြောင်းထားရင် ဖောင်တွေ မရှိပါ: ပစ္စည်း Tag ကို Scan လုပ်ပြီး ကတ်ပေါ်က <span class="b">ကုန်ရောက်</span> ကို နှိပ်ပါ။ (သို့) <span class="b">Menu</span> → <span class="b">📦 ကုန်ရောက်</span>: Telegram ရဲ့ ☰ 📦 လို Tag တစ်ခုချင်း မေးပါမည် (အပိုင်း ခ ၃)။ Tag ကို <span class="b">Scan</span> နဲ့ ဖတ်ပါ (Tag ကွဲနေရင် Scan ပြီးမှ <span class="b">နံပါတ် ရိုက်မယ်</span>)၊ <span class="b">+၁</span> <span class="b">+၅</span> <span class="b">+၁၀</span> <span class="b">+၂၀</span> (သို့) <span class="b">အခြား</span> (ဂဏန်း ခလုတ်ခုံ) နှိပ်ပါ၊ နောက် Tag ကို Scan လုပ်ပါ၊ ပြီးရင် <span class="b">ပြီးပြီ</span>။ ရောင်းဖို့ Scan လုပ်မိရင် <span class="b">ရောင်းမယ်</span>။ Telegram မှာ ပစ္စည်း ကတ်ရဲ့ <span class="b">📦 ကုန်ရောက်</span> (သို့) မီနူးရဲ့ <span class="b">📦 ကုန်ရောက်</span>။<span class="en">When the owner set sale_flow to quick there are no forms: scan the piece and tap ကုန်ရောက် on its card. Or Menu → 📦 ကုန်ရောက်, which asks for one tag at a time, as Telegram's ☰ 📦 does (Part B, 3): read the tag with Scan (a torn tag: Scan, then နံပါတ် ရိုက်မယ်), tap +၁ to +၂၀ or အခြား (the keypad), scan the next tag, and tap ပြီးပြီ at the end; ရောင်းမယ် when the scan was for a sale. In Telegram, 📦 ကုန်ရောက် on the item card or in the menu.</span></li>
+  </ol>
+
+  <h3>၁၂။ ကုန်ကျစရိတ် (ဖုန်းဘေလ်၊ ထမင်းဖိုး၊ ကားခ)<span class="en">12. Shop expenses</span></h3>
+  <ol class="steps">
+    <li><span class="b">💸 ကုန်ကျ</span> (ပင်မ (သို့) Menu) ကို နှိပ်ပါ။ <span class="say">ကုန်ကျ</span> ဖောင် ပွင့်ပါမည်။ ဆိုင်ရှင်က ဘယ်ဆိုင် အတွက်လဲ အရင် ရွေးပါသည်။<span class="en">Tap 💸 ကုန်ကျ (home or Menu). The owner first picks the shop.</span></li>
+    <li><span class="say">ဘာ ကုန်ကျစရိတ်လဲ?</span>: <span class="b">အထည်ဖိုး</span> <span class="b">ကားခ</span> <span class="b">ဖုန်းဘေလ်</span> <span class="b">ထမင်းဖိုး</span> …; မရှိရင် <span class="b">အမျိုးအစားအသစ်</span> (Save နှိပ်မှ စာရင်းထဲ ဝင်ပါသည်)။<span class="en">Pick the category (from the Lists tab); a missing one: အမျိုးအစားအသစ်, added at Save.</span></li>
+    <li>ပမာဏ: ခလုတ်ကို နှိပ်ပါ (သို့) ကွက်ကို နှိပ်ပြီး ရိုက်ပါ။ <span class="say">ဘယ်လိုပေးလဲ?</span>: <span class="b">ငွေသား</span> (သို့) ငွေထွက်တဲ့ အကောင့်။<span class="en">Amount: a button, or tap the box and type. How paid: cash or the account it was paid from.</span></li>
+    <li><span class="say">မှတ်ချက်</span> (မလိုရင် ကွက်လပ်)။ <span class="b">Save</span>။<span class="en">A note if needed, then Save.</span></li>
+  </ol>
+
+  <h3>၁၃။ ပြန်အမ်း · တခြားဆိုင်ကို ပို့ · Tag ပျောက်ရင်<span class="en">13. Returns, transfers, lost tags</span></h3>
+  <ol class="steps">
+    <li>ပစ္စည်း ကတ် ဖွင့်ပါ: <span class="b">Menu</span> → <span class="b">🕘 မကြာသေးမီ</span> (သို့) <span class="b">🔍 ရှာ</span> ပြီး ပစ္စည်းကို နှိပ်ပါ၊ (သို့) ရောင်းမယ် ဖောင်ထဲက စာကြောင်းရဲ့ အမည်ကို နှိပ်ပါ (ဖောင်ရဲ့ စာရင်း မပျောက်ပါ)။<span class="en">Open the item card: Menu → recent or find, then the piece; or tap a line's name in the sale form (the form keeps its list).</span></li>
+    <li>ပြန်အမ်း: ကတ်ပေါ်က <span class="b">ပြန်အမ်း</span>။ ငွေ ပြန်အမ်းပြီး လက်ကျန် ၁ ထည် တိုးပါမည်။<span class="en">Return: ပြန်အမ်း on the card. The refund is recorded and the stock goes up by one.</span></li>
+    <li>တခြားဆိုင်ကို ပို့: <span class="b">ဆိုင် ၂ … သို့</span>။ Tag နဲ့ လက်ကျန် အားလုံး တခြားဆိုင်ကို ပြောင်းသွားပါမည် (အင်တာနက် လိုပါသည်)။<span class="en">Transfer: the "to shop 2" button moves the tag and its stock to the other shop (needs internet).</span></li>
+    <li>Tag ပျောက်ရင်: ပင်မ စာမျက်နှာက <span class="say">ပစ္စည်း အမည် ရိုက်ပါ</span> မှာ အမည် ရိုက်ပြီး ပစ္စည်းကို နှိပ်ပါ (Scan လုပ်သလို ဖြစ်ပါသည်)။<span class="en">Lost tag: type the name in the home's search and tap the piece; it works like a scan.</span></li>
+  </ol>
+  <div class="plain">
+    <p><span class="k">ရှင်းရှင်း မှတ်ထားရန်</span> · အကြွေးနဲ့ ရောင်းထားပြီး ငွေ မကျေသေးတဲ့ အရောင်းက ပစ္စည်းကို ဝန်ထမ်းက ပြန်အမ်းလို့ မရပါ။ ကတ်မှာ <span class="say">ဒေါ်မြင့် · ကျန် 40,000 ကျပ် · အကြွေးနဲ့ ရောင်းထားတာပါ · ပြန်အမ်းရင် ဆိုင်ရှင်ကို မေးပါ</span> ပေါ်ပြီး ဘာမှ မမှတ်ပါ။ ဆိုင်ရှင်ကို ပြောပါ: ဆိုင်ရှင်က ကျန်ငွေကို အရင် လက်ခံပြီးမှ ပြန်အမ်းပါသည်၊ (သို့) ပစ္စည်း အများ ပါတဲ့ အရောင်း ဆိုရင် ဘောက်ချာကနေ အရောင်း တစ်ခုလုံးကို ပယ်ဖျက်ပြီး ဝယ်သူ ယူထားမယ့် ပစ္စည်းတွေကို ပြန်ရောင်းပါသည်။<span class="en">Plainly: a seller cannot return a piece from a sale that still owes money. The card says "… · ကျန် … ကျပ် · အကြွေးနဲ့ ရောင်းထားတာပါ · ပြန်အမ်းရင် ဆိုင်ရှင်ကို မေးပါ" and nothing is recorded. Tell the owner: she takes the payment first and then the return, or, for a sale of several pieces, voids the whole sale from its receipt and sells again the pieces the buyer keeps.</span></p>
+  </div>
+
+  <h3>၁၄။ ကိုယ်တိုင်း အတိုင်းအတာ<span class="en">14. Taking measurements</span></h3>
+  <ol class="steps">
+    <li><span class="b">Menu</span> → <span class="b">📏 အတိုင်းအတာ</span> → ဝယ်သူ ရွေးပါ၊ (သို့) ဝယ်သူ စာမျက်နှာက <span class="b">အတိုင်းအတာ</span>။ ဖောင် ပွင့်ပါမည်။<span class="en">Menu → measurements → the customer, or အတိုင်းအတာ on the buyer's page. The form opens.</span></li>
+    <li>ဘောက်ချာ ရှိရင် စက္ကူ ဘောက်ချာ နံပါတ်ကို ဂဏန်းနဲ့ ရိုက်ပါ (ဥပမာ <span class="say">2532</span> ရိုက်ရင် <span class="say">V1-2532</span> ပေါ်ပါမည်)။ မရှိရင် ကွက်လပ် ထားပါ။<span class="en">Voucher box: type the paper voucher's number (in shop 1, 2532 shows as V1-2532), or leave it empty.</span></li>
+    <li>အကွက်တွေ ဖြည့်ပါ (36/30/20 လို အတိုင်းမှာ အကွက် ဘေးချင်းကပ် ပါပါသည်)။ အရင် တိုင်းထားတာ ရှိရင် ဖြည့်ပြီးသား (<span class="say">အဟောင်း …</span>) ဖြစ်ပါမည်၊ <span class="b">အသစ် တိုင်း</span> နဲ့ ရှင်းပါ။<span class="en">Fill in the boxes (36/30/20 has boxes side by side). An earlier session fills them first; အသစ် တိုင်း empties them.</span></li>
+    <li><span class="say">မှတ်ချက်</span> ကွက် တစ်ကွက်တည်း ရှိပါသည် (အထွေထွေ အောက်၊ စာလုံး ၃၀၀ အထိ)။<span class="en">There is one notes box (under အထွေထွေ, up to 300 characters).</span></li>
+    <li><span class="say">ကိုယ်ပုံ</span>: <span class="b">အမျိုးသမီး</span> (သို့) <span class="b">အမျိုးသား</span> ရွေးပါ။ <span class="b">ဆွဲ</span> ကို နှိပ်မှ လက်ချောင်းနဲ့ ပုံပေါ်မှာ ရေးလို့ ရပါသည် (မနှိပ်ခင် ပုံပေါ် လက်တင်ရင် စာမျက်နှာ ရွှေ့ရုံသာ)။ ရေးနေတုန်း: <span class="b">ဆွဲ</span> / <span class="b">ဖျက်</span> (ထိတဲ့ မျဉ်း တစ်ကြောင်း ဖျက်)၊ <span class="b">မျဉ်း ပြန်ဖျက်</span> (နောက်ဆုံး မျဉ်း)၊ ပြီးရင် <span class="b">OK</span>။ <span class="b">ရှင်း</span> = အကုန် ဖျက် (မေးပါမည်)။<span class="en">The figure: pick the woman or the man. Tap ဆွဲ before drawing with a finger (before that a finger only scrolls the page). While drawing: draw or erase (removes the line you touch), undo the last line, then OK. ရှင်း clears everything after asking.</span></li>
+    <li><span class="b">Save</span>။ ဖုန်းထဲ သိမ်းပြီး <span class="say">… · အတိုင်းအတာ … ခု သိမ်းပြီး</span> ပြပါမည်။ အနည်းဆုံး တစ်ကွက် ဖြည့်ရပါမည် (မှတ်ချက်လည်း ရပါသည်)။ ပုံ ဆွဲရုံ နဲ့ မသိမ်းပါ: <span class="say">အတိုင်းအတာ တစ်ခုခု ထည့်ပါ</span>။<span class="en">Save. It is saved on the phone and says so. At least one box is needed (the note counts); a drawing alone is not saved.</span></li>
+    <li>ဆွဲထားတဲ့ ပုံကို နောက်တစ်ခါ ဖောင် ဖွင့်ရင် ပြန်မြင်ရပြီး အတိုင်းအတာ PDF မှာ ပါပါသည်။ အင်တာနက် မရှိလည်း ရပါသည်။<span class="en">The drawing is there when the form opens again and prints on the measurement PDF. Works offline.</span></li>
+    <li>မသိမ်းခင် အက်ပ် ပိတ်သွားရင် ရိုက်ထားတာ (ပုံ အပါအဝင်) တစ်ရက် ကျန်ပါသည်။ <span class="b">←</span> နှိပ်ရင် <span class="say">ရိုက်ထားတာတွေ မသိမ်းဘဲ ပိတ်မလား?</span> မေးပါမည်။<span class="en">If the app closes before saving, what was typed and drawn is kept for one day. ← asks before closing.</span></li>
+    <li>Telegram မှာ: <span class="b">👤 ဝယ်သူများ</span> → နာမည် → <span class="b">📏 အတိုင်းအတာ</span> → <span class="b">💬 တစ်ခုချင်း မေး</span> (AI ဖွင့်ထားရင် <span class="b">📷 စာရွက် ဓာတ်ပုံ</span> လည်း)။ ပုံ ဆွဲထားရင် <span class="say">✏️ ကိုယ်ပုံ ပါပါသည် · 📄 PDF မှာ ကြည့်ပါ</span> နဲ့ <span class="b">📏 PDF</span> ပါပါမည်။<span class="en">In Telegram: customers, the name, measurements, then one question at a time (or, with AI on, a photo of the paper sheet). A session with a drawing says so, with a PDF button.</span></li>
+  </ol>
+
+  <h3>၁၅။ ဘဏ်/Pay အကောင့် · အသစ်ထည့် · နံပါတ်<span class="en">15. Accounts: adding one, and its number</span></h3>
+  <ol class="steps">
+    <li>ရောင်းမယ် ဖောင်ရဲ့ <span class="say">ဘယ်လိုပေးလဲ?</span> မှာ အကောင့် မရှိရင် <span class="b">ဘဏ်အသစ်</span>: နာမည် ရိုက်ပြီး (ဥပမာ <span class="say">KBZ ဦးမောင်</span>) <span class="b">Pay အကောင့်</span> (KBZPay၊ WavePay၊ QR လို) (သို့) <span class="b">ဘဏ်အကောင့်</span> ရွေးပါ။ Save နှိပ်မှ စာရင်းထဲ ဝင်ပါသည်။ ကုန်ကျ ဖောင်ရဲ့ <span class="b">အမျိုးအစားအသစ်</span> လည်း အတူတူပါ။<span class="en">A missing account in the sale form: ဘဏ်အသစ်, type the name, then pick Pay account or bank account. It joins the list at Save. The expense form's new category works the same way.</span></li>
+    <li>ရိုက်တဲ့ စာက နာမည် ဖြစ်ပါသည်။ ငွေပမာဏ သက်သက် (ဥပမာ <span class="say">5000 ကျပ်</span>) ကို လက်မခံပါ။ ရှိပြီးသား နာမည် ဆိုရင် အသစ် မထည့်ဘဲ အဟောင်းကို သုံးပါမည်။<span class="en">What you type is the name; an amount alone is refused. An existing name is reused, never added twice.</span></li>
+    <li><span class="b">Menu</span> → <span class="b">🏛 အကောင့်</span>: ဆိုင်ရဲ့ အကောင့်များ နံပါတ်နဲ့တကွ (<span class="say">—</span> = နံပါတ် မရှိသေး)။ အကောင့် နာမည် ခလုတ်ကို နှိပ်ပြီး အကောင့်နံပါတ် (သို့) ဖုန်းနံပါတ် နဲ့ ပိုင်ရှင် နာမည် ရိုက်ပါ (Telegram မှာ <span class="b">🔢 KBZPay</span> လို ခလုတ်)။ ရောင်းပြီး ကတ်ပေါ်က <span class="b">နံပါတ် ထည့်</span> လည်း ရပါသည်။<span class="en">Menu → accounts: your shop's accounts with their numbers (— = none yet). Tap an account's button and type its number and the holder's name (in Telegram the button reads 🔢 and the name). The sold card's နံပါတ် ထည့် does the same.</span></li>
+    <li>နံပါတ် ထည့်ထားရင် ငွေ မကျေသေးတဲ့ ဘောက်ချာမှာ <span class="say">ငွေလွှဲရန်</span> (ဆိုင်ရဲ့ အကောင့် နံပါတ်) ပါလာပါမည်။<span class="en">Once a number is set, a receipt that still carries a balance shows where to transfer.</span></li>
+    <li>နာမည် ပြောင်းတာ၊ ဖြုတ်တာ အက်ပ်နဲ့ bot မှာ မရပါ: ကွန်ပျူတာက Lists tab မှာ လုပ်ပါ (အပိုင်း ဂ ၆)။<span class="en">Renaming or removing an option is done in the Lists tab on the laptop (Part C, 6), not in the app or the bot.</span></li>
+  </ol>
+
+  <h3>၁၆။ AI ဖွင့်ထားရင် · စာအုပ် · အသံ<span class="en">16. With AI on: the notebook and voice</span></h3>
+  <p class="lead">ဆိုင်ရှင်က AI ကို ဖွင့်ထားမှသာ ဒီခလုတ်တွေ ပေါ်ပါသည် (အပိုင်း ဂ ၈)။ ပိတ်ထားရင် မပေါ်ပါ: ဖောင်တွေကို လက်နဲ့ ဖြည့်ပါ၊ အကုန် အလုပ်လုပ်ပါသည်။<span class="en">These buttons show only while the owner has AI on (Part C, 8). With AI off they are hidden: fill the forms by hand; everything works.</span></p>
+  <ol class="steps">
+    <li><span class="b">📒 စာအုပ်</span> (Menu): စာအုပ်ထဲ လက်နဲ့ ရေးထားတဲ့ စာမျက်နှာ တစ်ရွက်ကို <span class="b">Photo</span> နဲ့ ဓာတ်ပုံ ရိုက်ပါ (Telegram မှာ ဓာတ်ပုံ ပို့ပါ)။ AI က ဖတ်ပြီး စာကြောင်း တစ်ကြောင်းချင်းကို မှတ်ရန် အဆိုပြုပါမည်: မှန်ရင် <span class="b">မှန်တယ်</span>၊ မှားရင် <span class="b">မဟုတ်ဘူး</span> (Telegram မှာ ✅ မှန်တယ် / ❌ မဟုတ်ဘူး)။ မှန်တယ် နှိပ်မှ မှတ်ပါသည်။<span class="en">The notebook (Menu): take a photo of a handwritten notebook page with Photo (in Telegram, send the photo). The AI reads it and proposes each line as an entry; tap မှန်တယ် to record it or မဟုတ်ဘူး to drop it.</span></li>
+    <li><span class="b">ပြော</span> (အက်ပ် အောက်ခြေ) / Telegram ရဲ့ 🎤: ပစ္စည်း Scan လုပ်ပြီး ဖိထားပြီး ပြောပါ၊ လွှတ်ရင် ပို့ပါမည်။ ကြားတာကို ပြန်ပြပါမည်၊ <span class="b">✅ မှန်တယ်</span> နှိပ်မှ မှတ်ပါသည်။<span class="en">Voice (ပြော in the app's bottom bar, 🎤 in Telegram): scan, hold, speak, release. The bot shows what it heard; nothing is recorded until Yes.</span></li>
+  </ol>
+  <table>
+    <thead><tr><th>ပြောစရာ ဥပမာ · What to say</th><th>အဓိပ္ပာယ် · Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>ဒါ ၂ ထည် ရောင်းရတယ်</td><td>ဒီပစ္စည်း ၂ ထည် ရောင်းပြီး<span class="en">Sold 2 of this item</span></td></tr>
+      <tr><td>တစ်ထည် နှစ်သောင်းနဲ့ ရောင်းလိုက်တယ်</td><td>တစ်ထည်ကို ၂၀,၀၀၀ နဲ့ ရောင်း<span class="en">Sold one at 20,000</span></td></tr>
+      <tr><td>ဒါ ၁၀ ထည် ရောက်တယ်</td><td>ကုန်ရောက် ၁၀ ထည်<span class="en">10 pieces arrived (restock)</span></td></tr>
+      <tr><td>အထည်ဖိုး သုံးသောင်း ပေးလိုက်တယ်</td><td>ကုန်ကျစရိတ် ၃၀,၀၀၀<span class="en">Expense 30,000 for fabric</span></td></tr>
+      <tr><td>ဒေါ်မြင့် ငါးသိန်း ပေးသွားတယ်</td><td>အကြွေး ဆပ် ၅၀၀,၀၀၀<span class="en">Daw Myint paid 500,000 she owed</span></td></tr>
+      <tr><td>ဒေါ်ခင် စရံ သုံးသိန်း ပေးသွားတယ်</td><td>စရံ ၃၀၀,၀၀၀<span class="en">Daw Khin paid a 300,000 deposit</span></td></tr>
+      <tr><td>ဒီနေ့ ဘယ်လောက်ရောင်းရလဲ</td><td>ဒီနေ့ အရောင်း မေး<span class="en">How much did we sell today?</span></td></tr>
+      <tr><td>ဒါ ဘယ်နှစ်ထည် ကျန်လဲ</td><td>လက်ကျန် မေး<span class="en">How many are left?</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="rules">
+    <p><span class="k">မှတ်ထားရန်</span> · အက်ပ်နဲ့ bot က ဘာမှ မဖျက်ပါ။ မှားရင် <span class="b">မှားသွားတယ်</span> နဲ့ ပြင်ပါ၊ ဆန့်ကျင်ဘက် စာရင်း ထပ်ရေးပါသည်။<span class="en">The app and the bot never delete anything. Mistakes are fixed with the undo, which writes a correction.</span></p>
+    <p><span class="k">မှတ်ထားရန်</span> · ရောင်းတိုင်း ချက်ချင်း မှတ်ပါ: အများဆုံး ရောင်းပုံက Scan နဲ့ Save ပဲ။ စာအုပ်ထဲ ချရေးပြီး နောက်မှ ထည့်တာထက် ပိုမြန်ပါသည်။<span class="en">Record each sale when it happens: the common sale is a scan and Save. Faster than writing it down and entering it later.</span></p>
+    <p><span class="k">မှတ်ထားရန်</span> · မသေချာရင် Save မနှိပ်ဘဲ <span class="b">←</span> နဲ့ ထွက်ပြီး ဆိုင်ရှင်ကို မေးပါ။ ဘာမှ မမှတ်ပါ။<span class="en">If unsure, leave with ← without Save and ask the owner. Nothing is recorded.</span></p>
+  </div>
+</section>
+
+<!-- ===================== PART B: TELEGRAM ===================== -->
+<section class="part">
+  <h2>အပိုင်း ခ · Telegram · အရန် နှင့် ဆိုင်ရှင်ရဲ့ လမ်းကြောင်း<span class="en">Part B · Telegram · the backup, and the owner's channel</span></h2>
+  <p class="lead">အက်ပ် မသုံးနိုင်ရင် (ဖုန်း ပျက်၊ အက်ပ် ပြဿနာ) Telegram bot နဲ့ ရောင်းပါ။ ပစ္စည်း တစ်ခု (သို့) အများကို ကတ် တစ်ခုတည်းနဲ့ ရောင်းပါသည်။ ကတ်ပေါ်က <span class="b">✅ သိမ်း</span> နှိပ်မှ မှတ်တမ်း ဝင်ပါသည်။<span class="en">When the app cannot be used (a broken phone, app trouble), sell in Telegram. One card holds one piece or several; nothing is recorded until ✅ သိမ်း on it.</span></p>
+
+  <h3>မစတင်ခင်<span class="en">Before you start</span></h3>
+  <ol class="steps">
+    <li>ပထမဆုံး အကြိမ် START နှိပ်ရင် bot က မဖြေပါ။ သင့်နံပါတ်ကို ဆိုင်ရှင် (သို့) Noel က မှတ်ပုံတင်ပေးပြီးမှ ဖြေပါမည်။<span class="en">The first time you press START the bot stays silent until the owner or Noel registers your number.</span></li>
+    <li>Bot ကို <span class="say">/start</span> လို့ ရိုက်ပို့ရင် ခလုတ်များ (မီနူး) ပေါ်လာပါမည်။<span class="en">Type /start at any time to get the menu of buttons.</span></li>
+    <li>ကွန်ပျူတာမှာလည်း ရပါသည်: Telegram ဖွင့်ပြီး Tag နံပါတ် (ဥပမာ <span class="say">S1-0042</span>) ရိုက်ပို့ရင် ကတ် ပွင့်ပါသည်။<span class="en">On a computer, type the tag number in Telegram; the card opens.</span></li>
+  </ol>
+
+  <h3>၁။ Telegram မှာ ရောင်းတဲ့အခါ · ရောင်းကတ်<span class="en">1. Selling in Telegram: the review card</span></h3>
+  <ol class="steps">
+    <li>Tag ကို ဖုန်းကင်မရာနဲ့ scan လုပ်ပြီး <span class="b">START</span> နှိပ်ပါ။ ပစ္စည်း ဓာတ်ပုံ၊ စျေး၊ လက်ကျန် ပေါ်လာပါမည်။<span class="en">Scan the tag and press START. The item card shows the photo, price and stock.</span></li>
+    <li><span class="b">✅ ရောင်း ၁</span> ကို နှိပ်ပါ (တစ်ထည်တည်း ပစ္စည်း: <span class="b">✅ ရောင်းပြီး</span>)။ ထည် အများ ဆိုရင် <span class="b">🔢 အရေအတွက်</span>၊ စျေးလျှော့ ဆိုရင် <span class="b">💬 စျေးလျှော့</span>။ ကတ်က <span class="say">🛒 ရောင်းမည့် စာရင်း · … ခု</span> ဖြစ်သွားပါမည်: ပစ္စည်း၊ စုစုပေါင်း၊ 🚫 နာမည် မရှိ၊ 💰 ငွေသား၊ ပေးပြီး … · ကျန် 0။<span class="en">Tap ✅ ရောင်း ၁ (a one-of-a-kind piece: ✅ ရောင်းပြီး); for more pieces 🔢, for a bargained price 💬. The card becomes the sale list, already filled in: no name, cash, paid in full.</span></li>
+    <li><span class="b">✅ သိမ်း</span> ကို နှိပ်ပါ။ ဒါနဲ့ မှတ်တမ်း ဝင်ပါပြီ (ငွေသား၊ နာမည် မလို၊ အကုန် ပေး: <span class="b">✅ ရောင်း ၁</span> → <span class="b">✅ သိမ်း</span>)။<span class="en">Tap ✅ သိမ်း: the sale is recorded (cash, no name, paid in full: two taps).</span></li>
+    <li>ပစ္စည်း နောက်ထပ်: <span class="b">➕ ပစ္စည်း ထပ်ထည့်</span> → နောက် Tag ကို scan လုပ်ပြီး START (သို့) ပေါ်လာတဲ့ ပစ္စည်းကို နှိပ် (သို့) Tag နံပါတ် / အမည် ရိုက်ပါ။ ကတ် အသစ်က အောက်ဆုံးမှာ ပေါ်ပါမည်။<span class="en">More pieces: ➕ ပစ္စည်း ထပ်ထည့်, then scan the next tag and press START, tap a listed piece, or type its number or name. The card comes back as the newest message.</span></li>
+    <li>စာကြောင်း ခလုတ် (ဥပမာ <span class="b">1. S1-0002 × ၁</span>): အရေအတွက် (၁–၉၊ <span class="b">✏️ ရိုက်မယ်</span>)၊ <span class="b">💬 စျေးလျှော့</span>၊ <span class="b">🗑 ဖယ်</span>။<span class="en">A line's button: its count, a bargained price, or remove it.</span></li>
+    <li><span class="b">👤 ဝယ်သူ</span>၊ <span class="b">💰 ဘယ်လိုပေးလဲ?</span>၊ <span class="b">💳 မကျေသေး</span> (→ ယခု ပေးငွေ → ဝယ်သူ → <span class="say">📅 ကျန် … ကျပ် · ဘယ်တော့ ပေးလဲ?</span>)။ အောက် စခရင်တွေမှာ <span class="b">⏮ နောက်ပြန်</span> တစ်ခုသာ ပါပါသည် (ကတ်ကို ပြန်သွား)။<span class="en">Buyer, how paid, not paid in full (then paid now, buyer and the day). Each sub-screen has only ⏮ နောက်ပြန်, back to the card.</span></li>
+    <li><span class="b">✖️ မလုပ်တော့</span> (ကတ်ရဲ့ အောက်ဆုံး) = စာရင်း တစ်ခုလုံး ရပ်၊ ဘာမှ မမှတ်ပါ။<span class="en">✖️ မလုပ်တော့ (the card's last row) stops the whole list; nothing is recorded.</span></li>
+    <li>ရောင်းပြီး ကတ်: <span class="say">✅ ရောင်းပြီး 🛍 ၂ ခု · ၂ ထည် · 40,000 ကျပ်</span>၊ ခလုတ် <span class="b">↩️ မှားသွားတယ်</span> <span class="b">🧾 ဘောက်ချာ</span> (ငွေကျန်ရင် <span class="b">💰 ငွေလက်ခံ</span>)။ ဘောက်ချာ: စာသားနဲ့ <span class="b">📄 PDF</span>၊ ဝယ်သူဆီ forward လုပ်ပါ။<span class="en">The sold card, with undo, receipt and (while owed) receive payment. The receipt is text with a PDF button: forward it to the buyer.</span></li>
+  </ol>
+  <p class="lead">ကတ် ဥပမာ (ပစ္စည်း ၂ ခု):<span class="en">The card as the seller sees it (two pieces):</span></p>
+  <div class="summary">🛒 ရောင်းမည့် စာရင်း · ၂ ခု
+1. 🧣 S1-0002 · လုံချည် ကချင် အပြာ × ၁ · 18,000
+2. 👗 S1-0005 · ထမီ ဇင်းမယ် အဝါ × ၁ · 22,000
+စုစုပေါင်း 40,000 ကျပ်
+🚫 နာမည် မရှိ
+💰 ငွေသား
+ပေးပြီး 40,000 · ကျန် 0
+<span class="b">1. S1-0002 × ၁</span> <span class="b">2. S1-0005 × ၁</span>
+<span class="b">➕ ပစ္စည်း ထပ်ထည့်</span>
+<span class="b">👤 ဝယ်သူ</span> <span class="b">💰 ဘယ်လိုပေးလဲ?</span>
+<span class="b">💳 မကျေသေး</span>
+<span class="b">✅ သိမ်း</span>
+<span class="b">✖️ မလုပ်တော့</span></div>
+  <div class="rules">
+    <p><span class="k">မှတ်ထားရန်</span> · Telegram မှာ Scan လုပ်ရုံနဲ့ စာရင်းထဲ ဘယ်တော့မှ မဝင်ပါ၊ ➕ နှိပ်မှ ဝင်ပါသည်။ ➕ မနှိပ်ဘဲ Tag scan လုပ်ရင် ကတ်က ခဏ ရပ်ပါမည်: <span class="say">⏸ ဒီစာရင်း (၁ ခု) ခဏ ရပ်ထားပါသည် · ဆက်ရောင်းရင် ↪️ ဒါမှမဟုတ် ပစ္စည်းကတ်ရဲ့ ➕ ကို နှိပ်ပါ</span>။ scan လုပ်ခဲ့တဲ့ ပစ္စည်း ကတ်ရဲ့ အပေါ်ဆုံးက <span class="b">➕ စာရင်းထဲ ထည့်</span> ကို နှိပ်ရင် ထည့်ပြီးပါပြီ၊ (သို့) ရပ်ထားတဲ့ ကတ်ရဲ့ <span class="b">↪️ ဆက်လုပ်မယ်</span>။ ရှိပြီးသား ပစ္စည်းကို ➕ နဲ့ ထပ်ထည့်ရင် အရေအတွက် ၁ တိုးပါသည် (တစ်ထည်တည်း ပစ္စည်း ဆိုရင် <span class="say">ℹ️ … ထည့်ပြီးသားပါ</span>)။ စာရင်းထဲ ရှိပြီးသား ပစ္စည်းကို ➕ မနှိပ်ဘဲ ထပ် scan လုပ်ရင်လည်း ကတ်က ခဏ ရပ်ပြီး အဲဒီ ပစ္စည်း ကတ်မှာ <span class="b">➕ စာရင်းထဲ ထည့်</span> ပေါ်ပါသည်: နှိပ်ရင် တစ်ထည် ထပ်တိုးပါသည် (× ၁ က × ၂ ဖြစ်)။ တစ်ထည်တည်း ပစ္စည်း ဆိုရင် ➕ မပေါ်ပါ: <span class="b">↪️ ဆက်လုပ်မယ်</span> ကို နှိပ်ပါ။ ဖုန်းအက်ပ်မှာတော့ ထပ် scan လုပ်ရုံနဲ့ ဘယ်တော့မှ မတိုးပါ၊ စာကြောင်းရဲ့ <span class="b">+</span> ကိုသာ နှိပ်ပါ (အပိုင်း က ၁)။<span class="en">In Telegram a scan alone never adds to the list; ➕ does. A tag scanned without ➕ pauses the card; the scanned piece's card then starts with ➕ စာရင်းထဲ ထည့် (one tap adds it), and the paused card has ↪️ ဆက်လုပ်မယ်. Adding with ➕ a piece already in the list raises its count by one (a one-of-a-kind piece is refused: it is already in). A piece already in the list, scanned again without ➕, pauses the card too, and its card offers ➕ စာရင်းထဲ ထည့်: that tap adds one more (× ၁ becomes × ၂). A one-of-a-kind piece gets no ➕: tap ↪️ ဆက်လုပ်မယ်. In the phone app a second scan never adds; only the line's + does (Part A, 1).</span></p>
+    <p><span class="k">မှတ်ထားရန်</span> · တခြား ပစ္စည်း ကတ်ပေါ်က ✅ (🔢၊ 💬) ကို နှိပ်ရင် အရောင်းအသစ် စပြီး စာရင်းဟောင်းကို ပိတ်ပါသည်: <span class="say">⏱ ဒီစာရင်း ပိတ်လိုက်ပါပြီ · ဘာမှ မမှတ်ရသေးပါ</span>။ မိနစ် ၃၀ ထားခဲ့ရင် <span class="say">⏱ သက်တမ်းကုန်သွားပါပြီ။ ထပ်ပြောပေးပါ။</span>: ပြန်ရောင်းပါ။<span class="en">✅, 🔢 or 💬 on another item card starts a new sale and closes the old list (nothing recorded). A list left for 30 minutes expires: sell again.</span></p>
+  </div>
+
+  <h3>၂။ Telegram မှာ ပစ္စည်းအသစ်<span class="en">2. A new piece in Telegram</span></h3>
+  <ol class="steps">
+    <li>Tag အလွတ်ကို scan လုပ်ပြီး START နှိပ်ပါ: <span class="say">🆕 Tag အသစ်ပါ (S1-0007)။ ပစ္စည်းရဲ့ ဓာတ်ပုံ ပို့ပေးပါ။</span> · ဓာတ်ပုံ ရိုက်ပို့ပါ။<span class="en">Scan a blank tag and press START; the bot asks for a photo. Send one.</span></li>
+    <li>ပစ္စည်းအသစ် ကတ် ပေါ်ပါမည် (AI ဖွင့်ထားရင် AI က အမည်နဲ့ အမျိုးအစား အကြံပြုပါသည်): စျေး ခလုတ်များ၊ <span class="b">✏️ အခြား</span>၊ <span class="b">⏳ စျေး မသတ်မှတ်ရသေး</span>၊ <span class="b">🪙 အရင်း</span>၊ <span class="b">✏️ နာမည်</span>၊ <span class="b">🏷 အမျိုးအစား</span>၊ <span class="b">🎨 နမူနာ: မဟုတ်</span>၊ <span class="b">➖</span> <span class="b">🔢 ၁ ထည်</span> <span class="b">➕</span>။<span class="en">The new-piece card follows (with AI on, the AI proposes a name and one of the shop's categories): price buttons, other, price pending, cost, name, category, sample, and the count.</span></li>
+    <li><span class="b">🏷 အမျိုးအစား</span>: ဆိုင်ရဲ့ အမျိုးအစားတွေ emoji နဲ့ (<span class="b">👗 ထမီ</span> <span class="b">🧣 လုံချည်</span> <span class="b">👚 အင်္ကျီ</span> <span class="b">🧥 ဝတ်စုံ</span>၊ ထည့်ထားတဲ့ အသစ်တွေ၊ <span class="b">🧵 အခြား</span> က အမြဲ နောက်ဆုံး)၊ ပြီးရင် <span class="b">➕ အမျိုးအစားအသစ်</span> နဲ့ <span class="b">⏮ နောက်ပြန်</span>။ တစ်ခု နှိပ်ရင် ကတ်ကို ပြန်ရောက်ပါမည်။<span class="en">🏷 အမျိုးအစား lists the shop's categories with their emoji (the added ones too; 🧵 အခြား always last), then ➕ အမျိုးအစားအသစ် and ⏮ နောက်ပြန်. A tap on one goes back to the card with it.</span></li>
+    <li>မရှိရင် <span class="b">➕ အမျိုးအစားအသစ်</span>: <span class="say">✏️ ပစ္စည်း အမျိုးအစား နာမည် ရိုက်ပါ (ဥပမာ ပိုးအင်္ကျီ)</span> · နာမည် ရိုက်ပို့ပါ (သို့) ပြောပါ။ ချက်ချင်း စာရင်းထဲ ဝင်ပြီး ကတ်က message အသစ် အဖြစ် <span class="say">➕ "ပိုးအင်္ကျီ" ထည့်ပြီး</span> နဲ့ ပြန်လာပါမည် (အမျိုးအစားအသစ် ဖြစ်လို့ စျေး ခလုတ်တွေက ပုံမှန် စျေးများ)။ ရှိပြီးသား နာမည်ကို ရိုက်ရင် <span class="say">ℹ️ "…" ရှိပြီးသား · အဲဒါကို သုံးပါမယ်</span>။ ဆိုင်ရှင် ပိတ်ထားတဲ့ နာမည် (<span class="say">ℹ️ "…" ကို ပိတ်ထားပါတယ် · တခြား နာမည် ရိုက်ပါ</span>)၊ နမူနာ ပါတဲ့ နာမည် (<span class="say">ℹ️ နမူနာ က အမျိုးအစား မဟုတ်ပါ · 🎨 နမူနာ ခလုတ်ကို သုံးပါ</span>)၊ ဂဏန်း သက်သက်၊ emoji သက်သက် ဆိုရင် ဘာမှ မထည့်ဘဲ ထပ်မေးပါသည်။ <span class="b">⏮ နောက်ပြန်</span> = ကတ်ကို ပြန်သွား။ မေးခွန်းက မိနစ် ၁၀ သာ ခံပါသည် (ပြီးမှ ရိုက်ရင် မထည့်ပါ)၊ ကတ်ကတော့ မိနစ် ၃၀ ကျန်ပါသည် (⏮ နဲ့ ပြန်ရ)။<span class="en">A missing one: ➕ အမျိုးအစားအသစ် asks for the name; type it or say it. It joins the list at once, and the card comes back as a new message with ➕ "…" ထည့်ပြီး on top (a new category has the default price buttons). A name that exists is used, not added twice. A name the owner closed, a name with the word နမူနာ, a number alone or only emoji adds nothing and is asked again. ⏮ goes back to the card. The question lasts ten minutes (a name typed after that adds nothing); the card itself lasts 30 minutes, so ⏮ still brings it back.</span></li>
+    <li>ဂဏန်း ၅၀၀ နဲ့ အထက် ရိုက်ပို့ရင် စျေး ဖြစ်ပါသည်၊ စာ ရိုက်ပို့ရင် အမည် ဖြစ်ပါသည်။<span class="en">A typed number of 500 or more is the price; typed text is the name.</span></li>
+    <li><span class="b">✅ သိမ်း</span> → <span class="say">🆕 မှတ်ပြီးပါပြီ · S1-0007</span> နဲ့ ပစ္စည်း ကတ် (<span class="b">↩️ မှားသွားတယ်</span> ပါ)။<span class="en">✅ သိမ်း records it; the piece's card follows with its undo.</span></li>
+  </ol>
+  <div class="plain">
+    <p><span class="k">🎨 နမူနာ နဲ့ 🧵 အခြား</span> · 🎨 နမူနာ နဲ့ 🧵 အခြား မတူပါ။ အခြား က ပစ္စည်း အမျိုးအစား တစ်ခုပါ (ထမီ၊ လုံချည်၊ အင်္ကျီ၊ ဝတ်စုံ မဟုတ်တဲ့ အထည်)။ နမူနာ က ဒီဇိုင်းဌာနက ဒီဇိုင်းအသစ် တစ်ခုစီအတွက် လုပ်တဲ့ တစ်ထည် နှစ်ထည်ပါ၊ အမျိုးအစား ဘာပဲ ဖြစ်ဖြစ် နမူနာ ဖြစ်နိုင်ပါတယ်။ နမူနာ ရောင်းရင် အစီရင်ခံစာမှာ "နမူနာ ရောင်း" ကော်လံမှာ သီးသန့် ပြပါတယ်။ Telegram မှာ နမူနာ ပစ္စည်း ကတ်က 🎨 နဲ့ စပြီး အမည် နောက်မှာ <span class="say">(နမူနာ)</span> ပါပါတယ် (ဥပမာ <span class="say">🎨 S1-0010 · ထမီ အသစ် (နမူနာ)</span>)၊ အက်ပ်မှာ <span class="say">နမူနာ</span> တံဆိပ် အသေး ပါပါတယ်။ Telegram ရဲ့ <span class="b">🎨 နမူနာ: ဟုတ်</span> / <span class="b">🎨 နမူနာ: မဟုတ်</span> နဲ့ အက်ပ်ရဲ့ ပစ္စည်းအသစ် ဖောင်မှာ <span class="say">နမူနာ</span> ခလုတ်ရဲ့ <span class="b">ဖွင့်</span> / <span class="b">ပိတ်</span> ဆိုတာ အတူတူပါ။<span class="en">Sample and Other are different: Other is a category (a garment that is not a htamein, longyi, blouse or set); a sample is one of the one or two pieces the design department makes of each new design, of any category, and the reports count samples sold in their own column, နမူနာ ရောင်း. In Telegram a sample's card starts with 🎨 and its name ends with (နမူနာ); in the app it carries a small နမူနာ badge. Telegram's ဟုတ်/မဟုတ် and the ဖွင့်/ပိတ် of the switch on the app's new-piece form are the same flag.</span></p>
+  </div>
+
+  <h3>၃။ Telegram မှာ တခြား လုပ်ငန်းများ<span class="en">3. Everything else in Telegram</span></h3>
+  <ol class="steps">
+    <li>ငွေလက်ခံ၊ စရံ: <span class="say">/start</span> → <span class="b">💰 ငွေလက်ခံ</span> / <span class="b">📥 စရံ</span> (အပိုင်း က ၇ အတိုင်း)။ အဖြေ အောက်မှာ အကောင့်တိုင်း <span class="b">🏦 …</span> ခလုတ် ပါပါသည်: ငွေဝင်တဲ့ အကောင့်ကို နှိပ်ပါ (ဒီနေ့အတွင်းသာ)။<span class="en">Payments and deposits as in Part A, 7. Under the reply, one 🏦 button per account: tap the one the money went into (same day only).</span></li>
+    <li>ကုန်ကျ: <span class="b">💸 ကုန်ကျ</span> → အမျိုးအစား → ပမာဏ → <span class="b">💵 ငွေသား</span> (သို့) 🏦 အကောင့်။ မှတ်ချက် လိုရင် <span class="b">📝 မှတ်ချက်</span>။<span class="en">Expense: category, amount, then cash or the account; 📝 adds a note.</span></li>
+    <li>ကုန်ရောက်: ပစ္စည်း ကတ်ပေါ်က <span class="b">📦 ကုန်ရောက်</span> → <span class="b">+၁</span> <span class="b">+၅</span> <span class="b">+၁၀</span> <span class="b">+၂၀</span> (သို့) အခြား၊ (သို့) Tag အများ ဆိုရင် မီနူးရဲ့ <span class="b">📦 ကုန်ရောက်</span> (နောက် အချက်)။ ပြန်အမ်း: <span class="b">↩️ ပြန်အမ်း</span> (အပိုင်း က ၁၃ ရဲ့ စည်းကမ်း အတူတူ)။ တခြားဆိုင်: <span class="b">🔁 … သို့</span>။<span class="en">Restock from the item card, or, for several tags, 📦 in the menu (next point); return (the same rule as Part A, 13); transfer.</span></li>
+    <li>Tag အများ ကုန်ရောက်: <span class="say">/start</span> → <span class="b">📦 ကုန်ရောက်</span> → <span class="say">📦 ကုန်ရောက် · ပစ္စည်း Tag ကို scan လုပ်ပါ · ဒါမှမဟုတ် နံပါတ် ရိုက်ပါ (ဥပမာ S1-0042 ဒါမှမဟုတ် 42)</span>။ Tag ကို scan လုပ်ပြီး START နှိပ်ပါ (သို့) Tag နံပါတ် ရိုက်ပို့ပါ (<span class="say">S1-0042</span>၊ ကိုယ့်ဆိုင်ရဲ့ Tag ဆိုရင် <span class="say">42</span> ပဲ)။ အဲဒီ ပစ္စည်းရဲ့ <span class="say">S1-0042 · … · လက်ကျန် …</span> နဲ့ <span class="say">📦 ဘယ်နှစ်ထည် ရောက်လဲ?</span> ပေါ်ပါမည်: <span class="b">+၁</span> <span class="b">+၅</span> <span class="b">+၁၀</span> <span class="b">+၂၀</span> ကို နှိပ်ပါ၊ (သို့) ဂဏန်း သက်သက် ရိုက်ပို့ပါ (<span class="say">5</span>၊ <span class="say">၅</span>၊ <span class="say">၅ ထည်</span>)၊ (သို့) <span class="b">✏️ အခြား</span> ပြီး ဂဏန်း ရိုက်ပါ (၁ မှ ၉၉၉)။ မှတ်ပြီးတိုင်း <span class="say">S1-0042 · 📦 ကုန်ရောက် ၅ ထည် · လက်ကျန် …</span> (<span class="b">↩️ မှားသွားတယ်</span> ပါ) ပြီး <span class="say">📦 နောက် Tag ကို scan လုပ်ပါ · ဒါမှမဟုတ် နံပါတ် ရိုက်ပါ · ပြီးရင် ✅ ပြီးပြီ ကို နှိပ်ပါ</span> ပေါ်ပါမည်။ နောက် Tag ကို ဆက်လုပ်ပါ၊ ပြီးရင် <span class="b">✅ ပြီးပြီ</span> (<span class="say">📦 ကုန်ရောက် မှတ်တာ ပြီးပါပြီ</span>)။<span class="en">Several tags: /start, then 📦 ကုန်ရောက်; the bot asks for a tag. Scan it and press START, or type its number (S1-0042, or just 42 for a tag of your own shop). That piece's line and "how many arrived" follow: tap +၁ to +၂၀, or type a number on its own (5, ၅, ၅ ထည်), or ✏️ အခြား and type one from 1 to 999. Each count is recorded with its own ↩️, and the bot asks for the next tag. Go on with the next tag; at the end tap ✅ ပြီးပြီ.</span></li>
+    <li>ဝယ်သူ: <span class="b">👤 ဝယ်သူများ</span> → နာမည် → ဝယ်ပြီး၊ ပေးပြီး၊ ကျန်၊ စရံ၊ <span class="b">📄 စာရင်း PDF</span>၊ <span class="b">📏 အတိုင်းအတာ</span>။ ဝယ်သူအသစ်ကို ရောင်းတဲ့အခါ (သို့) အကြွေး၊ စရံ၊ အော်ဒါ ထဲမှာသာ ထည့်ပါသည်။<span class="en">Customers: the card with bought, paid, owed, deposit, a statement PDF and measurements. In Telegram a new buyer is added only inside a sale, a credit, a deposit or an order.</span></li>
+    <li>အကောင့် အသစ်: ➕ (ဥပမာ <span class="b">➕ ဘဏ်အသစ်</span>) → နာမည် → (ရောင်းနေတုန်းဆိုရင်) <span class="b">📲 Pay အကောင့်</span> / <span class="b">🏛 ဘဏ်အကောင့်</span>။ Telegram မှာ နာမည် (နဲ့ အမျိုး) ရွေးပြီးကတည်းက စာရင်းထဲ ဝင်ပါသည်။ နံပါတ်: <span class="b">🏛 အကောင့်</span> → <span class="b">🔢 …</span>။<span class="en">A new account with ➕: in Telegram it joins the list as soon as the name (and, in a sale, its kind) is in. Numbers: 🏛 အကောင့်, then 🔢.</span></li>
+    <li>ငွေလက်ခံ၊ စရံ၊ ကုန်ကျ ရဲ့ <span class="b">✖️ မလုပ်တော့</span> က လုပ်နေတဲ့ စာရင်းကို ရပ်ပါသည် (ကုန်ကျ ဆိုရင် ဘာမှ မမှတ်ပါ)။ မှတ်ပြီးသား ငွေလက်ခံ၊ စရံ ကတော့ ကျန်ပါသည်။<span class="en">Cancel in those flows stops the entry you were in (an expense is then not recorded); a payment or deposit already recorded stays.</span></li>
+  </ol>
+  <div class="rules">
+    <p><span class="k">☰ 📦 ကုန်ရောက်</span> · ဂဏန်း ခလုတ်တွေ ပေါ်နေတုန်း <span class="b">✖️ မလုပ်တော့</span> = ဒီ Tag ကို ကျော် (Tag မှားရင်)၊ ဘာမှ မမှတ်ဘဲ နောက် Tag ကို မေးပါသည်။ <span class="b">🛒 ရောင်းမယ်</span> = ရောင်းဖို့ scan လုပ်မိတာ: ကုန်ရောက် ရပ်ပြီး ပစ္စည်း ကတ် ပေါ်ပါမည်။ တစ်ထည်တည်း ပစ္စည်းကို scan လုပ်ရင်လည်း (<span class="say">ℹ️ … က တစ်ထည်တည်း ပစ္စည်းပါ · ကုန်ရောက် မမှတ်နိုင်ပါ</span>) ကုန်ရောက် ရပ်ပြီး အဲဒီ ပစ္စည်း ကတ် ပေါ်ပါမည်။ Tag အလွတ်၊ မရှိတဲ့ Tag၊ (ဝန်ထမ်းဆိုရင်) တခြားဆိုင်ရဲ့ Tag ကို လက်မခံဘဲ နောက် Tag ကို ဆက်မေးပါသည်။ ဆိုင်ရှင်က ဆိုင်တိုင်းရဲ့ Tag ကို မှတ်နိုင်ပါသည်။<span class="en">On the count screen ✖️ မလုပ်တော့ skips that tag (a wrong tag): nothing is recorded and the bot asks for the next one. 🛒 ရောင်းမယ်: the scan was for a sale, so the restock ends and the item card comes. A one-of-a-kind piece scanned also ends it and shows that piece's card. A blank tag, an unknown tag or (for a seller) another shop's tag is refused and the bot asks again. The owner restocks any shop's tags.</span></p>
+    <p><span class="k">☰ 📦 ကုန်ရောက်</span> · ဂဏန်း ခလုတ်တွေ ပေါ်နေတုန်း ဂဏန်း သက်သက်ကိုသာ ထည် အရေအတွက်လို့ ယူပါသည်။ <span class="say">S1-5</span> (သို့) <span class="say">S1 0005</span> လို ရိုက်ရင် နောက် Tag ဖြစ်ပါသည်။ AI ဖွင့်ထားရင် <span class="say">ငါးထည် ရောက်တယ်</span> လို ပြောလည်း ရပါသည်၊ Tag မေးနေတုန်း ပြောတဲ့ ဂဏန်းက Tag နံပါတ် ဖြစ်ပါသည်။ Tag တစ်ခုချင်း သူ့ စာကြောင်း၊ သူ့ <span class="b">↩️ မှားသွားတယ်</span> နဲ့ပါ။<span class="en">On the count screen only a number on its own is the count; a typed tag such as S1-5 or S1 0005 is the next tag. With AI on a spoken count works too, and a number spoken while the bot asks for a tag is the tag number. Each tag is its own entry with its own ↩️.</span></p>
+    <p><span class="k">☰ 📦 ကုန်ရောက်</span> · Bot ရဲ့ နောက်ဆုံး မေးခွန်း ပြီး ၃ မိနစ် ဘာမှ မလုပ်ရင် (သို့) မီနူး ခလုတ် တစ်ခုခု နှိပ်ရင် ကုန်ရောက် ရပ်ပါသည်: နောက် scan က ပစ္စည်း ကတ်ကို ပြပါမည် (ကတ်ရဲ့ 📦 နဲ့ မှတ်နိုင်ပါသေးသည်၊ (သို့) 📦 ကို ပြန်နှိပ်ပါ)။ ထည် ရေနေလို့ ၃ မိနစ် ကျော်သွားရင်လည်း နောက်ဆုံး ဂဏန်း message ရဲ့ ခလုတ်ကို (မိနစ် ၃၀ အတွင်း) နှိပ်ရင် မှတ်ပြီး နောက် Tag ကို ဆက်မေးပါသည်။ message အဟောင်းပေါ်က ✖️ (သို့) ✅ ကို နှိပ်ရင် အဲဒီ ခလုတ်တွေ ပျောက်ရုံသာ၊ လုပ်နေတဲ့ ကုန်ရောက် မပျက်ပါ။<span class="en">The restock ends three minutes after the bot's last question, and at any menu button: the next scan then shows the item card (its 📦 still restocks, or tap 📦 in the menu again). Counting a big bundle took longer? A tap on the newest count message (within 30 minutes) still records the count and asks for the next tag. ✖️ or ✅ on an older message only removes its buttons; the restock you are in goes on.</span></p>
+  </div>
+</section>
+
+<!-- ===================== PART C: OWNER ===================== -->
+<section class="part">
+  <h2>အပိုင်း ဂ · ဆိုင်ရှင်<span class="en">Part C · Owner</span></h2>
+
+  <h3>၁။ ဒီနေ့ ဘယ်လောက် ရောင်းရလဲ<span class="en">1. Today's numbers</span></h3>
+  <ol class="steps">
+    <li>Telegram: <span class="say">/start</span> ပို့ပြီး <span class="b">📊 ဒီနေ့</span> နှိပ်ပါ (သို့) <span class="say">/today</span> ရိုက်ပါ။ အက်ပ်: <span class="b">Menu</span> → <span class="b">📊 ဒီနေ့</span> (ရောင်းရငွေ၊ ထည်၊ ငွေလက်ခံ၊ ကုန်ကျ၊ အမြတ် (ခန့်မှန်း)၊ ငွေသား၊ ဘဏ် စာရင်း)။ ဆိုင်တိုင်း ပေါ်ပါမည်။<span class="en">Telegram: /start then "Today", or type /today. The app: Menu → 📊 ဒီနေ့, drawn as a list. Every shop is shown.</span></li>
+  </ol>
+
+  <h3>၂။ စာရင်း PDF · ပုံနှိပ်ရန်<span class="en">2. Reports as PDF, for printing</span></h3>
+  <ol class="steps">
+    <li><span class="say">/start</span> → <span class="b">🖨 စာရင်း</span> → <span class="b">📅 ဒီနေ့</span> / <span class="b">📆 ဒီလ</span> / <span class="b">📆 ပြီးခဲ့တဲ့လ</span> / <span class="b">📦 ကုန်စာရင်း</span> / <span class="b">💳 အကြွေးစာရင်း</span><span class="en">Send /start, tap "Reports", pick one.</span></li>
+    <li>Bot က PDF ဖိုင် ပို့ပါမည်။ ပုံနှိပ်ဆိုင်ရဲ့ Viber / Telegram ကို forward လုပ်ပါ၊ (သို့) ဖုန်းကို ပုံနှိပ်ဆိုင် ယူသွားပါ။<span class="en">The bot sends a PDF. Forward it to the print shop's Viber or Telegram, or take the phone there.</span></li>
+    <li>လစဉ် ၁ ရက်နေ့ မနက်မှာ ပြီးခဲ့တဲ့လ စာရင်း PDF အလိုလို ရောက်ပါမည်။<span class="en">On the 1st of every month last month's PDF arrives by itself.</span></li>
+  </ol>
+
+  <h3>၃။ ည ၉ နာရီ အနှစ်ချုပ်<span class="en">3. The 21:00 summary in the family group</span></h3>
+  <div class="summary">📊 ၃၁ အောက်တိုဘာ ၂၀၂၆
+ဆိုင် ၁ · ရောင်းရငွေ 341,000 · ၁၅ ထည် · ကုန်ကျ 30,000 · အမြတ် ~197,000
+   💵 ငွေသား 296,000 · 🏦 ဘဏ် 30,000 · 💳 အကြွေး ကျန် 22,500
+   🏦 KBZPay 20,000 · WavePay 10,000
+ဆိုင် ၂ · ရောင်းရငွေ 30,000 · ၁ ထည် · ကုန်ကျ 0 · အမြတ် ~15,000
+📥 စရံ လက်ခံထား 555,000: ဒေါ်ခင် 355,000, ဒေါ်စန်း 200,000
+⏰ ရက်လွန် အကြွေး: ဒေါ်မြင့် 22,500 (၂၇ အောက်တိုဘာ · ၄ ရက် လွန်)
+⚠️ လက်ကျန်နည်း: လုံချည် ပိုး အနက် (၀)</div>
+  <table>
+    <thead><tr><th>စာကြောင်း · Line</th><th>အဓိပ္ပာယ် · Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>ရောင်းရငွေ</td><td>ဒီနေ့ ထွက်သွားတဲ့ ပစ္စည်း တန်ဖိုး (ငွေ ရပြီး/မရသေး မခွဲ)<span class="en">Sales: value of goods that left today, paid or not. A sale of several pieces counts every piece.</span></td></tr>
+      <tr><td>💵 ငွေသား · 🏦 ဘဏ်</td><td>ဒီနေ့ ငွေအံဆွဲထဲ ဝင်ထွက် စုစုပေါင်း နဲ့ ဘဏ်/KBZPay/WavePay ထဲ ဝင်ထွက် စုစုပေါင်း။ ငွေအံဆွဲ ရေတွက်ရင် ဒီဂဏန်းနဲ့ တိုက်ပါ။<span class="en">Net movement in the drawer and in the bank or wallets today. Count the drawer against the first number.</span></td></tr>
+      <tr><td>🏦 KBZPay … · WavePay …</td><td>အကောင့် နှစ်ခုနဲ့ အထက် ငွေ ဝင်ထွက် ရှိတဲ့ နေ့မှာ ဘဏ် ငွေကို အကောင့်အလိုက် ခွဲပြပါသည်။<span class="en">On a day when two or more accounts moved money, the bank figure is broken down per account (net).</span></td></tr>
+      <tr><td>💳 အကြွေး ကျန်</td><td>ဝယ်သူများ ပေးရန် ကျန်နေသော ငွေ စုစုပေါင်း<span class="en">Total still owed by customers</span></td></tr>
+      <tr><td>အမြတ်</td><td>ရောင်းရငွေ − ပစ္စည်း ကုန်ကျ − စရိတ်<span class="en">Profit: sales minus cost of goods minus expenses</span></td></tr>
+      <tr><td>📥 စရံ လက်ခံထား</td><td>ပစ္စည်း မပေးရသေးတဲ့ အော်ဒါများအတွက် လက်ခံထားတဲ့ ငွေ<span class="en">Deposits held for orders not yet delivered</span></td></tr>
+      <tr><td>⏰ ရက်လွန် အကြွေး</td><td>ပေးမည့်ရက် ကျော်ပြီး မဆပ်ရသေးတဲ့ အကြွေး (၃-က)<span class="en">Credits whose promised day has passed (see 3a)</span></td></tr>
+      <tr><td>⏰ ၃၀ ရက်ကျော် အကြွေး</td><td>ပေးမည့်ရက် မရှိဘဲ ရက် ၃၀ ကျော် မဆပ်ရသေးသော အကြွေး<span class="en">Credits with no promised day, older than 30 days</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>၃-က။ ကျန်ငွေ ပေးမည့်ရက် · ဘယ်မှာ ကြည့်မလဲ<span class="en">3a. Promised dates: where the owner sees them</span></h3>
+  <p class="lead">ငွေ မပြည့်တဲ့ အရောင်းမှာ ရောင်းသူက ပေးမည့်ရက် ရွေးပါသည် (အပိုင်း က ၆)။ Ledger tab ရဲ့ နောက်ဆုံး ကော်လံ DueDay မှာ အရောင်းရဲ့ စာကြောင်းတိုင်း (ပစ္စည်း တစ်ခု တစ်ကြောင်း) မှာ မှတ်ပါသည်။<span class="en">On a part-paid sale the seller picks the promised day (Part A, 6). It is kept in the last column of the Ledger tab, DueDay, on every row of the sale (one row per piece).</span></p>
+  <table>
+    <thead><tr><th>နေရာ · Where</th><th>ဘာ ပြလဲ · What it shows</th></tr></thead>
+    <tbody>
+      <tr><td>Credits tab</td><td>DueDay = ပေးမည့်ရက် · Overdue = TRUE ဆိုရင် ရက် ကျော်သွားပြီ (ရက် မပေးထားရင် ရက် ၃၀ ကျော်)။ ပစ္စည်း အများ ပါတဲ့ အရောင်းက တစ်ကြောင်းတည်း (🛍 ၂ ခု · …)<span class="en">DueDay is the promised day. Overdue is TRUE once that day has passed, or, with no day, once the credit is 30 days old. A sale of several pieces is one row. The 21:00 summary refreshes this tab first.</span></td></tr>
+      <tr><td>Dashboard · Overdue</td><td>ရက်ကျော် အကြွေး စုစုပေါင်း<span class="en">The total still owed on the overdue rows</span></td></tr>
+      <tr><td>ည ၉ နာရီ အနှစ်ချုပ်</td><td><span class="say">⏰ ရက်လွန် အကြွေး: …</span> · ဝယ်သူ၊ ကျန်ငွေ၊ ပေးမည့်ရက်၊ ဘယ်နှစ်ရက် လွန်ပြီလဲ (၅ ယောက်အထိ)<span class="en">One line naming up to five customers: what they owe, the promised day and how many days late</span></td></tr>
+      <tr><td>ဘောက်ချာ · 📄 PDF</td><td><span class="say">ပေးမည့်ရက်</span> (ငွေ ကျန်နေတုန်း)<span class="en">The promised day, while money is owed (the app's receipt page and Telegram's receipt and PDF)</span></td></tr>
+      <tr><td>💳 အကြွေးစာရင်း PDF</td><td>ပေးမည့်ရက် ကော်လံ · ရက် ကျော်ရင် ⏰<span class="en">A promised-day column, marked ⏰ when late; also in the month report and in a customer's statement PDF</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>၄။ စျေး မသတ်မှတ်ရသေးတဲ့ ပစ္စည်း<span class="en">4. A piece waiting for a price</span></h3>
+  <ol class="steps">
+    <li>ဒီဇိုင်နာက ပစ္စည်းအသစ် မှတ်ပြီး စျေး မသတ်မှတ်ရင် သင့် Telegram ကို <span class="say">⏳ S1-0042 · … · စျေး သတ်မှတ်ပေးပါ</span> ရောက်ပါမည် (အက်ပ်က မှတ်ရင်လည်း ရောက်ပါသည်)။<span class="en">You get a message with the tag id and name in Telegram (also when the piece was registered in the app).</span></li>
+    <li>စျေး ခလုတ်ကို နှိပ်ပါ (သို့) <span class="b">✏️ အခြား</span> ပြီး ရိုက်ပါ။ ဒီအတောအတွင်း ရောင်းရရင် ရောင်းသူက ဝယ်သူနဲ့ သဘောတူ စျေးကို ရိုက်ပြီး ရောင်းပါသည်။<span class="en">Tap a price or type one. Until then a seller who sells it types the price agreed with the buyer.</span></li>
+  </ol>
+
+  <h3>၄-က။ မှားနေတဲ့ စာရင်းကို ပယ်ဖျက်ခြင်း<span class="en">4a. Voiding a wrong entry (owner only)</span></h3>
+  <ol class="steps">
+    <li>ဝန်ထမ်းက ၃၀ မိနစ် ကျော်မှ မှားတာ သိရင် ဆိုင်ရှင်သာ ပြင်နိုင်ပါသည်။ ပစ္စည်း အများ ပါတဲ့ အရောင်း: ဘောက်ချာ (အက်ပ်ရဲ့ ဘောက်ချာ စာမျက်နှာ (သို့) Telegram ရဲ့ <span class="b">🧾 ဘောက်ချာ</span>) ပေါ်က <span class="b">🚫 ပယ်ဖျက် (ဆိုင်ရှင်)</span> ကို နှိပ်ပါ။ အရောင်း တစ်ခုလုံး ပယ်ဖျက်ပါသည်။ Telegram မှာ အဲဒီ ပစ္စည်းရဲ့ ကတ်မှာလည်း 🧾 ဘောက်ချာ ပါပါသည်။<span class="en">After 30 minutes only the owner can correct an entry. A sale of several pieces: tap 🚫 ပယ်ဖျက် (ဆိုင်ရှင်) on its receipt (the app's receipt page, or 🧾 in Telegram); the whole sale is voided. In Telegram the owner's card of such a piece also offers its 🧾.</span></li>
+    <li>ဆိုင်ရှင်ဆီ ရောက်တဲ့ သတိပေး message အောက်က <span class="b">🚫 ပယ်ဖျက် (ဆိုင်ရှင်)</span> လည်း အတူတူပါ။ ပစ္စည်း များ ရောင်းမိလို့ လက်ကျန် အနုတ် ဖြစ်တဲ့ <span class="say">⚠️ … · 📦 ကုန်ရောက် မမှတ်ရသေးတာ ရှိနိုင်ပါသည် · စစ်ပါ</span> မှာ ခလုတ် မပါပါ: ကုန်ရောက် မှတ်ဖို့ ကျန်ခဲ့တာ စစ်ပါ။<span class="en">The same button sits under the warnings that reach you. The warning that a piece sold by count went below zero stock has no button: check for a restock nobody recorded.</span></li>
+    <li>ငွေ နောက်မှ လက်ခံပြီးသား အရောင်း (အပိုင်း က ၇) ကို ပြန်ဖျက်လို့ ပယ်ဖျက်လို့ မရပါ: အက်ပ်ရဲ့ ဘောက်ချာ စာမျက်နှာမှာ <span class="b">မှားသွားတယ်</span> နဲ့ <span class="b">ပယ်ဖျက် (ဆိုင်ရှင်)</span> အစား <span class="say">ဒီအရောင်းမှာ ငွေလက်ခံ/စရံ ပါပြီးလို့ ပြင်လို့ မရတော့ပါ။</span> ကို မှိန်မှိန် ပြပါသည်။ Telegram မှာ <span class="b">🚫 ပယ်ဖျက် (ဆိုင်ရှင်)</span> (သို့) <span class="b">↩️ မှားသွားတယ်</span> ကို နှိပ်ရင်လည်း ဒီစာနဲ့ ဖြေပြီး ဘာမှ မမှတ်ပါ။ ဒီအရောင်းကို ပယ်ဖျက်ချင်ရင် အဲဒီ ငွေလက်ခံ ကို အရင် ပြန်ဖျက်ပါ: ငွေ လက်ခံခဲ့သူက မိနစ် ၃၀ အတွင်း ငွေလက်ခံ message ပေါ်က <span class="b">↩️ မှားသွားတယ်</span> (Telegram)၊ (သို့) ငွေ လက်ခံခဲ့တဲ့ ဖုန်းရဲ့ မှတ်တမ်း (အပိုင်း က ၉) ထဲက အဲဒီ ငွေလက်ခံ ကို ဖွင့်ပြီး <span class="b">မှားသွားတယ်</span> (အက်ပ်)။ ပြီးရင် အရောင်းကို ပြန်ဖျက်/ပယ်ဖျက် နိုင်ပါပြီ။ မိနစ် ၃၀ ကျော်သွားတဲ့ ငွေလက်ခံကို ပြန်ဖျက်လို့ မရတော့လို့ အဲဒီ အရောင်းလည်း ဒီအတိုင်း ကျန်ပါသည်။ ပယ်ဖျက်ခြင်းက စာရင်းကို မဖျက်ပါ: ဆန့်ကျင်ဘက် စာရင်း ထပ်ထည့်ပါသည်။<span class="en">A sale that a payment was taken against later (Part A, 7) can be neither undone nor voided. The app's receipt page shows the grey line ဒီအရောင်းမှာ ငွေလက်ခံ/စရံ ပါပြီးလို့ ပြင်လို့ မရတော့ပါ။ in place of မှားသွားတယ် and ပယ်ဖျက် (ဆိုင်ရှင်); in Telegram, 🚫 or ↩️ answers with that line and records nothing. To void such a sale, reverse that payment first: whoever took it taps ↩️ မှားသွားတယ် on the payment's message (Telegram), or opens the payment in the history of the phone that took it (Part A, 9) and taps မှားသွားတယ် (app), within 30 minutes. Then the sale's undo and void work again. A payment older than 30 minutes can no longer be undone, so the sale stays as it is. A void never deletes; it writes reversing rows, so the history stays complete.</span></li>
+  </ol>
+
+  <h3>၅။ ဝန်ထမ်း အသစ် ထည့်ခြင်း · စာသား ပြောင်းခြင်း<span class="en">5. Adding staff, changing wording</span></h3>
+  <ol class="steps">
+    <li>ဝန်ထမ်းအသစ်က bot ကို START နှိပ်ပါ။ ပြီးရင် Noel (သို့) စာရင်းဇယား သုံးတတ်သူကို ပြောပါ။ Sheet ထဲ Staff tab မှာ နံပါတ် ထည့်ပေးပါမည်။ ဖုန်းအက်ပ် အတွက် Telegram ရဲ့ <span class="b">📲 အက်ပ်</span> ကုဒ်နဲ့ ချိတ်ဆက်ပါ။<span class="en">The new person presses START, then tells Noel or the sheet-literate sister, who adds the number in the Staff tab. For the app, connect it with the 📲 code.</span></li>
+    <li>Bot နဲ့ အက်ပ်ရဲ့ စာသား တစ်ခုခု မကြိုက်ရင် Sheet ထဲ Messages tab မှာ ပြောင်းလို့ ရပါသည်။ ကုဒ် မပြောင်းရပါ။ ဘဏ်အကောင့်၊ ကုန်ကျစရိတ်၊ အထည်၊ ပစ္စည်း အမျိုးအစား နာမည်တွေကတော့ Lists tab မှာ ပြင်ပါ (၆)။<span class="en">Any wording can be changed in the Messages tab of the sheet; no code change (the app shows it without emoji). Account, expense-category, fabric and item-category names are changed in the Lists tab instead (6).</span></li>
+  </ol>
+
+  <h3>၆။ Lists tab · ဘဏ်အကောင့်၊ ကုန်ကျစရိတ်၊ အထည်၊ ပစ္စည်း အမျိုးအစား စာရင်း<span class="en">6. The Lists tab: accounts, expense categories, fabrics and item categories, on the laptop</span></h3>
+  <p class="lead">ခလုတ်တွေမှာ ပေါ်တဲ့ ရွေးစရာ စာရင်း ၄ ခုကို Sheet ထဲ Lists tab မှာ ကွန်ပျူတာနဲ့ စီမံပါ။ ဖုန်းက အသစ်ထည့်တာ အမြန် ထည့်ဖို့သာ ဖြစ်ပါသည်။<span class="en">The four pick lists behind the buttons live in the Lists tab of the sheet: manage them there on the laptop. Adding from a phone is only for quick additions. The tab is created by the one-time setup (setupSheet) and starts with today's buttons, the five item categories last.</span></p>
+  <table>
+    <thead><tr><th>ကော်လံ · Column</th><th>ဘာ ထည့်မလဲ · What goes in</th></tr></thead>
+    <tbody>
+      <tr><td>List</td><td>pay_method = ဘဏ်/Pay အကောင့် · expense_category = ကုန်ကျစရိတ် · fabric = အထည် · item_category = ပစ္စည်း အမျိုးအစား<span class="en">Which list the row belongs to</span></td></tr>
+      <tr><td>Key</td><td>ကုဒ် (အင်္ဂလိပ် စာလုံး/ဂဏန်း ၁၂ လုံးအထိ၊ ဥပမာ AYA)။ သုံးပြီးသား ကုဒ်ကို ဘယ်တော့မှ မပြင်ပါနဲ့။ ပစ္စည်း အမျိုးအစား ၅ ခုရဲ့ ကုဒ်: htamein, longyi, eingyi, wutsone, other။<span class="en">A short code of English letters and digits, at most 12. Never change a key that was used: the records keep it. An option added from a phone gets one by itself. The five built-in item categories are keyed htamein, longyi, eingyi, wutsone and other (အခြား).</span></td></tr>
+      <tr><td>Label</td><td>ခလုတ်မှာ ပေါ်မယ့် နာမည်။ ပြင်လို့ ရပါသည်။<span class="en">The name on the button. Change it here to rename.</span></td></tr>
+      <tr><td>Active</td><td>အမှန်ခြစ် ပါရင် ခလုတ် ပေါ်ပါသည်။ ဖြုတ်ရင် ခလုတ် ပျောက်ပါသည်၊ စာရင်းဟောင်းတွေ မပျက်ပါ။<span class="en">Ticked: shown as a button. Untick to retire an option; old records stay.</span></td></tr>
+      <tr><td>Order</td><td>ခလုတ် အစီအစဉ် · ဂဏန်း ငယ်တာ အရင်<span class="en">Button order, smallest first</span></td></tr>
+      <tr><td>Shop</td><td>S1 သို့မဟုတ် S2 · ကွက်လပ်ထားရင် ဆိုင် နှစ်ဆိုင်လုံး<span class="en">One shop, or blank for both. An option added from a phone starts blank.</span></td></tr>
+      <tr><td>Detail</td><td>ဘဏ်အကောင့်: အကောင့်နံပါတ်နဲ့ နာမည် (ငွေကျန်တဲ့ ဘောက်ချာမှာ ပါမယ်) · ကုန်ကျစရိတ်: emoji · ပစ္စည်း အမျိုးအစား: Telegram မှာ ပြမယ့် emoji (အက်ပ်မှာ မပြ) · စာလုံး ၈၀ အထိ<span class="en">Account: number and holder, printed on receipts with a balance. Expense category: its emoji in Telegram. Item category: the emoji Telegram shows before it (the app shows none). At most 80 characters.</span></td></tr>
+      <tr><td>Note</td><td>မှတ်ချက် (ဖုန်းကနေ ထည့်ရင် ဘယ်သူ ဘယ်နေ့ ထည့်တယ် ဆိုတာ bot က ရေးပါသည်)<span class="en">Remarks; for an option added from a phone the bot writes who added it and when.</span></td></tr>
+      <tr><td>Kind</td><td>ဘဏ်/Pay အကောင့် row တွေအတွက်: <span class="say">wallet = Pay အကောင့် (KBZPay, WavePay, QR) · bank = ဘဏ်လွှဲ · ကွက်လပ်ထားရင် wallet · BANK ကုဒ်က bank</span><span class="en">Accounts only, from the dropdown. wallet: shown by its name on "how paid". bank: behind ဘဏ် (🏛 ဘဏ် in Telegram). Blank counts as wallet; the old BANK key (ဘဏ်လွှဲ) counts as bank. An account added during a sale gets the kind the seller picked.</span></td></tr>
+    </tbody>
+  </table>
+  <div class="rules">
+    <p><span class="k">မှတ်ထားရန်</span> · မသုံးတော့တဲ့ ရွေးစရာကို row မဖျက်ပါနဲ့၊ Active အမှန်ခြစ် ဖြုတ်ပါ။ စာရင်း တစ်ခုရဲ့ row အားလုံး ဖျက်လိုက်ရင် Settings ထဲက စာရင်းဟောင်း ပြန်ပေါ်လာပါမည် (ပစ္စည်း အမျိုးအစား ဆိုရင် မူလ ၅ ခု)။<span class="en">To retire an option untick Active; do not delete the row. Deleting ALL rows of a list brings back the old Settings options (for item_category, the five built-in categories).</span></p>
+    <p><span class="k">မှတ်ထားရန်</span> · Active ကော်လံမှာ Insert → Tick box (Checkbox) ကို ဘယ်တော့မှ မသုံးပါနဲ့။ အကွက်အားလုံး ဖြုတ်သွားပြီး ခလုတ်အားလုံး ပျောက်သွားနိုင်ပါသည်။ အမှန်ခြစ် ကွက်တွေ ရှိပြီးသား ဖြစ်ပါသည်။<span class="en">Never use Insert → Tick box (Checkbox) on the Active column: it can untick every cell, and then every option disappears. The tick boxes are already there.</span></p>
+    <p><span class="k">မှတ်ထားရန်</span> · Lists tab မှာ row ရှိတဲ့ စာရင်းအတွက် Settings ထဲက pay_methods၊ expense_categories၊ fabric_presets ကို bot က မကြည့်တော့ပါ။ Lists tab ကိုသာ ပြင်ပါ။ အကောင့်နဲ့ ကုန်ကျစရိတ် နာမည်ကိုလည်း Messages tab မှာ မဟုတ်ဘဲ Label မှာ ပြင်ပါ။<span class="en">Once a list has rows here, Settings pay_methods, expense_categories and fabric_presets are ignored for it, and an account's or expense category's name comes from Label, not from the Messages tab.</span></p>
+    <p><span class="k">မှတ်ထားရန်</span> · နာမည် ပြောင်းတာ၊ ဖြုတ်တာ ဒီမှာသာ ရပါသည်။ ဝန်ထမ်းက ဖြုတ်ထားတဲ့ နာမည်ကို ရိုက်ရင် အဟောင်းကို သုံးပေမယ့် ခလုတ် ပြန်မပေါ်ပါ (ပစ္စည်း အမျိုးအစား ဆိုရင်တော့ လက်မခံပါ)။ ပြန်သုံးချင်ရင် Active ပြန်ခြစ်ပါ။<span class="en">Renaming and retiring happen only here. If a seller types the name of a retired option, that option is used for the entry but its button stays hidden (an item category is refused instead): tick Active again to bring it back.</span></p>
+    <p><span class="k">ပစ္စည်း အမျိုးအစား (item_category)</span> · setupSheet က ပထမဆုံး အကြိမ်မှာ ထမီ၊ လုံချည်၊ အင်္ကျီ၊ ဝတ်စုံ၊ အခြား row ၅ ခုကို စာရင်း ၃ ခုရဲ့ အောက်မှာ ထည့်ပေးပါသည် (Detail မှာ 👗 🧣 👚 🧥 🧵)။ ဖုန်းရဲ့ <span class="b">အမျိုးအစားအသစ်</span> နဲ့ Telegram ရဲ့ <span class="b">➕ အမျိုးအစားအသစ်</span> က ထည့်တာတွေ သူ့အောက်မှာ ဝင်ပါသည်။ Label ပြင်ရင် ပစ္စည်းအသစ်တွေမှာပဲ နာမည်သစ် ပေါ်ပါမည်၊ အရင် မှတ်ထားတဲ့ ပစ္စည်းတွေက နာမည်ဟောင်း အတိုင်း ကျန်ပါသည် (ပြောင်းချင်ရင် Items tab ရဲ့ Category ကွက်မှာ)။ Active ဖြုတ်ရင် ခလုတ် ပျောက်ပြီး အဲဒီ နာမည်ကို ရိုက်ထည့်လည်း လက်မခံပါ (ပစ္စည်းဟောင်းတွေ မပျက်ပါ)။ Order က ခလုတ် အစီအစဉ်၊ Shop က ဆိုင် တစ်ဆိုင်အတွက်သာ (ကွက်လပ် = ဆိုင်တိုင်း)၊ Detail က Telegram မှာ ပြမယ့် emoji (အသစ်မှာ မထည့်ရင် 🔖)။ <span class="b">အခြား</span> (Key other) က အမြဲ ပါပြီး အမြဲ နောက်ဆုံးမှာ ပါပါသည် (Active ဖြုတ်လည်း၊ Order ဘာပဲ ဖြစ်ဖြစ်)၊ Label ကိုတော့ ပြောင်းလို့ ရပါသည်။<span class="en">Item categories (item_category): the first setupSheet writes five rows, ထမီ, လုံချည်, အင်္ကျီ, ဝတ်စုံ and အခြား, below the three other lists (Detail 👗 🧣 👚 🧥 🧵); categories added with the app's အမျိုးအစားအသစ် or Telegram's ➕ come below them. A new Label renames the chip for new pieces only; pieces registered before keep the old name (change one in the Category cell of the Items tab). Untick Active to close one: its chip goes, and typing its name is refused; the pieces keep it. Order orders the chips, Shop keeps one to a shop (blank = every shop), Detail is the emoji Telegram shows (🔖 for an added one without). အခြား (key other) is always offered and always last, unticked or not and whatever its Order; its Label may be changed.</span></p>
+    <p><span class="k">ပစ္စည်း အမျိုးအစား (item_category)</span> · အသစ်ကို ဖုန်း (သို့) Telegram ကနေ ထည့်ပါ။ ဒီမှာ လက်နဲ့ ထည့်ရင် Key ကို အင်္ဂလိပ် စာလုံး/ဂဏန်း ၁၂ လုံးအထိ ရေးပါ (ဥပမာ silk): Key မပါတဲ့ row မပေါ်ပါ၊ မြန်မာစာ Key ဆိုရင် Telegram မှာ ခလုတ် မပေါ်ပါ။ နာမည်တူ row နှစ်ခု ရှိရင် ပထမ row ကိုသာ ပြပါသည်။ နမူနာ ဆိုတဲ့ စကားလုံး ပါတဲ့ row ကို အမျိုးအစား အဖြစ် မပြပါ (နမူနာ က ခလုတ် ဖြစ်ပါသည်)။ မြန်မာစာ Key၊ နာမည်တူ row နဲ့ နမူနာ row ကို Errors tab မှာ တစ်ကြိမ်စီ မှတ်ပါသည်။ မသုံးတော့ရင် row မဖျက်ပါနဲ့: ဖျက်လိုက်တဲ့ ခလုတ် ပျောက်သွားပြီး အခြား တစ်ခုတည်းသာ အလိုလို ပြန်ပေါ်ပါသည်။ List header ကွက်ရဲ့ note မှာလည်း ဒီအကြောင်း ရေးထားပါသည်။<span class="en">Add new ones from a phone or Telegram. A row typed here needs a Key of English letters and digits, at most 12 (for example silk): a row without a Key is not shown, and a Burmese Key keeps it off Telegram's buttons. A name on two rows is shown once (the first row). A row whose name holds the word နမူနာ is not offered as a category (a sample is the switch). A Burmese Key, a name on two rows and a နမူနာ row are each noted once in the Errors tab. Never delete a row you no longer use: its chip is gone, and only အခြား comes back by itself. The note on the List header cell says the same.</span></p>
+    <p><span class="k">မှတ်ထားရန်</span> · Kind က ရောင်းတဲ့အခါ <span class="say">ဘယ်လိုပေးလဲ?</span> ကိုသာ ပြောင်းပါသည်: wallet က နာမည်နဲ့၊ bank က <span class="b">ဘဏ်</span> အောက်မှာ။ Telegram ရဲ့ ငွေလက်ခံ၊ စရံ၊ ကုန်ကျ အောက်က 🏦 ခလုတ်တွေ မပြောင်းပါ။<span class="en">Kind changes only "how paid" in a sale: a wallet by its name, a bank behind ဘဏ်. The 🏦 buttons under Telegram's payments, deposits and expenses stay as they are.</span></p>
+    <p><span class="k">မှတ်ထားရန်</span> · အနီရောင် အကွက်: စာရင်း တစ်ခုထဲ Key တူ နှစ်ခု (သို့) Label မရှိတဲ့ row။<span class="en">A red cell: the same key twice in one list, or a row without a label.</span></p>
+    <p><span class="k">မှတ်ထားရန်</span> · Dashboard ရဲ့ <span class="say">Money by account (this month)</span> မှာ အကောင့်တစ်ခုချင်း ဒီလ ဝင်ငွေ (In)၊ ထွက်ငွေ (Out)၊ အသားတင် (Net) ကို ဆိုင် နှစ်ဆိုင်ပေါင်း ပြပါသည်။ Lists tab ပြင်ရင် Dashboard ကို ပြန်ရေးပါသည်။<span class="en">The Dashboard's "Money by account (this month)" block shows each account's money in, out and net this month, both shops together. It is redrawn after an edit of the Lists tab; if it does not change, tell Noel (this needs the script that belongs to the sheet).</span></p>
+  </div>
+
+  <h3>၇။ ရောင်းနည်း ပြောင်းခြင်း · Settings tab<span class="en">7. The sale's settings: sale_flow and sale_due_presets</span></h3>
+  <table>
+    <thead><tr><th>Key</th><th>Value · ဘာ ထည့်မလဲ</th></tr></thead>
+    <tbody>
+      <tr><td>sale_flow</td><td><span class="say">form = တစ်မျက်နှာတည်း ဖြည့်ပြီး သိမ်း · quick = ခလုတ်တစ်ချက် ရောင်း</span><span class="en">form (the normal way): the app's forms of Part A and Telegram's sale card of Part B. quick: the old card, where ✅ ရောင်း ၁ records the sale at once and buttons under it (💳 မကျေသေး, 👤 ဝယ်သူ, the 🏦 accounts, 💵+🏦 ခွဲပေး) correct it afterwards; the app then has no forms.</span></td></tr>
+      <tr><td>sale_due_presets</td><td>ကျန်ငွေ ပေးမည့်ရက် ခလုတ်များ (ယနေ့မှ ရက်)၊ ကော်မာ ခံပြီး · ပုံမှန် <span class="say">7,14,30</span><span class="en">The day buttons of "when is the rest paid", in days from today, separated by commas. Whole numbers from 1 to 365; the first three are shown. Other entries are ignored; with none left, the buttons are 7, 14 and 30.</span></td></tr>
+    </tbody>
+  </table>
+  <ol class="steps">
+    <li>ရောင်းသူတွေ အခက်တွေ့ရင် ဆိုင်ရှင်က Settings tab ရဲ့ sale_flow row မှာ Value ကို <span class="say">quick</span> လို့ ရိုက်ပါ။ ပြန်ပြောင်းချင်ရင် <span class="say">form</span>။ ကုဒ် မပြောင်းရပါ၊ publish မလုပ်ရပါ။<span class="en">If the sellers get stuck, the owner types quick in the Value of the sale_flow row; form switches back. No code change and no publish.</span></li>
+    <li>Telegram bot က နောက်တစ်ချက် နှိပ်ကတည်းက လိုက်ပါသည်။ ဖုန်းအက်ပ်တွေက နောက်တစ်ကြိမ် sync လုပ်ရင် လိုက်ပါမည် (အဲဒီအချိန် ဖွင့်ထားတဲ့ ရောင်းမယ် ဖောင်က Save မမှတ်ဘဲ ပိတ်ပါမည်၊ ပြန်ရောင်းပါ)။<span class="en">The bot follows at the next tap; each phone app at its next sync (a sale form open at that moment closes without saving: sell again).</span></li>
+    <li>quick က အရေးပေါ် အတွက်သာ ဖြစ်ပါသည်။ quick မှာ ကျန်ငွေ ပေးမည့်ရက် မမေးပါ၊ ကုန်ရောက်ကို ပစ္စည်း ကတ် (သို့) Menu ရဲ့ <span class="b">📦 ကုန်ရောက်</span> (Tag တစ်ခုချင်း၊ အပိုင်း က ၁၁) ကနေ မှတ်ပါသည်။ ဒီ လမ်းညွှန်က form ကို ပြောထားပါသည်။<span class="en">quick is only a fallback: it asks no promised day, and a restock starts from the piece's card or from 📦 in the Menu, one tag at a time (Part A, 11). This guide describes form. The rows are added by the one-time setup (setupSheet).</span></li>
+  </ol>
+
+  <h3>၈။ AI ခလုတ်<span class="en">8. The AI switch</span></h3>
+  <ol class="steps">
+    <li>အက်ပ်ရဲ့ Settings (ဂီယာပုံ icon) မှာ <span class="say">AI</span> နဲ့ <span class="b">ဖွင့်</span> / <span class="b">ပိတ်</span> ခလုတ် ရှိပါသည်။ ဆိုင်ရှင်သာ ပြောင်းနိုင်ပါသည် (ဝန်ထမ်းတွေ မြင်ရပေမယ့် <span class="say">ဆိုင်ရှင်သာ ပြောင်းနိုင်ပါသည်</span>)။ ဖုန်းတိုင်းနဲ့ Telegram bot အတွက် ခလုတ် တစ်ခုတည်း ဖြစ်ပါသည်။<span class="en">The app's Settings (the gear) has AI with an on/off switch. Only the owner can change it (sellers see it but cannot); it is one switch for every phone and the bot.</span></li>
+    <li>ဖွင့်ထားရင်: <span class="b">📒 စာအုပ်</span> (လက်ရေး စာအုပ် ဓာတ်ပုံကို AI က ဖတ်ပြီး စာကြောင်းတိုင်းကို မှတ်ရန် အဆိုပြု၊ ရောင်းသူက အတည်ပြု)၊ အသံ (<span class="b">ပြော</span>၊ Telegram 🎤)၊ ပစ္စည်းအသစ် ဓာတ်ပုံကို ကြည့်ပြီး အမည် ပေးခြင်း။ ခလုတ် အောက်မှာ <span class="say">စာအုပ်</span> <span class="say">အသံ</span> <span class="say">Photo အမည်</span> တစ်ခုချင်း ဖွင့်/ပိတ် ပြပါသည်။<span class="en">On: the notebook (a photo of a handwritten notebook page read by the AI into proposed entries the seller confirms), voice, and a name for a new piece from its photo. Under the switch each part shows ဖွင့် or ပိတ်.</span></li>
+    <li>ပိတ်ထားရင်: အဲဒါတွေ မပေါ်ပါ၊ AI ဆီ ဘာမှ မပို့ပါ (<span class="say">AI ပိတ်ထားပါသည် · ဖောင်တွေကို လက်နဲ့ ဖြည့်ပါ</span>)။ ဖောင်တွေ အကုန် လက်နဲ့ အလုပ်လုပ်ပါသည်၊ ပစ္စည်းအသစ် ဓာတ်ပုံလည်း Drive ကို ရောက်ပါသည်။ Telegram မှာ အသံ ပို့ရင် <span class="say">🤖 AI ပိတ်ထားပါသည် · အောက်က ခလုတ်တွေနဲ့ မှတ်ပါ</span>။<span class="en">Off: none of them shows and nothing is sent to the AI; every form works by hand and a new piece's photo still reaches Drive. A voice note in Telegram gets "AI is off, use the buttons".</span></li>
+    <li>ဆိုင်ရှင်ရဲ့ ဖုန်းမှာ ချက်ချင်း ပြောင်းပါသည်၊ တခြား ဖုန်းတွေ နောက် sync မှာ၊ bot က နောက်တစ်ချက် နှိပ်ရင် လိုက်ပါသည်။ ဖွင့်ရင် Sheet ရဲ့ Settings tab မှာ <span class="say">ai</span>၊ <span class="say">notebook_import</span>၊ <span class="say">app_voice</span> ကို TRUE ရေးပါသည်။ တစ်ခုခု ပိတ်ထားချင်ရင် အဲဒီ row မှာ FALSE ရိုက်ပါ (Sheet မှာ <span class="say">ai</span> row ကို တိုက်ရိုက် ပြောင်းလည်း ရပါသည်)။<span class="en">The owner's phone changes at once, other phones at their next sync, the bot at its next tap. ON writes ai, notebook_import and app_voice TRUE in the Settings tab; to keep one part off, type FALSE in its row (the ai row itself can also be typed in the sheet).</span></li>
+  </ol>
+
+  <h3>၉။ ဆိုင်များ · အမည်၊ လိပ်စာ၊ ဖုန်း<span class="en">9. The shops: name, address, phone</span></h3>
+  <ol class="steps">
+    <li>အက်ပ်ရဲ့ Settings → <span class="say">ဆိုင်များ</span> (ဆိုင်ရှင်သာ မြင်ရပါသည်): ဆိုင်တိုင်း တစ်ကြောင်း (အမည်၊ အောက်မှာ လိပ်စာနဲ့ ဖုန်း၊ မထည့်ရသေးရင် <span class="say">လိပ်စာ မထည့်ရသေး</span>)။<span class="en">The app's Settings → ဆိုင်များ (the owner only): one row per shop, its name with the address and phone under it.</span></li>
+    <li>ဆိုင်ကို နှိပ်ပါ: <span class="say">ဆိုင်အမည်</span> (မဖြစ်မနေ)၊ <span class="say">လိပ်စာ</span>၊ <span class="say">ဖုန်း</span> (နံပါတ် ၂ ခု ရ) ပြင်ပြီး <span class="b">Save</span>။ <span class="say">ဆိုင် အချက်အလက် သိမ်းပြီး · ပို့ပြီးရင် ဖုန်းတိုင်းမှာ ပြောင်းပါမည်</span>။<span class="en">Tap a shop: edit the shop name (required), the address and the phone (two numbers are fine), then Save. Every phone changes after the next sync.</span></li>
+    <li>အမည်က ဘောက်ချာ၊ စာရင်း၊ ည ၉ နာရီ အနှစ်ချုပ်၊ အက်ပ် ထိပ်မှာ ပေါ်ပါသည်။ လိပ်စာနဲ့ ဖုန်းက အက်ပ်ရဲ့ ဘောက်ချာ စာမျက်နှာနဲ့ အော်ဒါ ဘောက်ချာမှာ ပေါ်ပါသည်။<span class="en">The name shows on receipts, reports, the 21:00 summary and at the top of the app; the address and phone on the app's receipt page and on order vouchers.</span></li>
+    <li>Sheet မှာလည်း ပြင်နိုင်ပါသည်: Settings tab ရဲ့ အပြာနု ရောင် row တွေ (shop_name_S1, shop_address_S1, shop_phone_S1, shop_brand_S1 နဲ့ S2 အတွက် အတူတူ)။ ဘောက်ချာ ခေါင်းစီး (shop_brand) ကို Sheet မှာသာ ပြင်ပါ။<span class="en">The sheet has the same values: the light-blue rows of the Settings tab. The voucher heading (shop_brand) is edited only there.</span></li>
+    <li>ဆိုင် ID (S1၊ S2) ကတော့ မပြောင်းပါ (Tag တွေမှာ ပုံနှိပ်ထားလို့)။ တတိယ ဆိုင် လိုရင် Noel ကို ပြောပါ: နောက် တစ်ကြိမ်မှာ ထည့်ပါမည် (Tag S3၊ ဘောက်ချာ V3၊ စာရင်းများ)။ ဆိုင်များ စာမျက်နှာက ဆိုင် ID တိုင်းကို ပြလို့ အဲဒီအခါ အလိုလို ပါလာပါမည်။<span class="en">The shop ids S1 and S2 stay (they are printed on the tags). For a third shop, tell Noel: it is added in a later round (tags S3, vouchers V3, the lists and reports), and this screen then shows it by itself.</span></li>
+  </ol>
+</section>
+
+<!-- ===================== PART D: TROUBLE ===================== -->
+<section class="part">
+  <h2>အပိုင်း ဃ · ပြဿနာ ရှိရင်<span class="en">Part D · If something goes wrong</span></h2>
+  <table>
+    <thead><tr><th>ဖြစ်တာ · What you see</th><th>လုပ်ရမှာ · What to do</th></tr></thead>
+    <tbody>
+      <tr><td><span class="say">S1-0002 ထည့်ပြီးသားပါ · အရေအတွက် တိုးရင် + ကို နှိပ်ပါ</span><span class="en">"Already in the list"</span></td><td>ပစ္စည်းက စာရင်းထဲ ရှိပြီးသားပါ။ ထပ်ရောင်းရင် အဲဒီ စာကြောင်းရဲ့ <span class="b">+</span> ကို နှိပ်ပါ။<span class="en">The piece is already a line. Tap + on its line to sell one more.</span></td></tr>
+      <tr><td><span class="say">… · ဆိုင် ၂ ၏ ပစ္စည်းပါ · မထည့်ပါ</span><span class="en">"Another shop's piece"</span></td><td>အရောင်း တစ်ခုမှာ ဆိုင် တစ်ဆိုင်ရဲ့ ပစ္စည်းသာ။ အဲဒီ ဆိုင်ရဲ့ ဖုန်းနဲ့ ရောင်းပါ (သို့) ဆိုင်ရှင်ကို ပြောပါ။<span class="en">One sale holds one shop's pieces. Sell it from that shop, or tell the owner.</span></td></tr>
+      <tr><td><span class="say">… ရောင်းပြီးသားပါ · ဖယ်ပြီးမှ သိမ်းပါ</span><span class="en">"Sold meanwhile: remove it, then save"</span></td><td>တခြား ဖုန်းက ရောင်းသွားပါပြီ။ အဲဒီ စာကြောင်းကို ဖယ်ပြီး Save ပြန်နှိပ်ပါ။<span class="en">Another phone sold it meanwhile. Remove that line and tap Save again.</span></td></tr>
+      <tr><td>Save နှိပ်ရင် မမှတ်ဘဲ အောက်မှာ မေးခွန်း ပေါ်<span class="en">Save refuses with a question</span></td><td>ဘောင်ခတ်ထားတဲ့ အကွက်ကို ဖြေပါ (ယခု ပေးငွေ၊ ဝယ်သူ၊ ပေးမည့်ရက် စသည်)။ ပြီးမှ Save ပြန်နှိပ်ပါ။<span class="en">Answer the outlined row (paid now, buyer, promised day and so on), then Save again.</span></td></tr>
+      <tr><td><span class="say">… · ကျန် … ကျပ် · အကြွေးနဲ့ ရောင်းထားတာပါ · ပြန်အမ်းရင် ဆိုင်ရှင်ကို မေးပါ</span><span class="en">A return refused</span></td><td>ငွေ မကျေသေးတဲ့ အရောင်းက ပစ္စည်းပါ။ ဆိုင်ရှင်ကို ပြောပါ (အပိုင်း က ၁၃)။<span class="en">The piece is from a sale that still owes. Tell the owner (Part A, 13).</span></td></tr>
+      <tr><td><span class="say">ဖုန်းထဲ မသိမ်းနိုင်ပါ · ထပ်ကြိုးစားပါမည်</span><span class="en">"Could not save on the phone"</span></td><td>အက်ပ်က ထပ်ကြိုးစားပါမည်။ အက်ပ်ကို မပိတ်ပါနဲ့။ ဆက်ပေါ်နေရင် Noel ကို ပြောပါ။<span class="en">The app retries. Do not close it; if it keeps showing, tell Noel.</span></td></tr>
+      <tr><td>တိမ်ပုံ icon မှာ တြိဂံ (သို့) ဂဏန်း ကြီးလာ<span class="en">The sync icon shows a triangle, or a growing number</span></td><td>အင်တာနက် စစ်ပါ။ icon ကို နှိပ်ပြီး <span class="b">ယခု ပို့မယ်</span>။ ကြာနေရင် <span class="b">ဖိုင်ထုတ်</span> နှိပ်ပြီး ဖိုင်ကို Telegram ထဲက bot ဆီ ပို့ပါ။ ပို့ရန် ကျန်နေတုန်း အက်ပ်ကို မဖျက်ပါနဲ့။<span class="en">Check the internet. Tap the icon, then ယခု ပို့မယ်. If it lasts, ဖိုင်ထုတ် and send the file to the bot in Telegram. Never uninstall the app while rows wait.</span></td></tr>
+      <tr><td>Bot က ဘာမှ မဖြေ<span class="en">The bot does not answer</span></td><td>အင်တာနက် စစ်ပါ။ တစ်မိနစ် စောင့်ပြီး <span class="say">/start</span> ထပ်ပို့ပါ။ မရရင် Noel ကို ပြောပါ။<span class="en">Check the internet, wait a minute, send /start again. Still nothing: tell Noel.</span></td></tr>
+      <tr><td><span class="say">ဒီ bot ကို ဆိုင်ဝန်ထမ်းများသာ သုံးနိုင်ပါသည်။</span><span class="en">"Staff only"</span></td><td>သင့်နံပါတ် မှတ်ပုံတင် မထားသေးပါ။ Noel ကို ပြောပါ။<span class="en">Your number is not registered yet. Tell Noel.</span></td></tr>
+      <tr><td><span class="say">❓ Tag … ကို မတွေ့ပါ။</span><span class="en">"Tag not found"</span></td><td>ဒီ Tag က ဒီဆိုင်ရဲ့ Tag မဟုတ်ပါ။ Tag အလွတ် အသစ် ချိတ်ပါ (သို့) အမည်နဲ့ ရှာပါ။<span class="en">The tag is not in the system. Tie a new blank tag, or find the item by name.</span></td></tr>
+      <tr><td><span class="say">🤔 နားမလည်ပါ။ ခလုတ်နှိပ်ပေးပါ။</span><span class="en">"Did not understand" (Telegram)</span></td><td>ခလုတ်နဲ့ ထည့်ပါ။ (သို့) တိုတိုပြန်ပြောပါ: <span class="say">ဒါ ၂ ထည် ရောင်းရတယ်</span><span class="en">Use the buttons, or say it again shorter.</span></td></tr>
+      <tr><td><span class="say">🎤 အသံ မကြားရပါ။ ခလုတ်နှိပ်ပေးပါ။</span><span class="en">"Could not hear"</span></td><td>AI ခဏ ရပ်နေပါသည်။ ခလုတ် သုံးပါ။ ခလုတ်က အမြဲ အလုပ်လုပ်ပါသည်။<span class="en">The AI is briefly unavailable. Buttons always work.</span></td></tr>
+      <tr><td><span class="say">🤖 AI ပိတ်ထားပါသည် · အောက်က ခလုတ်တွေနဲ့ မှတ်ပါ</span><span class="en">"AI is off"</span></td><td>ဆိုင်ရှင်က AI ကို ပိတ်ထားပါသည် (အပိုင်း ဂ ၈)။ ခလုတ်နဲ့ (အက်ပ်မှာ ဖောင်နဲ့) မှတ်ပါ။<span class="en">The owner switched AI off (Part C, 8). Use the buttons, or the forms in the app.</span></td></tr>
+      <tr><td>အကောင့် ခလုတ် မပေါ်<span class="en">An account's button is missing</span></td><td>Lists tab မှာ စစ်ပါ: Active ခြစ်ထားလား၊ Shop က ကွက်လပ် (သို့) ဒီဆိုင်လား၊ Key က အင်္ဂလိပ် စာလုံး/ဂဏန်း ၁၂ လုံးအထိလား။ အကောင့် ၁၂ ခုထက် ပိုရင် ကျန်တာ မပေါ်ပါ။ ရောင်းတဲ့အခါ ဘဏ်အကောင့် (Kind = bank) တွေက <span class="b">ဘဏ်</span> အောက်မှာ၊ Pay အကောင့် များရင် <span class="b">Pay အကောင့်</span> အောက်မှာ ရှိပါသည်။<span class="en">Check the Lists tab: Active ticked, Shop blank or this shop, Key at most 12 English letters or digits. Beyond 12 accounts the rest are left out. In a sale, bank accounts are behind ဘဏ်, and many Pay accounts behind Pay အကောင့်.</span></td></tr>
+      <tr><td><span class="say">ℹ️ ဒီနေရာကနေ စာရင်းအသစ် ထည့်လို့ မရသေးပါ။ ဆိုင်ရှင်ကို ပြောပါ။</span><span class="en">"Cannot add a new option here yet"</span></td><td>ဆိုင်ရှင်က ကွန်ပျူတာမှာ Lists tab ထဲ ထည့်ပေးပါမည်။<span class="en">The owner adds it in the Lists tab on the laptop.</span></td></tr>
+      <tr><td><span class="say">ℹ️ "…" ကို ပိတ်ထားပါတယ် · တခြား နာမည် ရိုက်ပါ</span><span class="en">"… is closed: type another name" (a new category)</span></td><td>ဆိုင်ရှင်က အဲဒီ အမျိုးအစားကို ပိတ်ထားပါသည် (သို့) တခြားဆိုင် အတွက်သာ ထားပါသည်။ ရှိတဲ့ ခလုတ် တစ်ခုကို ရွေးပါ (သို့) ဆိုင်ရှင်ကို ပြောပါ: Lists tab မှာ Active ပြန်ခြစ်ပါမည် (အပိုင်း ဂ ၆)။<span class="en">The owner closed that category, or kept it to another shop. Pick one of the chips, or ask the owner to tick its Active again in the Lists tab (Part C, 6).</span></td></tr>
+      <tr><td><span class="say">ℹ️ နမူနာ က အမျိုးအစား မဟုတ်ပါ · 🎨 နမူနာ ခလုတ်ကို သုံးပါ</span><span class="en">"A sample is not a category" (a new category)</span></td><td>နမူနာ ဆိုတာ အမျိုးအစား မဟုတ်ပါ။ အမျိုးအစား ရွေးပြီး နမူနာ ခလုတ်ကို ဖွင့်ပါ (Telegram: <span class="b">🎨 နမူနာ: မဟုတ်</span> ကို နှိပ်ပါ)။<span class="en">A sample is not a category: pick the category, then turn the sample switch on (in Telegram, tap 🎨 နမူနာ: မဟုတ်).</span></td></tr>
+      <tr><td>☰ 📦 ကုန်ရောက် လုပ်နေတုန်း scan လုပ်ရင် ဂဏန်း ခလုတ် မပေါ်ဘဲ ပစ္စည်း ကတ် ပေါ်<span class="en">During ☰ 📦 a scan shows the item card, not the count</span></td><td>Bot ရဲ့ နောက်ဆုံး မေးခွန်း ပြီး ၃ မိနစ် ကျော်သွားလို့ (သို့) မီနူး ခလုတ် နှိပ်ခဲ့လို့ ကုန်ရောက် ရပ်သွားပါပြီ။ ကတ်ရဲ့ <span class="b">📦 ကုန်ရောက်</span> ကို နှိပ်ပါ (သို့) မီနူးရဲ့ <span class="b">📦 ကုန်ရောက်</span> ကို ပြန်နှိပ်ပါ။ မှတ်ပြီးသား Tag တွေ မပျောက်ပါ။<span class="en">More than three minutes passed since the bot's last question, or a menu button was tapped, so the restock loop ended. Tap 📦 on the card, or 📦 in the menu again. The tags already recorded stay.</span></td></tr>
+      <tr><td><span class="say">⏸ ဒီစာရင်း (… ခု) ခဏ ရပ်ထားပါသည် · ဆက်ရောင်းရင် ↪️ ဒါမှမဟုတ် ပစ္စည်းကတ်ရဲ့ ➕ ကို နှိပ်ပါ</span><span class="en">"This list is paused" (Telegram)</span></td><td>➕ မနှိပ်ဘဲ Tag scan လုပ်ခဲ့ပါသည်။ ပစ္စည်း ကတ်ရဲ့ <span class="b">➕ စာရင်းထဲ ထည့်</span> (သို့) <span class="b">↪️ ဆက်လုပ်မယ်</span> ကို နှိပ်ပါ။<span class="en">A tag was scanned without ➕. Tap ➕ စာရင်းထဲ ထည့် on the piece's card, or ↪️ ဆက်လုပ်မယ်.</span></td></tr>
+      <tr><td><span class="say">⏱ ဒီစာရင်း ပိတ်လိုက်ပါပြီ · ဘာမှ မမှတ်ရသေးပါ</span><span class="en">"This list is closed" (Telegram)</span></td><td>တခြား ပစ္စည်းကို ရောင်း စလိုက်လို့ပါ။ ဘာမှ မမှတ်ပါ။ လိုရင် ပြန်ရောင်းပါ။<span class="en">Another sale was started; nothing was recorded. Sell again if needed.</span></td></tr>
+      <tr><td><span class="say">⏱ သက်တမ်းကုန်သွားပါပြီ။ ထပ်ပြောပေးပါ။</span><span class="en">"Expired"</span></td><td>Telegram: ကတ်ကို မိနစ် ၃၀ ထားခဲ့တာ (သို့) message အဟောင်းကို နှိပ်မိတာ ဖြစ်ပါသည်၊ နောက်ဆုံး message ကို သုံးပါ။ အက်ပ်: ဆိုင်ရှင်က sale_flow ပြောင်းလိုက်လို့ ဖောင် ပိတ်သွားပါသည်။ ဘာမှ မမှတ်ပါ၊ ပြန်ရောင်းပါ။<span class="en">Telegram: the card waited 30 minutes, or an older message was tapped (use the newest). The app: the owner changed sale_flow and the form closed. Nothing was recorded: sell again.</span></td></tr>
+      <tr><td><span class="say">⚠️ ရောင်းပြီးသားပါ · မမှတ်ပါ</span><span class="en">"Already sold, not recorded"</span></td><td>တစ်ထည်တည်း ပစ္စည်းကို တခြား ဖုန်းက ရောင်းပြီးသား ဖြစ်ပါသည်။ ဘာမှ မမှတ်ပါ။<span class="en">The one-of-a-kind piece was sold on another phone meanwhile. Nothing was recorded.</span></td></tr>
+      <tr><td><span class="say">❓ … မှ … အတွင်း ဂဏန်း ရိုက်ပေးပါ</span><span class="en">"Type a number between … and …"</span></td><td>ပမာဏ မှားနေပါသည်။ ပြတဲ့ ဂဏန်းနှစ်ခုကြားက ပမာဏ ပြန်ရိုက်ပါ။<span class="en">The amount is outside what is allowed. Type one in the range shown.</span></td></tr>
+      <tr><td>ဖောင် မပေါ်ဘဲ ခလုတ်တစ်ချက်နဲ့ မှတ်သွား<span class="en">No form: one tap sells again</span></td><td>ဆိုင်ရှင်က sale_flow ကို quick ပြောင်းထားလို့ (အပိုင်း ဂ ၇)၊ (သို့) bot က ဗားရှင်း အဟောင်း ဖြစ်နေလို့ ပါ။ ဒီအတောအတွင်း ပေးမည့်ရက် မမေးပါ။ quick မဟုတ်ရင် Noel ကို ပြောပါ။<span class="en">Either the owner set sale_flow to quick (Part C, 7), or the bot is on an older version. Meanwhile no promised day is asked. If it is not quick, tell Noel; once the bot is back, the app shows the forms after its next sync.</span></td></tr>
+      <tr><td>အက်ပ် ဖွင့်ပြီးချင်း နောက်ပြန် နှိပ်ရင် ထွက်သွား<span class="en">Back left the app right after opening it</span></td><td>ဘာမှ မနှိပ်ခင် ကင်မရာက ဖောင် ဖွင့်ခဲ့ရင် ဖြစ်တတ်ပါသည်။ စာရင်း မပျောက်ပါ: <span class="b">🛒 ရောင်းမယ်</span> နှိပ်ပါ။<span class="en">It can happen when the camera opened a form before any tap. The list is kept: tap 🛒.</span></td></tr>
+      <tr><td>ကင်မရာ မပွင့်ဘူး · <span class="say">ကင်မရာ ခွင့် မရပါ · နံပါတ် ရိုက်ပါ</span><span class="en">The camera does not open: "camera permission not given"</span></td><td>ဖုန်းက ကင်မရာ ခွင့် မေးတုန်း <span class="b">Block</span> နှိပ်မိလို့ပါ။ ဖုန်းရဲ့ Settings → Apps → ဆိုင် အက်ပ် → Camera မှာ ပြန်ဖွင့်ပါ (Scan ခလုတ် အောက်က စာမှာလည်း ရေးထားပါသည်)။ မဖြစ်သေးခင် <span class="b">နံပါတ် ရိုက်မယ်</span> နဲ့ Tag နံပါတ် ရိုက်ပြီး ဆက်ရောင်းပါ။<span class="en">Block was tapped when the phone asked for the camera. Turn it back on in the phone's Settings → Apps → the ဆိုင် app → Camera (the line under the Scan button says so). Until then type tag numbers with နံပါတ် ရိုက်မယ်.</span></td></tr>
+      <tr><td>မတော်တဆ <span class="b">ဖုန်း ပြန်ချိတ်ဆက်</span> နှိပ်မိ<span class="en">ဖုန်း ပြန်ချိတ်ဆက် tapped by mistake</span></td><td>အက်ပ်က အရင် မေးပါသည် (<span class="say">ဒီဖုန်းကို ဆိုင်နဲ့ ဖြုတ်မလား?</span>): <span class="b">Cancel</span> နှိပ်ရင် ဘာမှ မဖြစ်ပါ။ <span class="b">ဖြုတ်မယ်</span> နှိပ်မိသွားရင် Telegram ထဲက <span class="b">📲 အက်ပ်</span> ကုဒ် အသစ်နဲ့ ပြန်ချိတ်ပါ (အပိုင်း က · မစတင်ခင်)။<span class="en">The app asks first (ဒီဖုန်းကို ဆိုင်နဲ့ ဖြုတ်မလား?): Cancel does nothing. If ဖြုတ်မယ် was tapped, connect again with a new 📲 အက်ပ် code from Telegram (Part A, Before you start).</span></td></tr>
+      <tr><td>မှားထည့်မိပြီး မိနစ် ၃၀ ကျော်သွား<span class="en">Wrong entry, more than 30 minutes ago</span></td><td>ဆိုင်ရှင်ကို ပြောပါ။ ပြန်အမ်း၊ ကုန်ရောက် (သို့) ဆိုင်ရှင်ရဲ့ ပယ်ဖျက်နဲ့ ပြင်ပါသည် (အပိုင်း ဂ ၄-က)။<span class="en">Tell the owner. It is corrected with a return, a restock or the owner's void (Part C, 4a).</span></td></tr>
+      <tr><td>ဖုန်း ပျောက် / ပြောင်း<span class="en">Lost or new phone</span></td><td>Telegram ကို အသစ် ဝင်ပြီး bot ကို START နှိပ်ပါ (နံပါတ် တူရင် ချက်ချင်း အလုပ်လုပ်ပါမည်)။ အက်ပ် အတွက် ဖုန်းအသစ်မှာ အက်ပ် ထည့်ပြီး <span class="b">📲 အက်ပ်</span> ကုဒ်အသစ်နဲ့ ချိတ်ဆက်ပါ၊ ဆိုင်ရှင်က ဖုန်းဟောင်းကို <span class="b">📱 ဖုန်းများ</span> မှာ ပိတ်ပါ။<span class="en">Sign in to Telegram on the new phone and press START. For the app, install it on the new phone and connect it with a new 📲 code; the owner switches the old phone off in 📱 ဖုန်းများ.</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===================== PART E: SIMULATOR ===================== -->
+<section class="part">
+  <h2>အပိုင်း င · Simulator မှာ လေ့ကျင့်ရန်<span class="en">Part E · Practise in the simulator</span></h2>
+  <p class="lead">Simulator က ဝဘ်စာမျက်နှာ တစ်ခုပါ (ဆိုင်ရှင်ဆီ ရှိပြီးသား link)။ အစစ် bot နဲ့ အစစ် ဖုန်းအက်ပ်ကို အတု Sheet နဲ့ ပြပါသည်။ ဘာနှိပ်နှိပ် ဆိုင်ရဲ့ Sheet အစစ်ကို မရောက်ပါ။<span class="en">The simulator is one web page (the link the owner already has). The real bot and the real phone app run in it against a pretend Sheet, so nothing tapped there reaches the shop's real Sheet. Practise there first.</span></p>
+  <ol class="steps">
+    <li>ဝင်မယ့်သူ ရွေးပါ: <span class="b">ဆိုင်ရှင် / Owner</span> (ဆိုင် ၂ ဆိုင်လုံး)၊ <span class="b">🧵 ဆိုင် ၁ / Seller shop 1</span>၊ <span class="b">🧵 ဆိုင် ၂ / Seller shop 2</span>။ <span class="b">🚪 Log out</span> နဲ့ ပြောင်းပါ၊ ထည့်ထားတာတွေ မပျောက်ပါ။ ရောင်းသူက 📱 အက်ပ်ကနေ စပါသည်။<span class="en">Pick a login: Owner (the shared admin login, both shops), Seller shop 1 or Seller shop 2. "Log out" switches; what was entered stays. A seller starts on the app.</span></li>
+    <li>ကိရိယာ ရွေးပါ: <span class="b">✈️ Telegram</span>၊ <span class="b">📱 အက်ပ် / App</span> (ဖုန်းအက်ပ် အစစ်)၊ ဆိုင်ရှင်အတွက် <span class="b">💻 Laptop</span> (Sheet: Dashboard, Lists (ပြင်လို့ရ), Ledger, Customers, Credits, Deposits, Orders, Measurements, Errors, Family group)။<span class="en">Pick a device: Telegram, the real phone app, and for the owner the Laptop: the Sheet with Dashboard, Lists (editable), Ledger, Customers, Credits, Deposits, Orders, Measurements, Errors and the Family group.</span></li>
+    <li>Shop floor ပေါ်က Tag ကို click လုပ်ရင် ဖုန်းကင်မရာနဲ့ scan လုပ်သလို ဖြစ်ပါသည်: 📱 အက်ပ်မှာ ရောင်းမယ် ဖောင် ပွင့်ပါမည် (ဖောင် ပွင့်နေရင် စာကြောင်း ထပ်ဝင်)၊ ✈️ Telegram မှာ START ပေါ်ပါမည်။<span class="en">A click on a tag on the shop floor is a scan: on the app the sale form opens (an open form takes it as a line); in Telegram the START button shows.</span></li>
+    <li>ဘယ်ဘက်က <span class="say">ဘာလုပ်လို့ရလဲ · What can I do</span> မှာ အလုပ် တစ်ခု ရွေးပါ။ နောက် နှိပ်ရမယ့် ခလုတ်ကို အရောင်နဲ့ ပြပါမည်။ <span class="b">⏭ do it for me</span> (ကိုယ်စား လုပ်ပေး)၊ <span class="b">skip</span> (ကျော်)၊ <span class="b">✖ leave the tour</span> (ထွက်)။<span class="en">On the left, "What can I do" lists the jobs below. Pick one: the panel says what to tap next and highlights it. "Do it for me" does the step, "skip" passes it, "leave the tour" stops.</span></li>
+    <li>အပေါ်က ခလုတ်များ: <span class="b">⏩ +31 min</span> <span class="b">⏩ +1 ရက် / next day</span> <span class="b">🕘 21:00</span> (demo နာရီ)၊ <span class="b">Post 21:00 summary</span> (ည ၉ နာရီ အနှစ်ချုပ်ကို Family group ထဲ ပို့)၊ sale_flow <span class="b">form</span> | <span class="b">quick</span>၊ <span class="b">Print tags</span>၊ <span class="b">Reset</span> (အစက ပြန်စ)။<span class="en">At the top: the demo clock (+31 min, next day, 21:00), "Post 21:00 summary" into the Family group, the form / quick switch, "Print tags", and "Reset" to start again from the login.</span></li>
+    <li>ဆိုင်ရှင်ရဲ့ 📱 အက်ပ် Settings မှာ AI ခလုတ်နဲ့ ဆိုင်များ ကို စမ်းနိုင်ပါသည်။ AI ပိတ်ထားရင် AI လိုတဲ့ tour (အော်ဒါ) မစပါ၊ ပြန်ဖွင့်ပါ (သို့) Reset။ အသံ (🎤 Voice notes) က Telegram ဖုန်း အောက်က ပိတ်ထားတဲ့ အပိုင်းမှာ ရှိပါသည်။<span class="en">On the owner's app, Settings has the AI switch and the shops to try. With AI off the order tour, which needs it, does not start: switch it on again or Reset. Voice notes sit in a closed section under the Telegram phone.</span></li>
+  </ol>
+  <table>
+    <thead><tr><th>ဘာလုပ်လို့ရလဲ · Tours</th><th>What can I do</th></tr></thead>
+    <tbody>
+      <tr><td>ရောင်း · တစ်မျက်နှာတည်း (ငွေသား · အကုန်)</td><td><span class="en">Sell on one screen (cash, paid in full)</span></td></tr>
+      <tr><td>စရံ နဲ့ ရောင်း · ကျန်ငွေ ပေးမည့်ရက်</td><td><span class="en">Sell with a deposit and a date for the rest</span></td></tr>
+      <tr><td>ခွဲပေး (ငွေသား + KBZPay)</td><td><span class="en">A mixed payment (part KBZPay, the rest cash)</span></td></tr>
+      <tr><td>စျေးလျှော့ပြီး ၂ ထည် ရောင်း</td><td><span class="en">A changed price for two pieces</span></td></tr>
+      <tr><td>ဖယ် · မလုပ်တော့</td><td><span class="en">Remove a line, then leave</span></td></tr>
+      <tr><td>ကုန်ရောက် (ဆိုင် ၂)</td><td><span class="en">Restock (shop 2)</span></td></tr>
+      <tr><td>Tag အသစ် · ဓာတ်ပုံနဲ့ မှတ်</td><td><span class="en">Register a new piece by photo</span></td></tr>
+      <tr><td>ပြန်အမ်း</td><td><span class="en">A return</span></td></tr>
+      <tr><td>ကုန်ကျစရိတ် မှတ်</td><td><span class="en">Record an expense</span></td></tr>
+      <tr><td>Telegram · ရောင်းကတ် (အက်ပ် မရှိရင်)</td><td><span class="en">Telegram backup: the review card</span></td></tr>
+      <tr><td>အကြွေး ငွေလက်ခံ</td><td><span class="en">Receive a payment on a credit</span></td></tr>
+      <tr><td>စရံ လက်ခံ</td><td><span class="en">Take a deposit</span></td></tr>
+      <tr><td>အော်ဒါ · ဘောက်ချာ · အတိုင်းအတာ</td><td><span class="en">A custom order with its voucher and measurements (the figure included)</span></td></tr>
+      <tr><td>စာရင်း PDF · ၂၁:၀၀ အစီရင်ခံ</td><td><span class="en">Reports and the 21:00 summary</span></td></tr>
+      <tr><td>ဖုန်းအက်ပ် ချိတ်ဆက်</td><td><span class="en">Enrol a phone (the app)</span></td></tr>
+      <tr><td>💻 Lists ပြင် · ဘဏ်/အကောင့်</td><td><span class="en">Manage the accounts on the laptop (Lists)</span></td></tr>
+      <tr><td>quick ရောင်း ↔ form</td><td><span class="en">Switch to the quick sale and back</span></td></tr>
+      <tr><td>ပစ္စည်းအသစ် · အမျိုးအစားအသစ် ➕ · နမူနာ</td><td><span class="en">A new piece with a new category, as a sample (then the owner's Lists tab)</span></td></tr>
+      <tr><td>Telegram · ☰ 📦 ကုန်ရောက် · Tag အများ</td><td><span class="en">Telegram: restock several tags from the menu</span></td></tr>
+      <tr><td>ဝယ်သူ တစ်ယောက် Tag ကို scan</td><td><span class="en">A stranger scans a tag</span></td></tr>
+    </tbody>
+  </table>
+
+  <p class="fine">Shop Tag Bot user guide · draft 5 · 2026-11-18 (draft 4 of 2026-11-13: selling in the app's forms, a sale of several pieces, the Telegram card as the backup, buyers, history, the receipt page, the figure, the AI switch, the owner's Shops screen; draft 5 adds the sample's own sign and switch, item categories the shop can add to, and 📦 in Telegram's menu) · Burmese wording to be corrected by the family. Button names are the defaults and can be changed in the Messages tab of the sheet; account, expense-category, fabric and item-category names come from the Lists tab. docs/USER-GUIDE.pdf is still draft 1.</p>
+</section>
+
+</body>
+</html>
