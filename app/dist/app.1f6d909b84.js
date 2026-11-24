@@ -1,5 +1,5 @@
-var APP_BUILD = {"version":"1.0.0","hash":"29f689e93e","builtAt":"2026-11-19T05:16:50.387Z"};
-/* SalesTag app bundle 1.0.0 · built 2026-11-19T05:16:50.387Z by tools/build_app.js. Do not edit; edit apps-script/core_*.js and app/app_*.js. */
+var APP_BUILD = {"version":"1.0.0","hash":"1f6d909b84","builtAt":"2026-11-24T06:16:17.900Z"};
+/* SalesTag app bundle 1.0.0 · built 2026-11-24T06:16:17.900Z by tools/build_app.js. Do not edit; edit apps-script/core_*.js and app/app_*.js. */
 /* ===== apps-script/core_config.js ===== */
 /**
  * core_config.js — shared constants.
@@ -253,25 +253,25 @@ function saleFlow(ports) {
 /* ------------------------------ custom orders: id helpers ------------------------------ */
 
 /** 'V1-2532' (shop digit, dash, the voucher number of that shop's paper series). */
-function isOrderId(s) { return /^V\d-\d{1,8}$/.test(String(s || '')); }
+function isOrderId(s) { return /^V\d+-\d{1,8}$/.test(String(s || '')); }
 
 /** 'V1-2532-1': a voucher line, used as the ledger ItemID when no tag is attached and as the tag's Alias when one is. */
-function isOrderLineId(s) { return /^V\d-\d{1,8}-\d{1,3}$/.test(String(s || '')); }
+function isOrderLineId(s) { return /^V\d+-\d{1,8}-\d{1,3}$/.test(String(s || '')); }
 
 function orderIdOfLine(lineId) {
-  var m = String(lineId || '').match(/^(V\d-\d{1,8})-\d{1,3}$/);
+  var m = String(lineId || '').match(/^(V\d+-\d{1,8})-\d{1,3}$/);
   return m ? m[1] : null;
 }
 
 /** The voucher number the family knows (2532) from the id V1-2532. */
 function orderNo(orderId) {
-  var m = String(orderId || '').match(/^V\d-(\d+)$/);
+  var m = String(orderId || '').match(/^V\d+-(\d+)$/);
   return m ? String(Number(m[1])) : String(orderId || '');
 }
 
 /** Shop of an order id: V1-... -> S1. */
 function orderShop(orderId) {
-  var m = String(orderId || '').match(/^V(\d)-/);
+  var m = String(orderId || '').match(/^V(\d+)-/);
   return m ? 'S' + m[1] : '';
 }
 
@@ -290,6 +290,43 @@ function normDesignCode(code) {
   var m = s.match(/^([A-Z]*)(\d*)$/);
   if (!m || (!m[1] && !m[2])) return '';
   return m[1] + '-' + (m[2] ? String(Number(m[2])) : '');
+}
+
+function shopRegistry(ports) {
+  var raw = ports.store.getSetting && ports.store.getSetting('shop_registry', '');
+  if (typeof raw === 'string' && /^\[/.test(raw)) return JSON.parse(raw);
+  return ['S1', 'S2'].map(function (id) { return { id: id, active: true }; });
+}
+
+/** Called at each request and app render, after the local Settings mirror is available. */
+function loadShopRegistry(ports) {
+  if (!ports || !ports.store || !ports.store.getSetting) return;
+  var raw = ports.store.getSetting('shop_registry', '');
+  if ((typeof raw !== 'string' || !/^\[/.test(raw)) && !CFG.registryLoaded) return;
+  CFG.SHOP_IDS = shopRegistry(ports).map(function (s) { return s.id; });
+  CFG.registryLoaded = !!raw;
+}
+
+function activeShopIds(ports) {
+  return shopRegistry(ports).filter(function (s) { return s.active; }).map(function (s) { return s.id; });
+}
+
+function officeRole(role) {
+  return !!role && role !== 'owner' && String(role).split('+').indexOf('staff') < 0;
+}
+
+function hasJob(staff, job) {
+  return !!staff && (staff.role === 'owner' || String(staff.role).split('+').indexOf(job) >= 0);
+}
+function staffShops(staff) {
+  return staff.role === 'owner' ? CFG.SHOP_IDS.slice() : (staff.shops && staff.shops.length ? staff.shops.slice() : [staff.shop]);
+}
+
+// A phone may deliver a saved entry after its shop has closed.
+function shopAcceptsEntry(ports, id, time) {
+  return !shopRegistry(ports).some(function (s) {
+    return s.id === id && !s.active && (!s.closedAt || !time || new Date(time).getTime() >= new Date(s.closedAt).getTime());
+  });
 }
 
 /* ===== apps-script/core_burmese.js ===== */
@@ -866,7 +903,7 @@ var MSG = {
   split_bad: '❓ ၁ မှ {max} အတွင်း ဂဏန်း ရိုက်ပေးပါ',
   split_no_bank: 'ℹ️ ဘဏ်အကောင့် မရှိသေးပါ။ အရင် ထည့်ပါ။',
   // round 4: adding a missing option where it is needed (the ➕ of every pick list)
-  btn_add_bank: '➕ ဘဏ်အသစ်',
+  btn_add_bank: '➕ အကောင့်အသစ်',
   btn_add_cat: '➕ အမျိုးအစားအသစ်',
   btn_add_option: '➕ အသစ် ထည့်',
   add_ask_pm: '✏️ ဘဏ်/အကောင့် နာမည် ရိုက်ပါ (ဥပမာ KBZ ဦးမောင်)',
@@ -1310,6 +1347,7 @@ function newTx(ports, f) {
 
 /** Append one or more rows atomically. Returns {groupId, txs}. */
 function writeGroup(ports, txs) {
+  if (txs.some(function (tx) { return !shopAcceptsEntry(ports, tx.shop, tx.time); })) throw new Error('ဆိုင် ပိတ်ထားပါသည်');
   var groupId = txs[0].groupId;
   txs.forEach(function (tx) { tx.groupId = groupId; });
   ports.lock.run(function () {
@@ -2547,6 +2585,7 @@ function commitBasket(ports, p) {
 function commitNewItem(ports, p) {
   var item = ports.store.getItem(p.itemId);
   if (!item) return { ok: false, reason: 'missing' };
+  if (!shopAcceptsEntry(ports, item.shop, p.when || ports.clock.now())) return { ok: false, reason: 'shop_closed' };
   if (item.status !== CFG.STATUS.BLANK) return { ok: false, reason: 'not_blank' };
   if (p.staff.role !== 'owner' && item.shop !== p.staff.shop) return { ok: false, reason: 'other_shop' };
   var count = nullish(p.count) ? 1 : Number(p.count);
@@ -2627,11 +2666,12 @@ function commitReturn(ports, p) {
   var qty = Math.max(1, Math.round(Number(p.qty) || 1));
   var unitPrice = !nullish(p.unitPrice) ? Number(p.unitPrice)
     : (!nullish(p.amount) ? Math.round(Number(p.amount) / qty) : (Number(p.item.price) || 0));
+  var sale = lastLiveSale(ports, p.item.id);
   var amount = -(qty * unitPrice);
   var cash = nullish(p.refund) ? amount : -Math.abs(Math.round(Number(p.refund) || 0));
   var tx = newTx(ports, {
     shop: p.item.shop, itemId: p.item.id, type: CFG.TX.RETURN, qty: qty, unitPrice: unitPrice,
-    amount: amount, cash: cash, costAtSale: p.item.cost, customerId: p.customerId || '', note: p.note,
+    amount: amount, cash: cash, costAtSale: sale ? sale.costAtSale : p.item.cost, customerId: p.customerId || '', note: p.note,
     method: methodFor(p.method, cash),
     source: p.source, transcript: p.transcript, staffId: p.staff.id, updateId: p.updateId, when: p.when
   });
@@ -2651,7 +2691,9 @@ function commitExpense(ports, p) {
 
 /** Moves the tag (and all its stock) to the other shop. */
 function commitTransfer(ports, p) {
-  var fromShop = p.item.shop, toShop = p.toShop || otherShop(fromShop);
+  var fromShop = p.item.shop, destinations = activeShopIds(ports).filter(function (s) { return s !== fromShop; });
+  var toShop = p.toShop || (destinations.length === 1 ? destinations[0] : '');
+  if (destinations.indexOf(toShop) < 0) throw new Error('လက်ခံမည့်ဆိုင် ရွေးပါ');
   var qty = Math.max(0, Number(p.item.stock) || 0);
   var out = newTx(ports, {
     shop: fromShop, itemId: p.item.id, type: CFG.TX.TRANSFER_OUT, qty: -qty, unitPrice: null, amount: 0, cash: 0,
@@ -2755,6 +2797,7 @@ function groupRows(ports, groupId) {
 function undoGroup(ports, groupId, staff, now, opts) {
   now = now || ports.clock.now();
   opts = opts || {};
+  if (String(groupId).indexOf('SHIP-') === 0) return { ok: false, reason: 'locked' };
   var g = groupRows(ports, groupId);
   if (!g.rows.length) return { ok: false, reason: 'missing' };
   var rows = g.live;
@@ -3389,7 +3432,12 @@ function statsWhere(ports, shop, pred) {
         s.fees += r.amount;
         s.orderRevenue += r.amount;
         break;
-      case T.RETURN: s.revenue += r.amount; s.pieces -= r.qty; break;
+      case T.RETURN:
+        s.revenue += r.amount;
+        s.pieces -= r.qty;
+        if (nullish(r.costAtSale) || r.costAtSale === '') s.unknownCostPieces -= r.qty;
+        else s.cogs -= r.qty * Number(r.costAtSale);
+        break;
       case T.EXPENSE: {
         s.expenses -= r.amount;
         var key = r.category || 'other';
@@ -3610,7 +3658,7 @@ function importProducts(ports, rows, staff) {
     if (!name) { skipped.push({ code: code, reason: 'no name' }); return; }
     if (CFG.SHOP_IDS.indexOf(shop) < 0) { skipped.push({ code: code, reason: 'unknown shop ' + shop }); return; }
     var target = null, alias = '';
-    if (/^S[12]-\d{4}$/.test(code)) {
+    if (/^S[1-9]\d*-\d{4}$/.test(code)) {
       var existing = ports.store.getItem(code);
       if (existing && existing.status === CFG.STATUS.BLANK && existing.shop === shop) target = existing;
       else if (existing) { skipped.push({ code: code, reason: 'tag already in use' }); return; }
@@ -3670,6 +3718,7 @@ function buildReport(ports, kind, o) {
   o = o || {};
   var now = o.now || ports.clock.now();
   var shops = o.shop ? [o.shop] : CFG.SHOP_IDS;
+  if (kind === 'year') return closingReport(ports, o.year || dayKey(now).slice(0, 4), shops, now);
   if (kind === 'today' || kind === 'day') return dayReport(ports, o.day || dayKey(now), shops, now);
   if (kind === 'month') return monthReport(ports, o.month || monthKey(now), shops, now);
   if (kind === 'last') return monthReport(ports, prevMonthKey(now), shops, now);
@@ -4074,6 +4123,105 @@ function receiptReport(ports, r, now) {
   };
 }
 
+/** One period on paper or on screen. All totals use the same signed ledger rows as the daily close. */
+function closingReport(ports, period, shops, now) {
+  if (!/^\d{4}(-\d{2}(-\d{2})?)?$/.test(period)) throw new Error('ရက်စွဲ ရွေးပါ');
+  var matches = function (day) { return String(day).slice(0, period.length) === period; };
+  var sections = [], summary = [], costsMissing = 0;
+  var totals = { revenue: 0, cashIn: 0, cashOut: 0, expenses: 0, cogs: 0, profit: 0, pieces: 0 };
+  var entries = ports.store.ledgerRows(), moves = {}, stock = {}, byCategory = {};
+  var asOf = entries.filter(function (r) { return String(r.day).slice(0, period.length) <= period; });
+  var closingPorts = Object.create(ports);
+  closingPorts.store = Object.create(ports.store);
+  closingPorts.store.ledgerRows = function () { return asOf; };
+  var owed = openCredits(closingPorts, null).filter(function (c) { return shops.indexOf(c.shop) >= 0; });
+  var moneyOwed = owed.reduce(function (n, c) { return n + c.owed; }, 0);
+  var held = 0;
+  var itemNames = {}, categories = {};
+  ports.store.listItems(null).forEach(function (it) {
+    itemNames[it.id] = it.name;
+    categories[it.id] = it.category;
+  });
+  shops.forEach(function (shop) {
+    var s = statsWhere(ports, shop, matches);
+    Object.keys(totals).forEach(function (key) { totals[key] += s[key]; });
+    costsMissing += Math.abs(s.unknownCostPieces);
+    summary.push(summaryRow(ports, shop, s));
+    sections.push(methodSection(ports, shop, s, true), categorySection(ports, shop, s, true));
+  });
+  var detail = [], receipts = [], sales = {}, months = {};
+  entries.forEach(function (r) {
+    var kind = r.type, T = CFG.TX, own = shops.indexOf(r.shop) >= 0;
+    if (String(r.day).slice(0, period.length) > period) return;
+    if (own) {
+      if (kind === T.DEPOSIT) held += r.amount;
+      if (kind === T.DEPOSIT_APPLIED) held -= r.amount;
+      if (r.itemId && r.qty) {
+        var stockKey = JSON.stringify([r.shop, r.itemId]);
+        stock[stockKey] = (stock[stockKey] || 0) + r.qty;
+      }
+    }
+    var name = shopName(ports, r.shop);
+    var label = itemNames[r.itemId] || r.itemId || r.note || '';
+    if (kind === T.TRANSFER_IN || kind === T.TRANSFER_OUT) {
+      var move = moves[r.groupId] || (moves[r.groupId] = { day: r.day, item: label, qty: 0 });
+      if (r.reversesTxId) move.undone = true;
+      else {
+        if (kind === T.TRANSFER_IN) { move.received = true; move.to = r.shop; move.from = String(r.note || '').replace(/^from /, '') || move.from; }
+        if (kind === T.TRANSFER_OUT) { move.from = r.shop; move.to = String(r.note || '').replace(/^to /, '') || move.to; }
+        move.qty = Math.abs(r.qty);
+        if (matches(r.day)) { move.inPeriod = true; move.day = r.day; }
+      }
+    }
+    if (!own || !matches(r.day)) return;
+    if (kind === T.SALE || kind === T.RETURN || kind === T.FEE) {
+      var cat = categories[r.itemId] || (isOrderId(r.groupId) ? 'အော်ဒါ' : txLabel(kind));
+      var categoryKey = JSON.stringify([r.shop, cat]);
+      byCategory[categoryKey] = (byCategory[categoryKey] || 0) + r.amount;
+      var key = JSON.stringify([r.shop, cat, r.itemId || label]);
+      var bucket = sales[key] || (sales[key] = [name, cat, label, 0, 0]);
+      bucket[3] -= Number(r.qty) || 0;
+      bucket[4] += Number(r.amount) || 0;
+    }
+    if (r.cash > 0 || r.cash < 0) receipts.push([r.day, name, txLabel(kind), methodLabel(ports, methodOf(r)), r.cash, r.receiptNo || r.groupId]);
+    if (kind === T.EXPENSE) label = categoryLabel(ports, r.category) + ' ' + (r.note || '');
+    detail.push([r.day, name, txLabel(kind), label, r.qty, r.amount, r.receiptNo || r.groupId]);
+    months[String(r.day).slice(0, 7)] = true;
+  });
+  if (period.length === 4) {
+    var byMonth = Object.keys(months).sort().map(function (ym) {
+      var vals = [ym, 0, 0, 0, 0];
+      shops.forEach(function (shop) {
+        var m = monthStats(ports, shop, ym);
+        vals[1] += m.revenue; vals[2] += m.cogs; vals[3] += m.expenses; vals[4] += m.profit;
+      });
+      return vals;
+    });
+    sections.unshift({ heading: 'လအလိုက်', columns: ['လ', 'ရောင်းရငွေ', 'ပစ္စည်းကုန်ကျ', 'စရိတ်', 'အမြတ် / အရှုံး'], rows: byMonth });
+  }
+  sections.unshift({ heading: 'ဆိုင်အလိုက်', columns: SUMMARY_COLS, rows: summary });
+  sections.push({ heading: 'အမျိုးအစားအလိုက် ဝင်ငွေ', columns: ['ဆိုင်', 'အမျိုးအစား', 'ဝင်ငွေ'], rows: Object.keys(byCategory).sort().map(function (k) {
+    var ids = JSON.parse(k); return [shopName(ports, ids[0]), ids[1], byCategory[k]];
+  }) });
+  sections.push({ heading: 'ကာလအဆုံး ရရန်ကျန်ငွေ', columns: ['ဆိုင်', 'ဝယ်သူ', 'ဘောက်ချာ', 'ကျန်ငွေ'], rows: owed.map(function (c) { return [shopName(ports, c.shop), c.customer, c.groupId, c.owed]; }) });
+  sections.push({ heading: 'ကာလအဆုံး ဆိုင်ရှိပစ္စည်း', columns: ['ဆိုင်', 'Tag', 'ပစ္စည်း', 'လက်ကျန်'], rows: Object.keys(stock).sort().filter(function (k) { return stock[k] !== 0; }).map(function (k) {
+    var ids = JSON.parse(k); return [shopName(ports, ids[0]), ids[1], itemNames[ids[1]] || ids[1], fmtCount(stock[k])];
+  }) });
+  sections.push({ heading: 'ပစ္စည်းအလိုက် အရောင်း', columns: ['ဆိုင်', 'အမျိုးအစား', 'ပစ္စည်း', 'ထည်', 'ရောင်းရငွေ'], rows: Object.keys(sales).sort().map(function (k) { return sales[k]; }) });
+  sections.push({ heading: 'ငွေဝင် ငွေထွက်', columns: ['ရက်', 'ဆိုင်', 'အကြောင်း', 'နည်းလမ်း', 'ငွေ', 'ဘောက်ချာ'], rows: receipts });
+  sections.push({ heading: 'ဆိုင်ပြောင်းစာရင်း', columns: ['ရက်', 'ပစ္စည်း', 'ပို့သည့်ဆိုင်', 'ရောက်သည့်ဆိုင်', 'ထည်', 'အခြေအနေ'], rows: Object.keys(moves).filter(function (k) { var m = moves[k]; return !m.undone && (m.inPeriod || !m.received) && (shops.indexOf(m.from) >= 0 || shops.indexOf(m.to) >= 0); }).map(function (k) {
+    var m = moves[k]; return [m.day, m.item, shopName(ports, m.from), shopName(ports, m.to), m.qty, (m.received || k.indexOf('SHIP-') !== 0) ? 'လက်ခံပြီး' : 'ပို့ပြီး'];
+  }) });
+  sections.push({ heading: 'မှတ်တမ်း အပြည့်အစုံ', columns: ['ရက်', 'ဆိုင်', 'အကြောင်း', 'ပစ္စည်း', 'ထည်', 'ငွေ', 'ဘောက်ချာ'], rows: detail });
+  var first = { heading: 'အနှစ်ချုပ်', columns: ['အကြောင်း', 'စုစုပေါင်း'], rows: [
+    ['ရောင်းရငွေ (ပြန်အမ်းငွေ နုတ်ပြီး)', totals.revenue], ['ရောင်းထွက်သည့် အထည်', fmtCount(totals.pieces)],
+    ['ငွေလက်ခံရရှိ', totals.cashIn], ['ငွေထွက်', totals.cashOut], ['ဝယ်သူများထံမှ ရရန်ကျန်', moneyOwed], ['လက်ကျန် စရန်ငွေ', held], ['ရောင်းပြီးပစ္စည်း အရင်း', totals.cogs], ['ဆိုင်ကုန်ကျစရိတ်', totals.expenses],
+    [totals.profit < 0 ? 'အရှုံး' : 'အမြတ်', Math.abs(totals.profit)]
+  ] };
+  return { kind: 'close', title: 'ဆိုင်စာရင်း · ' + period, subtitle: shopList(ports, shops) + ' · ငွေပမာဏအားလုံး ကျပ်ဖြင့်', sections: [first].concat(sections),
+    fileName: 'close-' + period, footer: reportFooter(now), missingCosts: costsMissing };
+}
+
 /* ===== apps-script/core_bot.js ===== */
 /**
  * core_bot.js — the conversation. Entry point: processUpdate(update, ports).
@@ -4160,6 +4308,12 @@ function handleUpdate(update, ports) {
     ports.store.logUnknownUser(src.from, update.update_id);
     if (update.message && update.message.chat) ports.chat.sendMessage(update.message.chat.id, t(ports, 'staff_only'));
     if (update.callback_query) ports.chat.answerCallback(update.callback_query.id);
+    return;
+  }
+  loadShopRegistry(ports);
+  if (officeRole(staff.role) || (staff.shops && staff.role !== 'owner' && !ports.ui)) {
+    if (update.message) return sendEnrollCode(update.message.chat.id, staff, ports);
+    ports.chat.answerCallback(update.callback_query.id);
     return;
   }
   if (update.callback_query) return handleCallback(update.callback_query, staff, update.update_id, ports);
@@ -4298,7 +4452,7 @@ function showDevices(chatId, staff, ports) {
  */
 function tagIdFromText(text) {
   var s = String(text || '').trim();
-  if (/^S[12]-\d{4}$/i.test(s)) return s.toUpperCase();
+  if (/^S[1-9]\d*-\d{4}$/i.test(s) && CFG.SHOP_IDS.indexOf(s.toUpperCase().split('-')[0]) >= 0) return s.toUpperCase();
   var m = s.match(/t\.me\/[^?\s]+\?start=([A-Za-z0-9_-]{1,64})/i);
   return m ? m[1].toUpperCase() : null;
 }
@@ -4340,7 +4494,7 @@ function cardText(ports, item) {
 
 function cardKeyboard(ports, item) {
   var id = item.id, rows = [];
-  var transfer = btn(t(ports, 'btn_transfer', { shop: shopName(ports, otherShop(item.shop)) }), 'X|' + id);
+  var transfer = btn(CFG.SHOP_IDS.length > 2 ? 'လက်ခံမည့်ဆိုင် ရွေးပါ' : t(ports, 'btn_transfer', { shop: shopName(ports, otherShop(item.shop)) }), 'X|' + id);
   if (isPricePending(item)) {
     rows.push([btn(t(ports, 'btn_sell_at'), 'D|' + id)]);
     rows.push([btn(t(ports, 'btn_set_price'), 'SP|' + id + '|ask'), transfer]);
@@ -4684,7 +4838,10 @@ function handleCallback(cq, staff, updateId, ports) {
       }), replyKeyboard(ports, r3.groupId));
     }
     case 'X': {
-      var to = otherShop(item.shop);
+      var destinations = activeShopIds(ports).filter(function (s) { return s !== item.shop; });
+      if (destinations.length !== 1 && !arg) return edit('လက်ခံမည့်ဆိုင် ရွေးပါ', destinations.map(function (s) { return [btn(shopName(ports, s), 'X|' + id + '|' + s)]; }));
+      var to = arg || destinations[0];
+      if (destinations.indexOf(to) < 0 || (staff.role !== 'owner' && item.shop !== staff.shop)) return edit(t(ports, 'expired'));
       var r4 = commitTransfer(ports, merge(base, { item: item, toShop: to }));
       return edit(t(ports, 'transfer_done', { id: id, shop: shopName(ports, to) }), undoRow(ports, r4.groupId));
     }
@@ -9699,7 +9856,7 @@ function sendAppCard(chatId, item, staff, ports) {
 
 var SYNC = {
   VERSION: 1,                     // protocol version in ping
-  API: ['ping', 'enroll', 'sync', 'bootstrap', 'ai', 'photo', 'report', 'devices'],
+  API: ['ping', 'enroll', 'sync', 'bootstrap', 'ai', 'photo', 'report', 'devices', 'office'],
   PAGE_ROWS: 500,                 // ledger rows per pull or bootstrap page (Settings pull_page_rows)
   PUSH_MAX_ROWS: 200,             // ledger rows per push (Settings push_max_rows)
   CODE_LEN: 8,                    // typed one-time enrollment code
@@ -9966,7 +10123,8 @@ function syncEnroll(sp, body, now) {
   }
   var d = v.match;
   var token = syncRandomHex(sp, SYNC.TOKEN_HEX);
-  var staff = sp.store.getStaff(d.staffId) || { id: d.staffId, name: d.label || d.staffId, shop: d.shop, role: d.role };
+  var staff = sp.store.getStaff(d.staffId);
+  if (!staff || staff.role !== d.role || staff.shop !== d.shop) return syncError('revoked', 'staff assignment changed');
   var letter = syncNextLetter(sp.devices.list());
   var fields = {
     tokenHash: sp.hash(token), status: SYNC.STATUS.ACTIVE, platform: String(body.platform || ''),
@@ -9976,12 +10134,12 @@ function syncEnroll(sp, body, now) {
   };
   sp.devices.update(d.id, fields);
   var owners = sp.store.listStaff().filter(function (s) { return s.role === 'owner'; }).map(function (s) { return String(s.id); });
-  var scope = (d.role === 'owner' || staff.role === 'owner') ? CFG.SHOP_IDS.slice() : [d.shop];
+  var scope = staffShops(staff);
   return {
     ok: true,
     device: { id: d.id, token: token, receiptLetter: letter, staff: { id: String(staff.id), name: staff.name, shop: staff.shop || d.shop, role: staff.role || d.role },
               scope: scope, owners: owners, label: fields.label },
-    bootstrap: true
+    bootstrap: !officeRole(staff.role)
   };
 }
 
@@ -10012,6 +10170,8 @@ function syncAuthenticate(sp, body, now) {
   }
   if (d.status === SYNC.STATUS.PENDING) return syncError('auth', 'device not enrolled');
   if (d.status === SYNC.STATUS.DRAIN && syncDrainExpired(sp, d, now)) return syncError('drain', 'drain period over; ask the owner');
+  var current = sp.store.getStaff(d.staffId);
+  if (!current || current.shop !== d.shop || current.role !== d.role) return syncError('revoked', 'staff assignment changed');
   var minVersion = syncSetting(sp, 'app_min_version', 0);
   if (minVersion && body.appVersion !== undefined && Number(body.appVersion) < Number(minVersion)) return syncError('version', 'app too old; update first');
   var fields = { lastSeen: now.toISOString() };
@@ -10019,7 +10179,7 @@ function syncAuthenticate(sp, body, now) {
   if (body.pendingCount !== undefined) fields.pendingCount = Number(body.pendingCount) || 0;
   sp.devices.update(d.id, fields);
   for (var k in fields) d[k] = fields[k];
-  return { ok: true, device: d };
+  return { ok: true, device: d, staff: current };
 }
 
 /* ------------------------------ push: validation (structural only) ------------------------------ */
@@ -10032,6 +10192,7 @@ function syncIsTransfer(type) { return type === CFG.TX.TRANSFER_OUT || type === 
  * Transfer rows span shops by nature when the group touches the device's own shop. Owners see both.
  */
 function syncGroupInScope(device, txs) {
+  if (device.scope) return txs.every(function (tx) { return device.scope.indexOf(tx.shop) >= 0; });
   if (device.role === 'owner' || device.shop === 'BOTH') return true;
   var anyOwn = txs.some(function (tx) { return tx.shop === device.shop; });
   return txs.every(function (tx) {
@@ -10086,7 +10247,8 @@ function syncValidateBatch(sp, device, batch) {
           var tx = e.txs[k];
           reason = syncValidateTx(tx);
           if (reason) break;
-          if (String(tx.staffId) !== String(device.staffId)) reason = SYNC.REASON.STAFF;
+          if (/^(SHIP|BOOK)-/.test(tx.groupId) || !shopAcceptsEntry(sp, tx.shop, tx.time)) reason = SYNC.REASON.SCOPE;
+          else if (String(tx.staffId) !== String(device.staffId)) reason = SYNC.REASON.STAFF;
           else if (tx.itemId && !itemExists(String(tx.itemId))) reason = SYNC.REASON.ITEM_MISSING;
         }
         if (!reason && !syncGroupInScope(device, e.txs)) reason = SYNC.REASON.SCOPE;
@@ -10094,16 +10256,20 @@ function syncValidateBatch(sp, device, batch) {
       }
     } else if (e.kind === 'item') {
       if (!syncStr(e.id) || !e.fields || typeof e.fields !== 'object') reason = SYNC.REASON.MALFORMED;
+      else if (device.scope && e.fields.shop && device.scope.indexOf(e.fields.shop) < 0) reason = SYNC.REASON.SCOPE;
       else if (!itemExists(e.id)) reason = SYNC.REASON.ITEM_MISSING;
       else if (!Object.keys(e.fields).some(function (f) { return SYNC.ITEM_FIELDS.indexOf(f) >= 0; })) reason = SYNC.REASON.MALFORMED;
       else if (device.role !== 'owner' && e.fields.shop !== undefined && CFG.SHOP_IDS.indexOf(e.fields.shop) < 0) reason = SYNC.REASON.MALFORMED;
     } else if (e.kind === 'customer') {
       var r = e.rec;
-      if (!r || typeof r !== 'object' || !syncStr(r.id) || !/^C-[0-9a-zA-Z]{4,12}$/.test(r.id) || !syncStr(r.name)) reason = SYNC.REASON.MALFORMED;
+      if (device.scope && r && sp.store.foreignCustomer(r.id)) reason = SYNC.REASON.SCOPE;
+      else if (!r || typeof r !== 'object' || !syncStr(r.id) || !/^C-[0-9a-zA-Z]{4,12}$/.test(r.id) || !syncStr(r.name)) reason = SYNC.REASON.MALFORMED;
     } else if (e.kind === 'list') {
       reason = sp.store.addListOption ? syncListRecReason(e.rec) : SYNC.REASON.BAD_KIND;
+      if (!reason && device.scope && e.rec.shop && device.scope.indexOf(e.rec.shop) < 0) reason = SYNC.REASON.SCOPE;
     } else if (e.kind === 'measurement') {
       reason = sp.store.addMeasurement ? syncMeasRecReason(device, e.rec) : SYNC.REASON.BAD_KIND;
+      if (!reason && device.scope && (sp.store.foreignCustomer(e.rec.customerId) || (e.rec.orderId && !sp.store.getOrder(e.rec.orderId)))) reason = SYNC.REASON.SCOPE;
     } else if (e.kind === 'setting') {
       reason = sp.store.setSetting ? syncSettingReason(device, e) : SYNC.REASON.BAD_KIND;
     } else if (e.kind === 'notice') {
@@ -10196,9 +10362,10 @@ function syncMeasRecReason(device, rec) {
  */
 function syncSettingReason(device, e) {
   var bad = SYNC.REASON.MALFORMED;
-  if (!e || !syncStr(e.key) || SYNC.SETTING_KEYS.indexOf(e.key) < 0 || !syncStr(e.value)) return bad;
+  if (!e || !syncStr(e.key) || (SYNC.SETTING_KEYS.indexOf(e.key) < 0 && !/^shop_(name|address|phone)_S[1-9]\d*$/.test(e.key)) || !syncStr(e.value)) return bad;
   var m = /^shop_(name|address|phone)_/.exec(e.key);
   if (m) {
+    if (CFG.SHOP_IDS.indexOf(e.key.slice(m[0].length)) < 0) return bad;
     if (e.value.length > CFG.SHOP_TEXT_MAX[m[1]]) return bad;
     if (m[1] === 'name' && !e.value.trim()) return bad;
   } else if (e.value !== 'TRUE' && e.value !== 'FALSE') return bad;
@@ -10826,7 +10993,7 @@ function syncBootstrap(sp, device, opts) {
     out.masterRev = counters.rev || 0;
     out.staff = { id: String(staff.id), name: staff.name, shop: staff.shop, role: staff.role };
     out.owners = owners;
-    out.scope = device.role === 'owner' ? CFG.SHOP_IDS.slice() : [device.shop];
+    out.scope = staffShops(staff);
     out.receiptLetter = device.receiptLetter || '';
   }
   if (!more) out.checksums = syncChecksums(all, [syncIsoDay(now), syncYesterday(now)]);
@@ -10893,8 +11060,10 @@ function syncIngestDocument(sp, text, staff, now, hooks) {
   var doc = parsed.doc;
   var device = sp.devices.get(doc.device);
   if (!device || !staff || String(device.staffId) !== String(staff.id)) return { ok: false, error: 'wrong_device', text: t(sp, 'ingest_wrong_device') };
-  if (device.status === SYNC.STATUS.REVOKED || device.status === SYNC.STATUS.PENDING) return { ok: false, error: 'revoked', text: t(sp, 'ingest_revoked') };
+  var registered = sp.store.getStaff(device.staffId);
+  if (!registered || officeRole(registered.role) || registered.role !== device.role || registered.shop !== device.shop || device.status === SYNC.STATUS.REVOKED || device.status === SYNC.STATUS.PENDING) return { ok: false, error: 'revoked', text: t(sp, 'ingest_revoked') };
   var t0 = now.getTime();
+  sp = syncSellerPorts(sp, device, registered);
   var applied = syncApplyPush(sp, device, { batchId: doc.batchId || ('doc-' + now.getTime()), entries: doc.entries }, now);
   sp.devices.update(device.id, { lastSeen: now.toISOString() });
   syncDeliver(sp, applied, hooks);
@@ -10934,6 +11103,35 @@ function syncSanitizeDevice(sp, d) {
            pendingCount: Number(d.pendingCount) || 0, receiptLetter: d.receiptLetter };
 }
 
+// A managed seller's phone keeps only the customers, stock and entries used by its shops.
+function syncSellerPorts(sp, device, staff) {
+  if (staff.role === 'owner' || !staff.shops || !staff.shops.length) return sp;
+  var allowed = staffShops(staff), base = sp.store, store = syncCopy(base);
+  device.scope = allowed;
+  function inShop(row) { return row && allowed.indexOf(row.shop) >= 0; }
+  store.ledgerRows = function () { return base.ledgerRows().filter(inShop); };
+  store.listItems = function (shop) { return base.listItems(shop).filter(inShop); };
+  store.getItem = function (id) { var r = base.getItem(id); return inShop(r) ? r : null; };
+  if (base.getOrder) store.getOrder = function (id) { var r = base.getOrder(id); return inShop(r) ? r : null; };
+  if (base.listOrders) store.listOrders = function (shop) { return base.listOrders(shop).filter(inShop); };
+  function customers() {
+    var ids = {};
+    store.ledgerRows().concat(store.listOrders ? store.listOrders(null) : []).forEach(function (r) { if (r.customerId) ids[r.customerId] = true; });
+    return ids;
+  }
+  store.listCustomers = function () { var ids = customers(); return base.listCustomers().filter(function (c) { return ids[c.id]; }); };
+  store.getCustomer = function (id) { return customers()[id] ? base.getCustomer(id) : null; };
+  store.foreignCustomer = function (id) { return !!base.getCustomer(id) && !customers()[id]; };
+  if (base.listAllMeasurements) store.listAllMeasurements = function () {
+    var ids = customers();
+    return base.listAllMeasurements().filter(function (m) { return m.orderId ? !!store.getOrder(m.orderId) : ids[m.customerId]; });
+  };
+  if (base.listOptions) store.listOptions = function (name) {
+    return base.listOptions(name).filter(function (r) { return !r.shop || inShop(r); });
+  };
+  return syncMerge(sp, { store: store });
+}
+
 /**
  * One entry point for every api. gasSyncHandle and the fake server both call this; they only
  * differ in serverPorts and hooks. Always returns a JSON-able object with ok:true|false.
@@ -10947,6 +11145,7 @@ function syncHandle(sp, api, body, now, hooks) {
   var skew = syncSkewSec(now, body.clientTime);
   if (skew !== null) base.clockSkewSec = skew;
   if (api === 'ping') return syncMerge(base, { version: SYNC.VERSION });
+  loadShopRegistry(sp);
   if (api === 'enroll') return syncMerge(base, syncEnroll(sp, body, now));
   if (SYNC.API.indexOf(api) < 0) return syncMerge(base, syncError('bad_request', 'unknown api ' + api));
 
@@ -10959,6 +11158,12 @@ function syncHandle(sp, api, body, now, hooks) {
     try { sp.store.logError('clock_skew', 'device ' + device.id + ' clock off by ' + skew + ' s', '', String(body.clientTime)); } catch (ignore) {}
   }
 
+  if (api === 'office' && !drain) return syncMerge(base, syncOffice(sp, device, body, now, hooks));
+  if (officeRole(device.role)) {
+    if (api === 'sync' && !body.push) return syncMerge(base, { device: deviceOut, pull: null });
+    return syncMerge(base, syncError('auth', 'ဤလုပ်ငန်းကို ပြုလုပ်ခွင့် မရှိပါ'));
+  }
+  if (auth.staff) sp = syncSellerPorts(sp, device, auth.staff);
   if (api === 'sync') {
     var out = { push: null, pull: null, device: deviceOut };
     if (body.push && body.push.entries && body.push.entries.length) {
@@ -10998,7 +11203,10 @@ function syncHandle(sp, api, body, now, hooks) {
     if (drain) return syncMerge(base, syncError('drain', 'device is draining; AI refused'));
     var job = body.job;
     if (!job || !syncStr(job.id) || !syncStr(job.kind)) return syncMerge(base, syncError('bad_request', 'job.id and job.kind required'));
+    if (device.scope && ((job.itemId && !sp.store.getItem(String(job.itemId))) ||
+        (job.kind === 'sketch' && !sp.store.listAllMeasurements().some(function (m) { return m.entryId === job.entryId; })))) return syncMerge(base, syncError('auth', 'ဆိုင် မမှန်ပါ'));
     var cached = sp.sync.aiJob(job.id);
+    if (device.scope && cached && cached.deviceId !== device.id) return syncMerge(base, syncError('auth', 'သုံးခွင့် မရှိပါ'));
     if (cached && cached.status === 'done') return syncMerge(base, { job: cached, cached: true });
     // A drawing's picture (sketch) and a new piece's photo without AI (pic) are not AI jobs (round 6, revision 3): they run
     // whatever the owner's AI switch says. An AI job while the switch is off is refused without calling the hook.
@@ -11040,6 +11248,7 @@ function syncHandle(sp, api, body, now, hooks) {
   if (api === 'photo') {
     if (drain) return syncMerge(base, syncError('drain', 'device is draining'));
     var ids = Array.isArray(body.itemIds) ? body.itemIds.slice(0, SYNC.PHOTO_MAX).map(String) : [];
+    if (device.scope) ids = ids.filter(function (id) { return !!sp.store.getItem(id); });
     var thumbs = {};
     ids.forEach(function (id) { thumbs[id] = null; });
     if (hooks.photo) {
@@ -11270,6 +11479,200 @@ function syncSettingsQuick(map) {
 /** Per-device receipt number: R1-A-000231 (shop digit, device letter, gap-free counter). */
 function syncReceiptNo(shop, letter, counter) {
   return 'R' + String(shop).replace(/\D/g, '') + '-' + letter + '-' + ('000000' + counter).slice(-6);
+}
+
+/** Online management. Read current staff permissions under the same lock as the mutation. */
+function syncOffice(sp, device, body, now, hooks) {
+  function perform() {
+    var actor = sp.store.getStaff(device.staffId);
+    if (!actor || actor.role !== device.role || actor.shop !== device.shop) return syncError('revoked', 'ချိတ်ဆက်မှု သက်တမ်းကုန်ပါပြီ');
+    var owner = actor.role === 'owner', admin = hasJob(actor, 'access');
+    var action = body.action, shops = shopRegistry(sp);
+    var shopIds = shops.map(function (s) { return s.id; });
+    var scope = staffShops(actor);
+    if (['designs','piece','piecePhoto','orders','order','orderStep','measure'].indexOf(action) >= 0) return syncWorkshop(sp, actor, body, hooks);
+    if (['stock', 'sendStock', 'receiveStock'].indexOf(action) >= 0) return syncStockSlip(sp, actor, body, now);
+    if (action === 'expenseBook' || action === 'recordExpense') {
+      if (!hasJob(actor, 'bookkeeper')) return syncError('auth', 'သုံးခွင့် မရှိပါ');
+      var open = scope.filter(function (id) { return activeShopIds(sp).indexOf(id) >= 0; });
+      var site = String(body.shop || open[0] || '');
+      if (open.indexOf(site) < 0) return syncError('bad_request', 'ဖွင့်ထားသည့်ဆိုင် ရွေးပါ');
+      var cats = expenseCategories(sp, site), methods = payMethods(sp, site);
+      if (action === 'expenseBook') return { ok: true, shop: site, shops: open.map(function (id) { return { id: id, name: shopName(sp, id) }; }),
+        categories: cats.map(function (c) { return { id: c[0], name: c[1] }; }),
+        methods: methods.map(function (m) { return { id: m, name: methodLabel(sp, m) }; }) };
+      var amount = Number(body.amount), note = String(body.note || '').trim();
+      if (!Number.isSafeInteger(amount) || amount <= 0 || amount > SYNC.MAX_AMOUNT || note.length > 180 ||
+          !/^BOOK-[a-zA-Z0-9-]{8,80}$/.test(body.slip) || !cats.some(function (c) { return c[0] === body.category; }) ||
+          methods.indexOf(body.method) < 0) return syncError('bad_request', 'ငွေပမာဏနှင့် အမျိုးအစား ပြန်စစ်ပါ');
+      var prior = sp.store.ledgerRows().filter(function (r) { return r.groupId === body.slip; })[0];
+      if (prior) return prior.staffId === String(actor.id) && prior.shop === site && prior.amount === -amount &&
+        prior.category === body.category && prior.method === body.method && prior.note === note ? { ok: true } : syncError('bad_request', 'ဘောက်ချာနံပါတ် ရှိပြီးသား');
+      writeGroup(sp, [newTx(sp, { groupId: body.slip, type: CFG.TX.EXPENSE, shop: site, amount: -amount, cash: -amount,
+        category: body.category, method: body.method, staffId: String(actor.id), note: note, when: now })]);
+      return { ok: true };
+    }
+    if (action === 'close') {
+      if (!hasJob(actor, 'staff') && !hasJob(actor, 'bookkeeper') && !hasJob(actor, 'viewer')) return syncError('auth', 'စာရင်း ကြည့်ခွင့် မရှိပါ');
+      var period = String(body.period || dayKey(now));
+      if (!/^\d{4}(-(0[1-9]|1[012])(-(0[1-9]|[12]\d|3[01]))?)?$/.test(period)) return syncError('bad_request', 'ရက်စွဲ ပြန်ရွေးပါ');
+      var selected = body.shop ? [String(body.shop)] : scope;
+      if (selected.some(function (id) { return scope.indexOf(id) < 0; })) return syncError('auth', 'ဆိုင် မမှန်ပါ');
+      var report = closingReport(sp, period, selected, now);
+      var stale = sp.devices.list().filter(function (d) {
+        var worker = sp.store.getStaff(d.staffId);
+        return worker && hasJob(worker, 'staff') && (d.status === SYNC.STATUS.ACTIVE || d.status === SYNC.STATUS.DRAIN) &&
+          staffShops(worker).some(function (id) { return selected.indexOf(id) >= 0; }) &&
+          (Number(d.pendingCount) > 0 || !d.lastSeen || dayKey(new Date(d.lastSeen)) < dayKey(now));
+      });
+      return { ok: true, report: report, unconfirmed: stale.length, shops: scope.map(function (id) { return { id: id, name: shopName(sp, id) }; }) };
+    }
+    if (!admin) return syncError('auth', 'ပြောင်းလဲခွင့် မရှိပါ');
+    if (action === 'shops') return { ok: true, shops: shops.map(function (s) { return { id: s.id, name: shopName(sp, s.id), address: shopAddress(sp, s.id), phone: shopPhone(sp, s.id), active: s.active }; }) };
+    if (action === 'shop' && owner) {
+      var name = String(body.name || '').trim(), id = String(body.shop || '');
+      if (!name || name.length > CFG.SHOP_TEXT_MAX.name || !/^S[1-9]\d*$/.test(id)) return syncError('bad_request', 'ဆိုင်အမည်နှင့် နံပါတ် စစ်ပါ');
+      var found = shops.filter(function (s) { return s.id === id; })[0];
+      if (found && body.create) return syncError('bad_request', 'ဆိုင်နံပါတ် ရှိပြီးသားပါ');
+      if (!found && body.active === false) return syncError('bad_request', 'ဆိုင် မရှိပါ');
+      if (!found && sp.store.prepareShopTags) sp.store.prepareShopTags(id);
+      if (!found) shops.push({ id: id, active: true });
+      else {
+        if (found.active && body.active === false) found.closedAt = now.toISOString();
+        if (body.active !== false) delete found.closedAt;
+        found.active = body.active !== false;
+      }
+      if (!shops.some(function (s) { return s.active; })) return syncError('bad_request', 'ဆိုင်တစ်ဆိုင် ဖွင့်ထားရန် လိုပါသည်');
+      if (body.address !== undefined) sp.store.setSetting('shop_address_' + id, String(body.address).trim().slice(0, CFG.SHOP_TEXT_MAX.address));
+      if (body.phone !== undefined) sp.store.setSetting('shop_phone_' + id, String(body.phone).trim().slice(0, CFG.SHOP_TEXT_MAX.phone));
+      sp.store.setSetting('shop_name_' + id, name);
+      sp.store.setSetting('shop_registry', JSON.stringify(shops));
+      loadShopRegistry(sp);
+      return { ok: true };
+    }
+    if (action === 'people') return { ok: true, people: sp.store.listStaff(true), shops: activeShopIds(sp).map(function (id) { return { id: id, name: shopName(sp, id) }; }) };
+    if (action === 'invite') {
+      var target = sp.store.getStaff(String(body.target));
+      if (!target || (target.role === 'owner' && actor.id !== target.id) || (!owner && hasJob(target, 'access'))) return syncError('auth', 'သုံးခွင့် မရှိပါ');
+      return { ok: true, code: syncMintCode(sp, target, target.name, now).display };
+    }
+    if (action !== 'person') return syncError('bad_request', 'လုပ်ငန်း မမှန်ပါ');
+    var person = body.person || {}, old = sp.store.listStaff(true).filter(function (s) { return String(s.id) === String(person.id); })[0];
+    var jobs = String(person.role || '').split('+'), allowedJobs = ['staff','access','bookkeeper','viewer','designer','tailor'];
+    var assigned = person.shops || [person.shop];
+    if (!Array.isArray(assigned) || !assigned.length || assigned.indexOf(person.shop) < 0 || assigned.some(function (id) { return activeShopIds(sp).indexOf(id) < 0; }))
+      return syncError('bad_request', 'ဆိုင် ရွေးပါ');
+    if (!/^(?:\d{1,18}|W-[A-Z0-9]{1,12})$/.test(String(person.id)) || !String(person.name || '').trim() || String(person.name).length > 60 ||
+        jobs.some(function (j) { return allowedJobs.indexOf(j) < 0; }) || activeShopIds(sp).indexOf(person.shop) < 0)
+      return syncError('bad_request', 'အမည်၊ ဆိုင်နှင့် တာဝန် ပြန်စစ်ပါ');
+    if (String(actor.id) === String(person.id) || (old && old.role === 'owner') ||
+        (!owner && (hasJob(old, 'access') || hasJob(person, 'access')))) return syncError('auth', 'ပြောင်းလဲခွင့် မရှိပါ');
+    person = { name: String(person.name).trim(), id: String(person.id), shop: person.shop, shops: assigned, role: jobs.sort().join('+'), active: person.active === true };
+    var reset = !person.active || (old && (!old.shops || old.role !== person.role || old.shop !== person.shop || staffShops(old).join() !== assigned.join()));
+    if (reset && sp.devices.list().some(function (d) {
+      return String(d.staffId) === person.id && d.status === SYNC.STATUS.ACTIVE && Number(d.pendingCount) > 0;
+    })) return syncError('bad_request', 'ဝန်ထမ်းဖုန်းရှိ စာရင်းများကို အရင် ပို့ပါ');
+    sp.store.saveStaff(person);
+    if (reset) {
+      sp.devices.list().forEach(function (d) {
+        if (String(d.staffId) === String(person.id)) sp.devices.update(d.id, { status: SYNC.STATUS.REVOKED });
+      });
+    }
+    return { ok: true };
+  }
+  var reads = ['close', 'expenseBook', 'people', 'shops', 'stock', 'designs', 'orders', 'order'];
+  return reads.indexOf(body.action) >= 0 ? perform() : sp.lock.run(perform);
+}
+
+function syncStockSlip(sp, actor, body, now) {
+  var scope = staffShops(actor);
+  if (!hasJob(actor, 'staff')) return syncError('auth', 'သုံးခွင့် မရှိပါ');
+  var active = activeShopIds(sp), slips = {}, rows = sp.store.ledgerRows();
+  rows.forEach(function (r) {
+    if (String(r.groupId).indexOf('SHIP-') !== 0) return;
+    var slip = slips[r.groupId] || (slips[r.groupId] = {});
+    if (r.type === CFG.TX.TRANSFER_OUT) slip.out = r;
+    if (r.type === CFG.TX.TRANSFER_IN) slip.received = r;
+  });
+  if (body.action === 'stock') {
+    var incoming = [];
+    Object.keys(slips).forEach(function (k) {
+      var s = slips[k], r = s.out;
+      if (!r) return;
+      var to = r.note.slice(3), item = s.received && sp.store.getItem(s.received.itemId);
+      if ((scope.indexOf(to) >= 0) && (!s.received || (item && !item.createdAt))) incoming.push({ id: k, from: shopName(sp, r.shop), to: shopName(sp, to), toId: to, tag: r.itemId, qty: -r.qty });
+    });
+    return { ok: true, shops: active.map(function (id) { return { id: id, name: shopName(sp, id) }; }), incoming: incoming };
+  }
+  var id = String(body.slip || ''), existing = slips[id];
+  if (!/^SHIP-[a-zA-Z0-9-]{8,80}$/.test(id)) return syncError('bad_request', 'ဘောက်ချာနံပါတ် မမှန်ပါ');
+  var item = sp.store.getItem(String(body.tag || '').toUpperCase());
+  if (!item) return syncError('bad_request', 'Tag မတွေ့ပါ');
+  if (body.action === 'sendStock') {
+    if (existing) return existing.out && existing.out.staffId === String(actor.id) && existing.out.itemId === item.id && -existing.out.qty === Number(body.qty) && existing.out.note === 'to ' + body.to ? { ok: true } : syncError('bad_request', 'ဘောက်ချာ ရှိပြီးသား');
+    var qty = Number(body.qty);
+    if ((scope.indexOf(item.shop) < 0) || active.indexOf(item.shop) < 0 || active.indexOf(body.to) < 0 || item.shop === body.to ||
+        !(qty > 0 && qty === Math.floor(qty) && qty <= item.stock) || item.status === CFG.STATUS.BLANK) return syncError('bad_request', 'ဆိုင်နှင့် လက်ကျန် စစ်ပါ');
+    var fields = syncPick(item, ['name','category','type','price','cost','sample','photoUrl','photoFileId']);
+    sp.store.appendLedger(newTx(sp, { groupId: id, itemId: item.id, qty: -qty, shop: item.shop, type: CFG.TX.TRANSFER_OUT,
+      note: 'to ' + body.to, transcript: JSON.stringify(fields), staffId: String(actor.id), when: now }));
+    return { ok: true };
+  }
+  if (!existing || !existing.out) return syncError('bad_request', 'ပို့စာ မတွေ့ပါ');
+  var out = existing.out, dest = out.note.slice(3);
+  if ((scope.indexOf(dest) < 0) || dest !== item.shop || (existing.received && existing.received.itemId !== item.id))
+    return syncError('bad_request', 'လက်ခံမည့်ဆိုင်၏ Tag ကို သုံးပါ');
+  if (existing.received && item.createdAt) return { ok: true };
+  if (!existing.received && item.status !== CFG.STATUS.BLANK) return syncError('bad_request', 'Tag အသစ် လိုပါသည်');
+  var data = JSON.parse(out.transcript);
+  data.createdBy = actor.id; data.createdAt = now.toISOString();
+  if (!existing.received) sp.store.appendLedger(newTx(sp, { groupId: id, itemId: item.id, qty: -out.qty, shop: dest,
+    type: CFG.TX.TRANSFER_IN, note: 'from ' + out.shop, staffId: String(actor.id), when: now }));
+  sp.store.updateItem(item.id, data);
+  return { ok: true };
+}
+
+function syncWorkshop(sp, actor, body, hooks) {
+  var a = body.action, scope = staffShops(actor), designer = ['designs','piece','piecePhoto'].indexOf(a) >= 0;
+  if (!hasJob(actor, designer ? 'designer' : 'tailor')) return syncError('auth', 'တာဝန်နှင့် မကိုက်ညီပါ');
+  if (designer) {
+    if (a === 'designs') {
+      return { ok: true, categories: itemCategoryRows(sp).map(function (r) { return r.label; }),
+        items: sp.store.listItems(null).filter(function (it) { return scope.indexOf(it.shop) >= 0 && it.status !== CFG.STATUS.BLANK && (it.sample || isPricePending(it)); })
+          .map(function (it) { return { id: it.id, name: it.name, sample: it.sample, pending: isPricePending(it) }; }) };
+    }
+    var item = sp.store.getItem(String(body.tag || '').trim().toUpperCase());
+    if (!item || scope.indexOf(item.shop) < 0 || activeShopIds(sp).indexOf(item.shop) < 0) return syncError('bad_request', 'Tag နှင့် ဆိုင် စစ်ပါ');
+    if (a === 'piecePhoto') {
+      if (!hooks.ai || item.status === CFG.STATUS.BLANK || !body.data || body.data.length > 3000000 || !/^[A-Za-z0-9+/=]+$/.test(body.data)) return syncError('bad_request', 'ဓာတ်ပုံ စစ်ပါ');
+      hooks.ai({ id: sp.uuid(), kind: 'pic', mime: 'image/jpeg', data: body.data, itemId: item.id }, { shop: item.shop, staffId: actor.id });
+      return { ok: true };
+    }
+    if (!String(body.name || '').trim() || String(body.name).length > 80) return syncError('bad_request', 'ပစ္စည်းအမည် ဖြည့်ပါ');
+    var worker = syncMerge(actor, { shop: item.shop });
+    return commitNewItem(sp, { staff: worker, itemId: item.id, name: body.name, category: body.category, cost: body.cost,
+      price: body.price, count: Number(body.qty), sample: body.sample === true, source: CFG.SOURCE.BUTTON });
+  }
+  if (!sp.store.listOrders) return syncError('bad_request', 'အော်ဒါစာရင်း မရရှိပါ');
+  if (a === 'orders') {
+    return { ok: true, orders: openOrders(sp, null).filter(function (o) { return scope.indexOf(o.shop) >= 0; }).map(function (o) {
+      return { id: o.id, shop: shopName(sp, o.shop), customer: customerName(sp, o.customerId), due: o.dueDay, status: orderStatusLabel(sp, o.status) };
+    }) };
+  }
+  var order = sp.store.getOrder(String(body.id || ''));
+  if (!order || scope.indexOf(order.shop) < 0 || !orderIsOpen(order)) return syncError('bad_request', 'အော်ဒါကို ပြန်စစ်ပါ');
+  if (a === 'order') {
+    var last = order.measId && sp.store.getMeasurement ? sp.store.getMeasurement(order.measId) : null;
+    return { ok: true, text: orderCardText(sp, order), next: nextStatuses(order).map(function (k) { return { id: k, name: orderStatusLabel(sp, k) }; }),
+      fields: measureFields(sp, true).map(function (f) { return { key: f.key, name: f.labelMy, value: last && last.fields[f.key] || '' }; }) };
+  }
+  if (activeShopIds(sp).indexOf(order.shop) < 0) return syncError('bad_request', 'ဆိုင် ပိတ်ထားပါသည်');
+  if (a === 'orderStep') return setOrderStatus(sp, order.id, String(body.status), syncMerge(actor, { shop: order.shop }));
+  var values = {}, any = false;
+  measureFields(sp, true).forEach(function (f) { var v = String((body.values || {})[f.key] || '').trim().slice(0, 300); values[f.key] = v; if (v) any = true; });
+  if (!any) return syncError('bad_request', 'အတိုင်းအတာ ဖြည့်ပါ');
+  saveMeasurement(sp, { customerId: order.customerId, orderId: order.id, values: values, source: CFG.MEAS_SOURCE.FORM }, actor);
+  return { ok: true };
 }
 
 /* ===== apps-script/core_orders.js ===== */
@@ -11982,7 +12385,7 @@ var APP_MSG = {
   // the card, the stepper, inputs
   ui_sell_n: '✅ ရောင်း {n} ထည်',
   ui_qty_hint: 'ဂဏန်းကို နှိပ်ရင် ကီးဘုတ် ပွင့်မည်',
-  ui_history: '⌃ မှတ်တမ်း',
+  ui_history: '⌃ ဒီဖုန်း၏ မှတ်တမ်း',
   ui_history_title: '🕘 မှတ်တမ်း',
   ui_history_empty: 'မှတ်တမ်း မရှိသေးပါ',
   ui_text_placeholder: '✏️ ရိုက်ပါ',
@@ -13953,6 +14356,9 @@ function createAppSync(phone, opts) {
   };
 
   /* ---------- server jobs: PDF to Telegram, item thumbnails ---------- */
+  sync.office = function (action, params) {
+    return call('office', authBody(syncMerge(params || {}, { action: action })));
+  };
   sync.requestReport = function (kind, groupId, inline) {
     if (!store.meta.deviceId) return Promise.resolve({ ok: false, error: 'not_enrolled' });
     return call('report', authBody({ kind: kind, groupId: groupId || null, inline: !!inline }));
@@ -14640,7 +15046,7 @@ function appMeasSplit(value, multi) {
 function appMeasVoucher(text, shop) {
   var s = normMeasValue({ type: 'text' }, text).toUpperCase().replace(/\s+/g, '');
   if (!s) return { id: '', bad: false };
-  var m = /^V(\d)-0*(\d{1,8})$/.exec(s), id = s;
+  var m = /^V(\d+)-0*(\d{1,8})$/.exec(s), id = s;
   if (/^\d+$/.test(s)) id = Number(s) > 0 ? orderIdFor(shop, Number(s)) : '';
   else if (m) id = Number(m[2]) > 0 ? orderIdFor('S' + m[1], Number(m[2])) : '';
   return isOrderId(id) ? { id: id, bad: false } : { id: '', bad: true };
@@ -14950,6 +15356,13 @@ function appState() { return APP.store.meta.deviceId ? getState(APP.phone.ports,
 function appRender() {
   if (!APP || !APP.doc) return;
   if (APP.screen === 'home') appNavCardSync();           // the card rule (13.4): a card layer exactly while the home shows a card
+  loadShopRegistry(APP.phone.ports);
+  var profile = APP.store.meta.staff;
+  if (profile && officeRole(profile.role) && APP.store.meta.deviceId) {
+    if (['people','expenseBook','closing','orders','designs','settings','work'].indexOf(APP.screen) < 0) APP.screen = 'work';
+    APP.showScanner = false;
+  }
+  if (APP.officePage && APP.officePage.kind !== APP.screen) APP.officePage = null;
   appRenderHeader();
   appRenderBanner();
   var main = APP.$('main');
@@ -14963,6 +15376,12 @@ function appRender() {
   else if (APP.screen === 'home') appRenderHome(main);
   else if (APP.screen === 'history') appHistoryScreen(main);
   else if (APP.screen === 'entry') appEntryScreen(main);
+  else if (APP.screen === 'work') appOfficeJobs(main, profile);
+  else if (APP.screen === 'orders' || APP.screen === 'designs') appWorkshopScreen(main, APP.screen);
+  else if (APP.screen === 'expenseBook') appExpenseBook(main);
+  else if (APP.screen === 'stockslips') appStockSlips(main);
+  else if (APP.screen === 'people' || APP.screen === 'shops') appManageScreen(main, APP.screen);
+  else if (APP.screen === 'closing') appClosingScreen(main);
   else if (APP.screen === 'buyers') appBuyersScreen(main);
   else if (APP.screen === 'buyer') appBuyerScreen(main);
   else if (APP.screen === 'receipt') appReceiptScreen(main);
@@ -15090,6 +15509,8 @@ function appRenderHome(main) {
   var handle = function () { return appHi('button', { class: 'handle', text: tt('ui_history'), onclick: function () { appOpenScreen('history'); } }, 'history'); };
   if (APP.showScanner || !m) {
     if (jobs) main.appendChild(appJobRow(false));
+    main.appendChild(appOfficeButton('ဆိုင်ပြောင်း ပို့ / လက်ခံ', function () { appOpenScreen('stockslips'); }));
+    main.appendChild(appH('button', { text: 'ဆိုင်စာရင်း ကြည့်မယ်', onclick: function () { appOpenScreen('closing'); } }));
     if (!APP.form) main.appendChild(appScannerPanel());     // a form owns the one video while it is open (U1)
     if (jobs) main.appendChild(appH('div', { class: 'muted small center', text: tt('ui_home_scan_hint') }));
     main.appendChild(appH('div', { class: 'scanrow' }, [
@@ -15439,6 +15860,7 @@ function appTapSend(m, data, btn) {
   var tt = APP.tt, parts = String(data || '').split('|');
   if (parts[0] === 'X') {
     if (!APP.sync.online() || APP.store.outbox.length || APP.store.meta.lastSyncOk === null) { appToast(tt('ui_transfer_online'), true); return; }
+    appOpenScreen('stockslips', parts[1]); return;
   }
   if (btn) btn.className += ' busy';
   APP.tapStart = APP.win && APP.win.performance ? APP.win.performance.now() : 0;
@@ -15507,10 +15929,35 @@ function appRenderSettings(main) {
   if (meta.staff) { p.appendChild(appKv(tt('ui_lbl_staff'), meta.staff.name)); p.appendChild(appKv(tt('ui_lbl_shop'), shopName(ports, meta.staff.shop))); }
   if (meta.deviceId) { p.appendChild(appKv(tt('ui_lbl_device'), meta.label)); p.appendChild(appKv(tt('ui_lbl_letter'), meta.receiptLetter || '-', { cls: 'num' })); }
   main.appendChild(p);
+  if (meta.deviceId && officeRole(meta.staff.role)) {
+    appOfficeJobs(main, meta.staff);
+    main.appendChild(appOfficeButton('ဖုန်း ပြန်ချိတ်ဆက်', function () {
+      appAsk({ kind: 'disconnect', title: tt('ui_ask_reenroll'), yes: tt('ui_ask_reenroll_yes'), no: tt('ui_w_cancel'),
+        onYes: function () { APP.store.wipe().then(function () { appNavReset(); APP.officePage = null; APP.screen = 'enroll'; appRender(); }); } });
+    })); return;
+  }
   if (meta.deviceId) {
+    if (meta.staff.role !== 'owner' && hasJob(meta.staff, 'staff') && meta.scope && meta.scope.length > 1) {
+      var site = appOfficeSelect('လက်ရှိဆိုင်', meta.scope.map(function (id) { return { id: id, name: shopName(ports, id) }; }), meta.staff.shop);
+      site.onchange = function () {
+        clearState(ports, appUid()); APP.store.setMeta({ staff: syncMerge(meta.staff, { shop: site.value }) });
+        APP.phone.commit('shop').then(function () { appNavReset(); APP.screen = 'home'; APP.showScanner = true; appRender(); });
+      };
+      appOfficeField(main, 'လက်ရှိဆိုင်', site);
+    }
+    if (meta.staff.role !== 'owner') appOfficeJobs(main, meta.staff);
+    else {
+      main.appendChild(appOfficeButton('အော်ဒါနှင့် အတိုင်းအတာ', function () { appOpenScreen('orders'); }));
+      main.appendChild(appOfficeButton('ပစ္စည်းအသစ်နှင့် နမူနာ', function () { appOpenScreen('designs'); }));
+    }
     var aiBox = appH('div', { class: 'panel' });
+    if (meta.staff.role === 'owner') {
+      main.appendChild(appOfficeButton('ဝန်ထမ်းနှင့် သုံးခွင့်', function () { appOpenScreen('people'); }));
+      main.appendChild(appOfficeButton('ဆိုင် ဖွင့် / ပိတ်', function () { appOpenScreen('shops'); }));
+    }
     appSettingsAi(aiBox);                                    // the owner's AI switch (13.11)
     main.appendChild(aiBox);
+    main.appendChild(appH('button', { text: 'ဆိုင်စာရင်း ကြည့်မယ်', onclick: function () { appOpenScreen('closing'); } }));
     appSettingsShops(main);                                  // the owner's Shops section (13.12)
   }
   p = appH('div', { class: 'panel' });
@@ -15979,7 +16426,7 @@ function appAsk(spec) {
   var tt = APP.tt, o = APP.$ && APP.$('overlay');
   if (!o) return false;
   appClear(o);
-  var sheet = appH('div', { class: 'sheet ask', role: 'alertdialog', 'aria-modal': 'true', 'data-ask': spec.kind || 'ask' }, [appH('h3', { text: spec.title })]);
+  var sheet = appH('div', { class: 'sheet ask', role: 'alertdialog', 'aria-label': spec.title, 'aria-modal': 'true', 'data-ask': spec.kind || 'ask' }, [appH('h3', { text: spec.title })]);
   if (spec.text) sheet.appendChild(appH('div', { class: 'muted asktext', text: spec.text }));
   sheet.appendChild(appH('div', { class: 'actions askacts' }, [
     appH('button', { type: 'button', class: spec.danger ? 'danger' : 'primary', 'data-f': 'ask:yes', text: spec.yes, onclick: function () { appAskClose(spec, true); } }),
@@ -15987,6 +16434,17 @@ function appAsk(spec) {
   ]));
   o.appendChild(sheet);
   appOpenSheet(o);
+  spec.opener = APP.doc && APP.doc.activeElement;
+  var choices = sheet.querySelectorAll ? sheet.querySelectorAll('button') : [];
+  if (choices.length === 2 && choices[1].focus) {
+    choices[1].focus();
+    sheet.addEventListener('keydown', function (event) {
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        choices[APP.doc.activeElement === choices[0] ? 1 : 0].focus();
+      }
+    });
+  }
   return true;
 }
 /** The sheet's answer: the sheet and its layer go first (no history call), the choice runs, then ONE history sync. */
@@ -15994,6 +16452,7 @@ function appAskClose(spec, yes) {
   appCloseOverlay({ fromNav: true });
   var top = appNavTop();
   if (top && top.kind === 'sheet') APP.nav.pop();
+  if (spec.opener && spec.opener.focus) spec.opener.focus();
   if (yes) { if (spec.onYes) spec.onYes(); }
   else if (spec.onNo) spec.onNo();
   appNavSync();
@@ -17050,7 +17509,7 @@ function appFormRender(F) {
   F.title = appH('h2', { text: appFormTitle(F) });
   col.appendChild(appH('div', { class: 'fhead' }, [back, F.title]));
   F.stripHost = appH('div', { class: 'fstriphost' });
-  col.appendChild(F.stripHost);
+  if (F.kind !== 'sale') col.appendChild(F.stripHost);
   F.body = appH('div', { class: 'fbody' });
   col.appendChild(F.body);
   page.appendChild(col);
@@ -17125,6 +17584,8 @@ function appFormBar(F) {
       cells.push(appH('div', { class: 'fsum' }, [appH('span', { class: 'k', text: tt('ui_lbl_paid') }), appH('span', { class: 'v num', text: fmtMoney(view.needAmount ? 0 : view.paidNow) })]));
       cells.push(appH('div', { class: 'fsum owed' }, [appH('span', { class: 'k', text: tt('ui_lbl_owed') }), appH('span', { class: 'v num', text: fmtMoney(view.needAmount ? view.total : view.owed) })]));
     }
+    var method = methodLabel(APP.phone.ports, F.values.method || CFG.METHOD.CASH);
+    inner.appendChild(appH('div', { class: 'fmethod', text: (F.values.mixed ? tt('btn_split') + ' · ' : '') + (F.values.acctAdd ? F.values.addLabel : method) }));
     inner.appendChild(appH('div', { class: 'fsums' }, cells));
   }
   var msg = F.msg || (F.problems.length ? appPlain(t(APP.phone.ports, F.problems[0].key, F.problems[0].vars)) : '');
@@ -17508,7 +17969,7 @@ function appSaleRender(F, body) {
   split.appendChild(left);
   split.appendChild(right);
   body.appendChild(split);
-  appFormScanHelpers(F, left, view, true);
+
   // the lines
   var linesBox = appH('div', { class: 'flines' });
   view.lines.forEach(function (l) {
@@ -17533,6 +17994,8 @@ function appSaleRender(F, body) {
     linesBox.appendChild(row);
   });
   left.appendChild(linesBox);
+  left.appendChild(F.stripHost);
+  appFormScanHelpers(F, left, view, true);
   // the buyer
   var buyerSec = appFormSection(tt('btn_customer'), [], 'fbuyer' + (view.needBuyer && !view.buyer && !view.newBuyer ? ' fneed' : '') + (appFormBad(F, 'buyer') ? ' fbad' : ''));
   if (view.buyer) {
@@ -18245,6 +18708,14 @@ function appOnOpenScreen(evt) {
 }
 /** The header's title of a page (13.3). */
 function appScreenTitle(screen) {
+  if (screen === 'expenseBook') return 'ကုန်ကျစရိတ်';
+  if (screen === 'work') return 'ကျွန်ုပ်၏ လုပ်ငန်း';
+  if (screen === 'orders') return 'အော်ဒါများ';
+  if (screen === 'designs') return 'ပစ္စည်းအသစ်နှင့် နမူနာ';
+  if (screen === 'stockslips') return 'ကုန်ပို့ / လက်ခံ';
+  if (screen === 'people') return 'ဝန်ထမ်းနှင့် သုံးခွင့်';
+  if (screen === 'shops') return 'ဆိုင်များ';
+  if (screen === 'closing') return 'ဆိုင်စာရင်း';
   var key = { history: 'ui_history_title', sync: 'ui_sync_title', settings: 'ui_w_settings', buyers: 'ui_buyers_title', buyer: 'ui_buyer_title',
     receipt: 'ui_receipt_title', entry: 'ui_entry_title' }[screen];
   return key ? APP.tt(key) : '';
@@ -18939,4 +19410,292 @@ function appSettingsShops(main) {
       [appH('div', { class: 'lmain' }, lines), appChevron()]));
   });
   main.appendChild(box);
+}
+
+function appJobNames(role) {
+  return String(role).split('+').map(function (j) { return APP_ROLE_NAMES[j] || j; }).join('၊ ');
+}
+var APP_ROLE_NAMES = { designer: 'ဒီဇိုင်နာ', tailor: 'အပ်ချုပ်သူ', staff: 'ရောင်းသူ', owner: 'ဆိုင်ရှင်', access: 'ဝန်ထမ်းခွင့် စီမံသူ', bookkeeper: 'စာရင်းကိုင်', viewer: 'စာရင်းကြည့်သူ' };
+
+function appOfficeButton(label, action) { return appH('button', { type: 'button', text: label, onclick: action }); }
+function appOfficeSelect(label, options, selected) {
+  return appH('select', { 'aria-label': label }, options.map(function (o) {
+    return appH('option', { value: o.id, selected: o.id === selected, text: o.name });
+  }));
+}
+function appOfficeField(box, title, field) { box.appendChild(appH('label', { class: 'office-field' }, [appH('span', { text: title }), field])); }
+function appOfficePage(main, kind, init) {
+  if (!APP.officePage || APP.officePage.kind !== kind) {
+    var box = appH('section', { class: 'office-page' });
+    APP.officePage = { kind: kind, box: box };
+    init(box);
+  }
+  main.appendChild(APP.officePage.box);
+}
+function appClosingScreen(main) {
+  appOfficePage(main, 'closing', function (page) {
+    var today = dayKey(APP.phone.now()), period = 'day', date = today, selectedShop = '', detailed = false, serial = 0;
+    var choices = [], report, waiting, scope = APP.store.meta.staff;
+    function request() {
+      var prefix = date.slice(0, period === 'day' ? 10 : period === 'month' ? 7 : 4), n = ++serial;
+      appClear(page); page.appendChild(appH('p', { text: 'စာရင်း ရယူနေသည်…' }));
+      APP.sync.office('close', { period: prefix, shop: selectedShop }).then(function (res) {
+        if (n !== serial) return;
+        if (res.ok) { report = res.report; choices = res.shops; waiting = res.unconfirmed; }
+        else if (res.transportFailure && !officeRole(scope.role)) {
+          var local = scope.role === 'owner' ? CFG.SHOP_IDS : (APP.store.meta.scope || [scope.shop]);
+          choices = local.map(function (id) { return { id: id, name: shopName(APP.phone.ports, id) }; });
+          report = closingReport(APP.phone.ports, prefix, selectedShop ? [selectedShop] : local, APP.phone.now()); waiting = true;
+        } else {
+          appClear(page); page.appendChild(appH('p', { text: APP.sync.errorText(res.error) }));
+          page.appendChild(appOfficeButton('ပြန်ယူမယ်', request)); return;
+        }
+        draw();
+      });
+    }
+    function draw() {
+      appClear(page);
+      var controls = appH('div', { class: 'report-controls' });
+      var duration = appOfficeSelect('ကာလ', [{ id: 'day', name: 'နေ့စဉ်' }, { id: 'month', name: 'လစဉ်' }, { id: 'year', name: 'နှစ်စဉ်' }], period);
+      duration.onchange = function () { period = duration.value; request(); };
+      appOfficeField(controls, 'ကာလ', duration);
+      var picker = appH('input', { type: period === 'year' ? 'number' : period === 'day' ? 'date' : 'month', value: date.slice(0, period === 'day' ? 10 : period === 'year' ? 4 : 7) });
+      picker.onchange = function () {
+        if (!picker.value || (period === 'year' && !/^\d{4}$/.test(picker.value))) return;
+        date = picker.value + (period === 'day' ? '' : period === 'month' ? '-01' : '-01-01'); request();
+      };
+      appOfficeField(controls, 'ရက်စွဲ', picker);
+      if (choices.length > 1) {
+        var shop = appOfficeSelect('ဆိုင်', [{id:'', name:'ဆိုင်အားလုံး'}].concat(choices), selectedShop);
+        shop.onchange = function () { selectedShop = shop.value; request(); }; appOfficeField(controls, 'ဆိုင်', shop);
+      }
+      controls.appendChild(appOfficeButton(detailed ? 'အနှစ်ချုပ် ကြည့်မယ်' : 'အသေးစိတ် ကြည့်မယ်', function () { detailed = !detailed; draw(); }));
+      controls.appendChild(appOfficeButton('ပုံနှိပ်မယ်', function () { APP.win.print(); }));
+      page.appendChild(controls);
+      page.appendChild(appH('h2', { text: report.title }));
+      if (waiting || report.missingCosts || APP.store.outbox.length) page.appendChild(appH('p', { class: 'banner', text: 'ယာယီစာရင်း · ' +
+        (report.missingCosts ? 'အရင်း မပြည့်စုံသေးပါ ' : '') + (waiting || APP.store.outbox.length ? 'ဖုန်းမှတ်တမ်းများ အပြည့်အစုံ ရောက်ရှိမှု စစ်ဆေးရန်' : '') }));
+      page.appendChild(appRenderReport(detailed ? report : syncMerge(report, { sections: [report.sections[0]] })));
+    }
+    request();
+  });
+}
+
+function appManageScreen(main, kind) {
+  appOfficePage(main, kind, function (box) {
+    var people = kind === 'people', busy = false, note = appH('p', { role: 'status' });
+    function load() {
+      APP.sync.office(kind, {}).then(function (res) {
+        appClear(box); box.appendChild(note);
+        if (!res.ok) { note.textContent = APP.sync.errorText(res.error); box.appendChild(appOfficeButton('ပြန်ယူမယ်', load)); return; }
+        var list = people ? res.people : res.shops;
+        list.forEach(function (r) {
+          box.appendChild(appOfficeButton(r.name + ' · ' + (people ? appJobNames(r.role) + (r.active === false ? ' · ပိတ်ထား' : '') : r.id + (r.active ? '' : ' · ပိတ်ထား')), function () { edit(r, res); }));
+        });
+        box.appendChild(appOfficeButton(people ? 'ဝန်ထမ်းအသစ်' : 'ဆိုင်အသစ်', function () { edit(null, res); }));
+      });
+    }
+    function edit(row, res) {
+      appClear(box);
+      var id = appH('input', { value: row ? row.id : '', disabled: !!row, autocapitalize: 'characters', placeholder: people ? 'W-001' : 'S3' });
+      var name = appH('input', { value: row ? row.name : '', maxlength: people ? 60 : 40 });
+      appOfficeField(box, people ? 'ဝန်ထမ်းနံပါတ် (W-001) သို့မဟုတ် Telegram ID' : 'ဆိုင်နံပါတ်', id); appOfficeField(box, 'အမည်', name);
+      var roles = [], shop, roleInputs = [], shopInputs = [];
+      if (people) {
+        if (row) box.appendChild(appH('p', { text: 'တာဝန် သို့မဟုတ် ဆိုင် မပြောင်းမီ ဝန်ထမ်း၏ ဖုန်းရှိ စာရင်းများကို အရင် ပို့ပါ။ ပြောင်းပြီးလျှင် ဖုန်း ပြန်ချိတ်ဆက်ရပါမည်။' }));
+        roles = ['staff', 'designer', 'tailor', 'bookkeeper', 'viewer'];
+        if (APP.store.meta.staff.role === 'owner') roles.push('access');
+        var selectedJobs = row ? row.role.split('+') : ['staff'];
+        roles.forEach(function (job) {
+          var input = appH('input', { type: 'checkbox', value: job, checked: selectedJobs.indexOf(job) >= 0 });
+          roleInputs.push(input); appOfficeField(box, APP_ROLE_NAMES[job], input);
+        });
+        shop = appOfficeSelect('အဓိကဆိုင်', res.shops, row ? row.shop : '');
+        appOfficeField(box, 'အဓိကဆိုင်', shop);
+        res.shops.forEach(function (s) {
+          var input = appH('input', { type: 'checkbox', value: s.id, checked: !!row && staffShops(row).indexOf(s.id) >= 0 });
+          shopInputs.push(input); appOfficeField(box, 'သုံးခွင့်ရှိသည့်ဆိုင် · ' + s.name, input);
+        });
+        if (row && row.active !== false) box.appendChild(appOfficeButton('ဖုန်းချိတ်ဆက်ရန် ကုဒ် ရယူမယ်', function () {
+          APP.sync.office('invite', { target: row.id }).then(function (r) { note.textContent = r.ok ? r.code : APP.sync.errorText(r.error); });
+        }));
+      } else {
+        var address = appH('input', { value: row && row.address || '', maxlength: CFG.SHOP_TEXT_MAX.address });
+        var phone = appH('input', { value: row && row.phone || '', type: 'tel', maxlength: CFG.SHOP_TEXT_MAX.phone });
+        appOfficeField(box, 'လိပ်စာ', address); appOfficeField(box, 'ဖုန်း', phone);
+      }
+      var active = appH('input', { type: 'checkbox', checked: !row || row.active !== false });
+      appOfficeField(box, people ? 'သုံးခွင့်ရှိ' : 'ဆိုင်ဖွင့်ထား', active);
+      box.appendChild(note);
+      box.appendChild(appOfficeButton('ပြန်စစ်မယ်', function () {
+        var actor = { id: id.value.trim().toUpperCase(), name: name.value.trim(), active: active.checked };
+        if (!actor.id || !actor.name) { note.textContent = 'နံပါတ်နှင့် အမည် ဖြည့်ပါ'; return; }
+        var params;
+        if (people) { actor.role = roleInputs.filter(function (c) { return c.checked; }).map(function (c) { return c.value; }).join('+');
+          actor.shop = shop.value; actor.shops = [actor.shop].concat(shopInputs.filter(function (c) { return c.checked && c.value !== actor.shop; }).map(function (c) { return c.value; })); params = { person: actor }; }
+        else params = { shop: actor.id, active: actor.active, name: actor.name, address: address.value, phone: phone.value, create: !row };
+        if (people && !actor.role) { note.textContent = 'တာဝန် ရွေးပါ'; return; }
+        appAsk({ kind: 'manage', title: 'သိမ်းမလား?', text: actor.name + ' · ' + (people ? appJobNames(actor.role) + ' · ' + actor.shops.map(function (id) { return res.shops.filter(function (s) { return s.id === id; })[0].name; }).join('၊ ') : actor.id) + ' · ' + (actor.active ? 'ဖွင့်' : 'ပိတ်'),
+          yes: 'သိမ်းမယ်', no: 'ပြန်ပြင်မယ်', onYes: function () {
+            if (busy) return; busy = true;
+            APP.sync.office(people ? 'person' : 'shop', params).then(function (result) {
+              busy = false;
+              if (!result.ok) { note.textContent = result.message || APP.sync.errorText(result.error); return; }
+              note.textContent = 'သိမ်းပြီး'; load();
+              if (!people) APP.sync.syncNow('shops');
+            });
+          } });
+      }));
+      box.appendChild(appOfficeButton('စာရင်းသို့ ပြန်သွားမယ်', load));
+    }
+    load();
+  });
+}
+
+function appStockSlips(main) {
+  appOfficePage(main, 'stockslips', function (box) {
+    var op = 'SHIP-' + appUuid(), busy = false;
+    function show() {
+      APP.sync.office('stock', {}).then(function (res) {
+        appClear(box);
+        if (!res.ok) { box.appendChild(appH('p', { text: APP.sync.errorText(res.error) })); box.appendChild(appOfficeButton('ပြန်ယူမယ်', show)); return; }
+        var tag = appH('input', { value: APP.screenArg || '', placeholder: APP.store.meta.staff.shop + '-0001' }), qty = appH('input', { type: 'number', value: '1', min: '1' });
+        var to = appOfficeSelect('လက်ခံမည့်ဆိုင်', [{ id: '', name: 'ဆိုင် ရွေးပါ' }].concat(res.shops), '');
+        appOfficeField(box, 'ပို့မည့် ပစ္စည်း Tag', tag); appOfficeField(box, 'အရေအတွက်', qty); appOfficeField(box, 'လက်ခံမည့်ဆိုင်', to);
+        function reviewTransfer(action, params, line) {
+          if (busy) return;
+          appAsk({ kind: 'stock', title: 'စာရင်း သွင်းမလား?', text: line, yes: 'သိမ်းမယ်', no: 'ပြန်စစ်မယ်', onYes: function () {
+            busy = true;
+            APP.sync.office(action, params).then(function (r) {
+              busy = false;
+              if (!r.ok) { appToast(r.message || APP.sync.errorText(r.error), true); return; }
+              op = 'SHIP-' + appUuid(); appToast('သိမ်းပြီး'); show(); APP.sync.syncNow('transfer');
+            });
+          } });
+        }
+        box.appendChild(appOfficeButton('ပို့မယ်', function () {
+          if (!tag.value.trim() || !to.value || !(Number(qty.value) > 0)) { appToast('ပစ္စည်း၊ အရေအတွက်နှင့် လက်ခံဆိုင် ဖြည့်ပါ', true); return; }
+          if (APP.store.outbox.length) { appToast(APP.tt('ui_transfer_online'), true); return; }
+          reviewTransfer('sendStock', { tag: tag.value.trim(), qty: Number(qty.value), to: to.value, slip: op }, tag.value + ' × ' + qty.value + ' → ' + to.options[to.selectedIndex].text);
+        }));
+        box.appendChild(appH('h2', { text: 'လက်ခံရန် စောင့်နေသည်' }));
+        res.incoming.forEach(function (s) {
+          var name = s.from + ' → ' + s.to + ' · ' + s.tag + ' × ' + fmtCount(s.qty);
+          box.appendChild(appH('p', { text: name }));
+          var target = appH('input', { placeholder: s.toId + '-0001' }); appOfficeField(box, 'လက်ခံဆိုင်၏ Tag အသစ်', target);
+          box.appendChild(appOfficeButton('လက်ခံရရှိ', function () { reviewTransfer('receiveStock', { tag: target.value.trim(), slip: s.id }, name + ' · ' + target.value); }));
+        });
+      });
+    }
+    show();
+  });
+}
+
+function appOfficeJobs(main, profile) {
+  var jobs = [
+    ['viewer','closing','ဆိုင်စာရင်း ကြည့်မယ်'], ['bookkeeper','expenseBook','ကုန်ကျစရိတ် သွင်းမယ်'], ['designer','designs','ပစ္စည်းအသစ်နှင့် နမူနာ'],
+    ['tailor','orders','အော်ဒါနှင့် အတိုင်းအတာ'], ['access','people','ဝန်ထမ်းနှင့် သုံးခွင့်']
+  ];
+  jobs.forEach(function (job) {
+    if (hasJob(profile, job[0]) || (job[0] === 'viewer' && hasJob(profile, 'bookkeeper'))) {
+      main.appendChild(appOfficeButton(job[2], function () { appOpenScreen(job[1]); }));
+    }
+  });
+}
+function appWorkshopScreen(main, kind) {
+  appOfficePage(main, kind, function (box) {
+    var busy = false;
+    function invoke(action, params, done) {
+      if (busy) return; busy = true;
+      APP.sync.office(action, params).then(function (r) {
+        busy = false;
+        if (!r.ok) { appToast(r.message || r.reason || APP.sync.errorText(r.error), true); return; }
+        done(r);
+      });
+    }
+    function formField(label, opts) { var el = appH('input', opts); appOfficeField(box, label, el); return el; }
+    function show() {
+      invoke(kind, {}, function (r) {
+        appClear(box);
+        if (kind === 'orders') {
+          if (!r.orders.length) box.appendChild(appH('p', { text: 'စောင့်နေသည့် အော်ဒါ မရှိပါ' }));
+          r.orders.forEach(function (o) {
+            box.appendChild(appOfficeButton([o.shop, o.id, o.customer, o.due, o.status].join(' · '), function () { orderPage(o.id); }));
+          });
+          return;
+        }
+        var tag = formField('Tag နံပါတ်', { placeholder: APP.store.meta.staff.shop + '-0001' }), name = formField('ပစ္စည်းအမည်', { maxlength: 80 });
+        var cat = appOfficeSelect('အမျိုးအစား', r.categories.map(function (c) { return { id: c, name: c }; }), '');
+        appOfficeField(box, 'အမျိုးအစား', cat);
+        var qty = formField('အရေအတွက်', { type: 'number', min: 1, value: 1 });
+        var cost = formField('အရင်း', { type: 'number', min: 0 }), price = formField('ရောင်းစျေး', { type: 'number', min: 0, placeholder: 'စျေး မသတ်မှတ်ရသေး' });
+        var sample = formField('နမူနာ', { type: 'checkbox' });
+        box.appendChild(appOfficeButton('ပစ္စည်း သိမ်းမယ်', function () {
+          invoke('piece', { tag: tag.value, name: name.value, category: cat.value, qty: qty.value, cost: cost.value, price: price.value, sample: sample.checked }, function () {
+            appToast('ပစ္စည်း သိမ်းပြီး'); photo(tag.value);
+          });
+        }));
+        r.items.forEach(function (it) { box.appendChild(appOfficeButton(it.id + ' · ' + it.name + (it.pending ? ' · စျေး မသတ်မှတ်ရသေး' : ' · နမူနာ'), function () { photo(it.id); })); });
+      });
+    }
+    function photo(id) {
+      appClear(box); var file = formField(id + ' · ဓာတ်ပုံ', { type: 'file', accept: 'image/*', capture: 'environment' });
+      file.onchange = function () {
+        if (file.files.length) appDownscalePhoto(file.files[0], 1024, 0.8).then(function (img) {
+          invoke('piecePhoto', { tag: id, data: img.dataUrl.split(',')[1] }, function () { appToast('ဓာတ်ပုံ သိမ်းပြီး'); show(); });
+        }, function () { appToast('ဓာတ်ပုံ ပြန်ရွေးပါ', true); });
+      };
+      box.appendChild(appOfficeButton('ပြီးပြီ', show));
+    }
+    function orderPage(id) {
+      invoke('order', { id: id }, function (r) {
+        appClear(box); box.appendChild(appH('p', { style: 'white-space:pre-line', text: r.text }));
+        r.next.forEach(function (n) {
+          box.appendChild(appOfficeButton(n.name, function () {
+            appAsk({ kind: 'step', title: id + ' · ' + n.name + '?', yes: 'သိမ်းမယ်', no: 'ပြန်စစ်မယ်',
+              onYes: function () { invoke('orderStep', { id: id, status: n.id }, show); } });
+          }));
+        });
+        var inputs = r.fields.map(function (f) { return { key: f.key, input: formField(f.name, { value: f.value, maxlength: 300 }) }; });
+        box.appendChild(appOfficeButton('အတိုင်းအတာ သိမ်းမယ်', function () {
+          var values = {}; inputs.forEach(function (f) { values[f.key] = f.input.value; });
+          invoke('measure', { id: id, values: values }, function () { appToast('သိမ်းပြီး'); show(); });
+        }));
+        box.appendChild(appOfficeButton('အော်ဒါစာရင်း', show));
+      });
+    }
+    box.appendChild(appOfficeButton('စာရင်း ပြန်ယူမယ်', show)); show();
+  });
+}
+
+function appExpenseBook(main) {
+  appOfficePage(main, 'expenseBook', function (box) {
+    var slip = 'BOOK-' + appUuid(), busy = false;
+    function load(shop) {
+      APP.sync.office('expenseBook', { shop: shop }).then(function (r) {
+        appClear(box);
+        if (!r.ok) { box.appendChild(appH('p', { text: r.message || APP.sync.errorText(r.error) })); box.appendChild(appOfficeButton('ပြန်ယူမယ်', function () { load(shop); })); return; }
+        var site = appOfficeSelect('ဆိုင်', r.shops, r.shop), cat = appOfficeSelect('ကုန်ကျစရိတ် အမျိုးအစား', r.categories, '');
+        var method = appOfficeSelect('ပေးချေသည့်နည်း', r.methods, 'CASH');
+        var amount = appH('input', { type: 'number', min: 1, inputmode: 'numeric' }), note = appH('input', { maxlength: 180 });
+        site.onchange = function () { load(site.value); };
+        appOfficeField(box, 'ဆိုင်', site); appOfficeField(box, 'ကုန်ကျစရိတ် အမျိုးအစား', cat); appOfficeField(box, 'ပေးချေသည့်နည်း', method);
+        appOfficeField(box, 'ငွေပမာဏ (ကျပ်)', amount); appOfficeField(box, 'မှတ်ချက်', note);
+        box.appendChild(appOfficeButton('ပြန်စစ်မယ်', function () {
+          if (!(Number(amount.value) > 0)) { appToast('ငွေပမာဏ ဖြည့်ပါ', true); return; }
+          appAsk({ kind: 'expense', title: 'ကုန်ကျစရိတ် သိမ်းမလား?',
+            text: [site.selectedOptions[0].text, cat.selectedOptions[0].text, fmtMoney(Number(amount.value)), method.selectedOptions[0].text, note.value].join(' · '),
+            yes: 'သိမ်းမယ်', no: 'ပြန်ပြင်မယ်', onYes: function () {
+              if (busy) return; busy = true;
+              APP.sync.office('recordExpense', { slip: slip, shop: r.shop, category: cat.value, method: method.value, amount: Number(amount.value), note: note.value }).then(function (result) {
+                busy = false;
+                if (!result.ok) { appToast(result.message || APP.sync.errorText(result.error), true); return; }
+                slip = 'BOOK-' + appUuid(); appToast('ကုန်ကျစရိတ် သိမ်းပြီး'); load(r.shop);
+              });
+            } });
+        }));
+      });
+    }
+    load('');
+  });
 }

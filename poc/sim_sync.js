@@ -59,6 +59,7 @@ function createFakeServer(world, opts) {
   if (server.props.MASTER_REV < 1) server.props.MASTER_REV = 1;
 
   var store = {
+    appendLedger: function (tx) { return base.appendLedger(tx); },
     ledgerRows: function () { return world.ledger; },
     getItem: function (id) { return base.getItem(id); },
     listItems: function (shop) { return base.listItems(shop); },
@@ -75,7 +76,14 @@ function createFakeServer(world, opts) {
       }
     },
     getStaff: function (uid) { return base.getStaff(uid); },
-    listStaff: function () { return base.listStaff(); },
+    prepareShopTags: function (id) {
+      if (!base.listItems(id).length) for (var i = 1; i <= 20; i++) world.items.push({ id: id + '-' + ('000' + i).slice(-4), shop: id, rev: nextRev() });
+    },
+    saveStaff: function (p) {
+      var found = world.staff.filter(function (s) { return String(s.id) === String(p.id); })[0];
+      if (found) Object.keys(p).forEach(function (k) { found[k] = p[k]; }); else world.staff.push(copy(p));
+    },
+    listStaff: function (includeInactive) { return base.listStaff(includeInactive); },
     getSetting: function (k, d) { return base.getSetting(k, d); },
     getMessage: function (k) { return base.getMessage(k); },
     allSettings: function () { return copy(world.settings); },
@@ -95,6 +103,10 @@ function createFakeServer(world, opts) {
   // rule), addMeasurement, and getOrder / updateOrder (the voucher link). getCustomer is forwarded above.
   if (base.listMeasureFields) store.listMeasureFields = function () { return base.listMeasureFields(); };
   if (base.listAllMeasurements) store.listAllMeasurements = function () { return base.listAllMeasurements(); };
+  if (base.listOrders) store.listOrders = base.listOrders;
+  if (base.listOrderItems) store.listOrderItems = base.listOrderItems;
+  if (base.getDesign) store.getDesign = base.getDesign;
+  if (base.getMeasurement) store.getMeasurement = base.getMeasurement;
   if (base.listMeasurements) store.listMeasurements = function (customerId) { return base.listMeasurements(customerId); };
   if (base.addMeasurement) store.addMeasurement = function (rec) { return base.addMeasurement(rec); };
   if (base.getOrder) store.getOrder = function (id) { return base.getOrder(id); };

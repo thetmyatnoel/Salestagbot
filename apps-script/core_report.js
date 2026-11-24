@@ -28,6 +28,7 @@ function buildReport(ports, kind, o) {
   o = o || {};
   var now = o.now || ports.clock.now();
   var shops = o.shop ? [o.shop] : CFG.SHOP_IDS;
+  if (kind === 'year') return closingReport(ports, o.year || dayKey(now).slice(0, 4), shops, now);
   if (kind === 'today' || kind === 'day') return dayReport(ports, o.day || dayKey(now), shops, now);
   if (kind === 'month') return monthReport(ports, o.month || monthKey(now), shops, now);
   if (kind === 'last') return monthReport(ports, prevMonthKey(now), shops, now);
@@ -430,4 +431,103 @@ function receiptReport(ports, r, now) {
       totals: totals }],
     footer: footer.join('\n')
   };
+}
+
+/** One period on paper or on screen. All totals use the same signed ledger rows as the daily close. */
+function closingReport(ports, period, shops, now) {
+  if (!/^\d{4}(-\d{2}(-\d{2})?)?$/.test(period)) throw new Error('ရက်စွဲ ရွေးပါ');
+  var matches = function (day) { return String(day).slice(0, period.length) === period; };
+  var sections = [], summary = [], costsMissing = 0;
+  var totals = { revenue: 0, cashIn: 0, cashOut: 0, expenses: 0, cogs: 0, profit: 0, pieces: 0 };
+  var entries = ports.store.ledgerRows(), moves = {}, stock = {}, byCategory = {};
+  var asOf = entries.filter(function (r) { return String(r.day).slice(0, period.length) <= period; });
+  var closingPorts = Object.create(ports);
+  closingPorts.store = Object.create(ports.store);
+  closingPorts.store.ledgerRows = function () { return asOf; };
+  var owed = openCredits(closingPorts, null).filter(function (c) { return shops.indexOf(c.shop) >= 0; });
+  var moneyOwed = owed.reduce(function (n, c) { return n + c.owed; }, 0);
+  var held = 0;
+  var itemNames = {}, categories = {};
+  ports.store.listItems(null).forEach(function (it) {
+    itemNames[it.id] = it.name;
+    categories[it.id] = it.category;
+  });
+  shops.forEach(function (shop) {
+    var s = statsWhere(ports, shop, matches);
+    Object.keys(totals).forEach(function (key) { totals[key] += s[key]; });
+    costsMissing += Math.abs(s.unknownCostPieces);
+    summary.push(summaryRow(ports, shop, s));
+    sections.push(methodSection(ports, shop, s, true), categorySection(ports, shop, s, true));
+  });
+  var detail = [], receipts = [], sales = {}, months = {};
+  entries.forEach(function (r) {
+    var kind = r.type, T = CFG.TX, own = shops.indexOf(r.shop) >= 0;
+    if (String(r.day).slice(0, period.length) > period) return;
+    if (own) {
+      if (kind === T.DEPOSIT) held += r.amount;
+      if (kind === T.DEPOSIT_APPLIED) held -= r.amount;
+      if (r.itemId && r.qty) {
+        var stockKey = JSON.stringify([r.shop, r.itemId]);
+        stock[stockKey] = (stock[stockKey] || 0) + r.qty;
+      }
+    }
+    var name = shopName(ports, r.shop);
+    var label = itemNames[r.itemId] || r.itemId || r.note || '';
+    if (kind === T.TRANSFER_IN || kind === T.TRANSFER_OUT) {
+      var move = moves[r.groupId] || (moves[r.groupId] = { day: r.day, item: label, qty: 0 });
+      if (r.reversesTxId) move.undone = true;
+      else {
+        if (kind === T.TRANSFER_IN) { move.received = true; move.to = r.shop; move.from = String(r.note || '').replace(/^from /, '') || move.from; }
+        if (kind === T.TRANSFER_OUT) { move.from = r.shop; move.to = String(r.note || '').replace(/^to /, '') || move.to; }
+        move.qty = Math.abs(r.qty);
+        if (matches(r.day)) { move.inPeriod = true; move.day = r.day; }
+      }
+    }
+    if (!own || !matches(r.day)) return;
+    if (kind === T.SALE || kind === T.RETURN || kind === T.FEE) {
+      var cat = categories[r.itemId] || (isOrderId(r.groupId) ? 'အော်ဒါ' : txLabel(kind));
+      var categoryKey = JSON.stringify([r.shop, cat]);
+      byCategory[categoryKey] = (byCategory[categoryKey] || 0) + r.amount;
+      var key = JSON.stringify([r.shop, cat, r.itemId || label]);
+      var bucket = sales[key] || (sales[key] = [name, cat, label, 0, 0]);
+      bucket[3] -= Number(r.qty) || 0;
+      bucket[4] += Number(r.amount) || 0;
+    }
+    if (r.cash > 0 || r.cash < 0) receipts.push([r.day, name, txLabel(kind), methodLabel(ports, methodOf(r)), r.cash, r.receiptNo || r.groupId]);
+    if (kind === T.EXPENSE) label = categoryLabel(ports, r.category) + ' ' + (r.note || '');
+    detail.push([r.day, name, txLabel(kind), label, r.qty, r.amount, r.receiptNo || r.groupId]);
+    months[String(r.day).slice(0, 7)] = true;
+  });
+  if (period.length === 4) {
+    var byMonth = Object.keys(months).sort().map(function (ym) {
+      var vals = [ym, 0, 0, 0, 0];
+      shops.forEach(function (shop) {
+        var m = monthStats(ports, shop, ym);
+        vals[1] += m.revenue; vals[2] += m.cogs; vals[3] += m.expenses; vals[4] += m.profit;
+      });
+      return vals;
+    });
+    sections.unshift({ heading: 'လအလိုက်', columns: ['လ', 'ရောင်းရငွေ', 'ပစ္စည်းကုန်ကျ', 'စရိတ်', 'အမြတ် / အရှုံး'], rows: byMonth });
+  }
+  sections.unshift({ heading: 'ဆိုင်အလိုက်', columns: SUMMARY_COLS, rows: summary });
+  sections.push({ heading: 'အမျိုးအစားအလိုက် ဝင်ငွေ', columns: ['ဆိုင်', 'အမျိုးအစား', 'ဝင်ငွေ'], rows: Object.keys(byCategory).sort().map(function (k) {
+    var ids = JSON.parse(k); return [shopName(ports, ids[0]), ids[1], byCategory[k]];
+  }) });
+  sections.push({ heading: 'ကာလအဆုံး ရရန်ကျန်ငွေ', columns: ['ဆိုင်', 'ဝယ်သူ', 'ဘောက်ချာ', 'ကျန်ငွေ'], rows: owed.map(function (c) { return [shopName(ports, c.shop), c.customer, c.groupId, c.owed]; }) });
+  sections.push({ heading: 'ကာလအဆုံး ဆိုင်ရှိပစ္စည်း', columns: ['ဆိုင်', 'Tag', 'ပစ္စည်း', 'လက်ကျန်'], rows: Object.keys(stock).sort().filter(function (k) { return stock[k] !== 0; }).map(function (k) {
+    var ids = JSON.parse(k); return [shopName(ports, ids[0]), ids[1], itemNames[ids[1]] || ids[1], fmtCount(stock[k])];
+  }) });
+  sections.push({ heading: 'ပစ္စည်းအလိုက် အရောင်း', columns: ['ဆိုင်', 'အမျိုးအစား', 'ပစ္စည်း', 'ထည်', 'ရောင်းရငွေ'], rows: Object.keys(sales).sort().map(function (k) { return sales[k]; }) });
+  sections.push({ heading: 'ငွေဝင် ငွေထွက်', columns: ['ရက်', 'ဆိုင်', 'အကြောင်း', 'နည်းလမ်း', 'ငွေ', 'ဘောက်ချာ'], rows: receipts });
+  sections.push({ heading: 'ဆိုင်ပြောင်းစာရင်း', columns: ['ရက်', 'ပစ္စည်း', 'ပို့သည့်ဆိုင်', 'ရောက်သည့်ဆိုင်', 'ထည်', 'အခြေအနေ'], rows: Object.keys(moves).filter(function (k) { var m = moves[k]; return !m.undone && (m.inPeriod || !m.received) && (shops.indexOf(m.from) >= 0 || shops.indexOf(m.to) >= 0); }).map(function (k) {
+    var m = moves[k]; return [m.day, m.item, shopName(ports, m.from), shopName(ports, m.to), m.qty, (m.received || k.indexOf('SHIP-') !== 0) ? 'လက်ခံပြီး' : 'ပို့ပြီး'];
+  }) });
+  sections.push({ heading: 'မှတ်တမ်း အပြည့်အစုံ', columns: ['ရက်', 'ဆိုင်', 'အကြောင်း', 'ပစ္စည်း', 'ထည်', 'ငွေ', 'ဘောက်ချာ'], rows: detail });
+  var first = { heading: 'အနှစ်ချုပ်', columns: ['အကြောင်း', 'စုစုပေါင်း'], rows: [
+    ['ရောင်းရငွေ (ပြန်အမ်းငွေ နုတ်ပြီး)', totals.revenue], ['ရောင်းထွက်သည့် အထည်', fmtCount(totals.pieces)],
+    ['ငွေလက်ခံရရှိ', totals.cashIn], ['ငွေထွက်', totals.cashOut], ['ဝယ်သူများထံမှ ရရန်ကျန်', moneyOwed], ['လက်ကျန် စရန်ငွေ', held], ['ရောင်းပြီးပစ္စည်း အရင်း', totals.cogs], ['ဆိုင်ကုန်ကျစရိတ်', totals.expenses],
+    [totals.profit < 0 ? 'အရှုံး' : 'အမြတ်', Math.abs(totals.profit)]
+  ] };
+  return { kind: 'close', title: 'ဆိုင်စာရင်း · ' + period, subtitle: shopList(ports, shops) + ' · ငွေပမာဏအားလုံး ကျပ်ဖြင့်', sections: [first].concat(sections),
+    fileName: 'close-' + period, footer: reportFooter(now), missingCosts: costsMissing };
 }

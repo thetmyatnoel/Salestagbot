@@ -146,6 +146,7 @@ function probeWebhookResponse() {
 }
 
 function buildPorts() {
+  loadShopRegistry({ store: gasStore });
   return {
     store: gasStore, chat: gasChat, ai: gasAi, pdf: gasPdf,
     cache: {

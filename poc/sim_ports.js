@@ -86,13 +86,13 @@ function createSimWorld() {
     getStaff: function (uid) {
       for (var i = 0; i < world.staff.length; i++) {
         var s = world.staff[i];
-        if (String(s.id) === String(uid) && s.active !== false) return { id: String(s.id), name: s.name, shop: s.shop, role: s.role || 'staff' };
+        if (String(s.id) === String(uid) && s.active !== false) return { id: String(s.id), name: s.name, shop: s.shop, shops: s.shops, active: s.active !== false, role: s.role || 'staff' };
       }
       return null;
     },
-    listStaff: function () {
-      return world.staff.filter(function (s) { return s.active !== false; })
-        .map(function (s) { return { id: String(s.id), name: s.name, shop: s.shop, role: s.role || 'staff' }; });
+    listStaff: function (includeInactive) {
+      return world.staff.filter(function (s) { return includeInactive || s.active !== false; })
+        .map(function (s) { return { id: String(s.id), name: s.name, shop: s.shop, shops: s.shops, active: s.active !== false, role: s.role || 'staff' }; });
     },
     getCustomer: function (id) {
       for (var i = 0; i < world.customers.length; i++) if (world.customers[i].id === String(id)) return world.customers[i];

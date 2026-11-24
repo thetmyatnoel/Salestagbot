@@ -382,7 +382,7 @@ var MSG = {
   split_bad: '❓ ၁ မှ {max} အတွင်း ဂဏန်း ရိုက်ပေးပါ',
   split_no_bank: 'ℹ️ ဘဏ်အကောင့် မရှိသေးပါ။ အရင် ထည့်ပါ။',
   // round 4: adding a missing option where it is needed (the ➕ of every pick list)
-  btn_add_bank: '➕ ဘဏ်အသစ်',
+  btn_add_bank: '➕ အကောင့်အသစ်',
   btn_add_cat: '➕ အမျိုးအစားအသစ်',
   btn_add_option: '➕ အသစ် ထည့်',
   add_ask_pm: '✏️ ဘဏ်/အကောင့် နာမည် ရိုက်ပါ (ဥပမာ KBZ ဦးမောင်)',

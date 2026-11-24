@@ -434,11 +434,27 @@ var gasStore = {
     for (var i = 0; i < list.length; i++) if (list[i].id === String(uid)) return list[i];
     return null;
   },
-  listStaff: function () {
+  prepareShopTags: function (id) {
+    if (!gasStore.listItems(id).length) generateBlankTags(id, 1, 20, gasSyncCounters.nextRev());
+  },
+  saveStaff: function (p) {
+    var sh = gasSheet('Staff'), rows = gasTable('Staff'), row = sh.getLastRow() + 1;
+    rows.forEach(function (r) { if (String(r.TelegramUserID) === String(p.id)) row = r._row; });
+    gasEnsureRows(sh, row);
+    var headers = gasHeader(sh), scopeCol = headers.indexOf('Shops') + 1;
+    if (!scopeCol) { scopeCol = headers.length + 1; sh.getRange(1, scopeCol).setValue('Shops'); }
+    sh.getRange(row, scopeCol).setValue((p.shops || [p.shop]).join(','));
+    var cells = sh.getRange(row, 1, 1, 5);
+    cells.setNumberFormat('@');
+    cells.setValues([[String(p.id), String(p.name).replace(/^=/, "'="), p.shop, p.role, !!p.active]]);
+    SpreadsheetApp.flush();
+    gasInvalidate();
+  },
+  listStaff: function (includeInactive) {
     return gasTable('Staff').filter(function (s) {
-      return s.Active === '' || gasBool(s.Active);
+      return includeInactive || s.Active === '' || gasBool(s.Active);
     }).map(function (s) {
-      return { id: String(s.TelegramUserID), name: String(s.Name || ''), shop: String(s.DefaultShop || 'S1'), role: String(s.Role || 'staff').toLowerCase() };
+      return { id: String(s.TelegramUserID), name: String(s.Name || ''), shop: String(s.DefaultShop || 'S1'), active: s.Active === '' || gasBool(s.Active), shops: s.Shops ? String(s.Shops).split(',') : undefined, role: String(s.Role || 'staff').toLowerCase() };
     });
   },
   getCustomer: function (id) {
@@ -519,7 +535,7 @@ var gasStore = {
       for (var i = 0; i < rows.length; i++) if (String(rows[i].Key) === key) row = rows[i];
       var n = row ? Math.round(Number(row.Value)) || 0 : 0;
       gasTableIf('Orders').forEach(function (o) {
-        var m = String(o.Shop) === shop && String(o.OrderID || '').match(/^V\d-(\d+)$/);
+        var m = String(o.Shop) === shop && String(o.OrderID || '').match(/^V\d+-(\d+)$/);
         if (m) max = Math.max(max, Number(m[1]));
       });
       if (n <= max) n = max + 1;

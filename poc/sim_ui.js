@@ -913,9 +913,9 @@
       var low = lowStockList(world.ports, shop);
       var owed = openCredits(world.ports, shop).reduce(function (a, c) { return a + c.owed; }, 0);
       var tiles = [['Revenue', s.revenue], ['Pieces', s.pieces], ['Cash in', s.cashIn], ['Drawer (net)', s.drawerNet], ['Bank (net)', s.bankNet],
-                   ['Expenses', s.expenses], ['COGS', s.cogs], ['Gross profit', s.profit]].map(function (tp) {
+                   ['Expenses', s.expenses], ['COGS', s.cogs], ['Operating profit', s.profit]].map(function (tp) {
         var isPieces = tp[0] === 'Pieces';
-        var cls = tp[0] === 'Gross profit' ? (tp[1] < 0 ? 'neg' : tp[1] > 0 ? 'pos' : '') : '';
+        var cls = tp[0] === 'Operating profit' ? (tp[1] < 0 ? 'neg' : tp[1] > 0 ? 'pos' : '') : '';
         return h('div', { class: 'tile' }, [h('div', { class: 'k', text: tp[0] }), h('div', { class: 'v ' + cls, text: isPieces ? String(tp[1]) : money(tp[1]) })]);
       });
       var card = h('div', { class: 'shop' }, [h('h3', { text: shopName(world.ports, shop) }), h('div', { class: 'tiles six' }, tiles)]);

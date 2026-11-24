@@ -9,8 +9,8 @@
  * reloads once; never mid-sale, no banner to tap (SPEC section 2). Old shell caches are removed on activate.
  * The two lines marked @sw-version / @sw-precache are rewritten by tools/build_app.js. Plain ES5.
  */
-var SW_VERSION = "1.0.0+29f689e93e"; // @sw-version
-var SW_PRECACHE = ["index.html","app.29f689e93e.js","app.css?v=1.0.0+29f689e93e","manifest.webmanifest","config.js","version.json","fonts/IBMPlexSans-latin-e2291e84.woff2","fonts/IBMPlexSans-latin-ext-d160e209.woff2","fonts/NotoSansMyanmar-latin-9831ab28.woff2","fonts/NotoSansMyanmar-myanmar-c1453c36.woff2","fonts/fonts.css","vendor/jsQR.js","icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png","icons/icon.svg"]; // @sw-precache
+var SW_VERSION = "1.0.0+1f6d909b84"; // @sw-version
+var SW_PRECACHE = ["index.html","app.1f6d909b84.js","app.css?v=1.0.0+1f6d909b84","manifest.webmanifest","config.js","version.json","fonts/IBMPlexSans-latin-e2291e84.woff2","fonts/IBMPlexSans-latin-ext-d160e209.woff2","fonts/NotoSansMyanmar-latin-9831ab28.woff2","fonts/NotoSansMyanmar-myanmar-c1453c36.woff2","fonts/fonts.css","vendor/jsQR.js","icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png","icons/icon.svg"]; // @sw-precache
 var SW_CACHE = 'shell-' + SW_VERSION;
 
 function swPrecacheRequest(url) {

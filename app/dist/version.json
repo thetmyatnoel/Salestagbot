@@ -1,9 +1,9 @@
 {
   "version": "1.0.0",
-  "hash": "29f689e93e",
-  "build": "1.0.0+29f689e93e",
-  "builtAt": "2026-11-19T05:16:50.387Z",
-  "bundle": "app.29f689e93e.js",
+  "hash": "1f6d909b84",
+  "build": "1.0.0+1f6d909b84",
+  "builtAt": "2026-11-24T06:16:17.900Z",
+  "bundle": "app.1f6d909b84.js",
   "files": [
     "apps-script/core_config.js",
     "apps-script/core_burmese.js",
@@ -28,8 +28,8 @@
   ],
   "precache": [
     "index.html",
-    "app.29f689e93e.js",
-    "app.css?v=1.0.0+29f689e93e",
+    "app.1f6d909b84.js",
+    "app.css?v=1.0.0+1f6d909b84",
     "manifest.webmanifest",
     "config.js",
     "version.json",

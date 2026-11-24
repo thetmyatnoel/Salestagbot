@@ -3625,7 +3625,7 @@ async function round6h(ctx) {
     check(/\bဆိုင်ရှင်\b|ဆိုင်ရှင်/.test(APP_MSG.ui_enroll_hint) && /Telegram/.test(APP_MSG.ui_enroll_hint) && /ကုဒ်/.test(APP_MSG.ui_enroll_hint), 'the enrol hint says where the code comes from and to ask the owner without one');
     const css86 = fs.readFileSync(path.join(ROOT, 'app/app.css'), 'utf8');
     check(/\n\.kb\.grid \{ display: grid; grid-template-columns: repeat\(2, 1fr\); \}/.test(css86) && /\n\.sheet \.askacts \{ flex-direction: column; \}/.test(css86) && /\n\.sheet \.askacts button\.danger \{ background: var\(--bad\); color: #fff;/.test(css86) &&
-      /\n\.scan \.note \{ color: #fff; font-size: 14px;/.test(css86) && /\n\.jobs\.compact button \.lb \{ font-size: 11px;/.test(css86) && /\n\.fnum\.empty \{ color: var\(--muted\);/.test(css86),
+      /\n\.scan \.note \{ color: #fff; font-size: 14px;/.test(css86) && /\n\.jobs\.compact button \.lb \{ font-size: \.75rem;/.test(css86) && /\n\.fnum\.empty \{ color: var\(--muted\);/.test(css86),
       'app.css: the menu grid has two columns; the question sheet stacks its buttons with the risky one in red; the camera note; the compact row\'s small word; the empty number box reads as a hint');
     await app6(U, { scanner: { running: false, start: () => Promise.resolve('none'), stop() {} } }, async h => {
       // The toast's timer gets the computed time.

@@ -179,6 +179,14 @@ function appOnOpenScreen(evt) {
 }
 /** The header's title of a page (13.3). */
 function appScreenTitle(screen) {
+  if (screen === 'expenseBook') return 'ကုန်ကျစရိတ်';
+  if (screen === 'work') return 'ကျွန်ုပ်၏ လုပ်ငန်း';
+  if (screen === 'orders') return 'အော်ဒါများ';
+  if (screen === 'designs') return 'ပစ္စည်းအသစ်နှင့် နမူနာ';
+  if (screen === 'stockslips') return 'ကုန်ပို့ / လက်ခံ';
+  if (screen === 'people') return 'ဝန်ထမ်းနှင့် သုံးခွင့်';
+  if (screen === 'shops') return 'ဆိုင်များ';
+  if (screen === 'closing') return 'ဆိုင်စာရင်း';
   var key = { history: 'ui_history_title', sync: 'ui_sync_title', settings: 'ui_w_settings', buyers: 'ui_buyers_title', buyer: 'ui_buyer_title',
     receipt: 'ui_receipt_title', entry: 'ui_entry_title' }[screen];
   return key ? APP.tt(key) : '';
@@ -873,4 +881,292 @@ function appSettingsShops(main) {
       [appH('div', { class: 'lmain' }, lines), appChevron()]));
   });
   main.appendChild(box);
+}
+
+function appJobNames(role) {
+  return String(role).split('+').map(function (j) { return APP_ROLE_NAMES[j] || j; }).join('၊ ');
+}
+var APP_ROLE_NAMES = { designer: 'ဒီဇိုင်နာ', tailor: 'အပ်ချုပ်သူ', staff: 'ရောင်းသူ', owner: 'ဆိုင်ရှင်', access: 'ဝန်ထမ်းခွင့် စီမံသူ', bookkeeper: 'စာရင်းကိုင်', viewer: 'စာရင်းကြည့်သူ' };
+
+function appOfficeButton(label, action) { return appH('button', { type: 'button', text: label, onclick: action }); }
+function appOfficeSelect(label, options, selected) {
+  return appH('select', { 'aria-label': label }, options.map(function (o) {
+    return appH('option', { value: o.id, selected: o.id === selected, text: o.name });
+  }));
+}
+function appOfficeField(box, title, field) { box.appendChild(appH('label', { class: 'office-field' }, [appH('span', { text: title }), field])); }
+function appOfficePage(main, kind, init) {
+  if (!APP.officePage || APP.officePage.kind !== kind) {
+    var box = appH('section', { class: 'office-page' });
+    APP.officePage = { kind: kind, box: box };
+    init(box);
+  }
+  main.appendChild(APP.officePage.box);
+}
+function appClosingScreen(main) {
+  appOfficePage(main, 'closing', function (page) {
+    var today = dayKey(APP.phone.now()), period = 'day', date = today, selectedShop = '', detailed = false, serial = 0;
+    var choices = [], report, waiting, scope = APP.store.meta.staff;
+    function request() {
+      var prefix = date.slice(0, period === 'day' ? 10 : period === 'month' ? 7 : 4), n = ++serial;
+      appClear(page); page.appendChild(appH('p', { text: 'စာရင်း ရယူနေသည်…' }));
+      APP.sync.office('close', { period: prefix, shop: selectedShop }).then(function (res) {
+        if (n !== serial) return;
+        if (res.ok) { report = res.report; choices = res.shops; waiting = res.unconfirmed; }
+        else if (res.transportFailure && !officeRole(scope.role)) {
+          var local = scope.role === 'owner' ? CFG.SHOP_IDS : (APP.store.meta.scope || [scope.shop]);
+          choices = local.map(function (id) { return { id: id, name: shopName(APP.phone.ports, id) }; });
+          report = closingReport(APP.phone.ports, prefix, selectedShop ? [selectedShop] : local, APP.phone.now()); waiting = true;
+        } else {
+          appClear(page); page.appendChild(appH('p', { text: APP.sync.errorText(res.error) }));
+          page.appendChild(appOfficeButton('ပြန်ယူမယ်', request)); return;
+        }
+        draw();
+      });
+    }
+    function draw() {
+      appClear(page);
+      var controls = appH('div', { class: 'report-controls' });
+      var duration = appOfficeSelect('ကာလ', [{ id: 'day', name: 'နေ့စဉ်' }, { id: 'month', name: 'လစဉ်' }, { id: 'year', name: 'နှစ်စဉ်' }], period);
+      duration.onchange = function () { period = duration.value; request(); };
+      appOfficeField(controls, 'ကာလ', duration);
+      var picker = appH('input', { type: period === 'year' ? 'number' : period === 'day' ? 'date' : 'month', value: date.slice(0, period === 'day' ? 10 : period === 'year' ? 4 : 7) });
+      picker.onchange = function () {
+        if (!picker.value || (period === 'year' && !/^\d{4}$/.test(picker.value))) return;
+        date = picker.value + (period === 'day' ? '' : period === 'month' ? '-01' : '-01-01'); request();
+      };
+      appOfficeField(controls, 'ရက်စွဲ', picker);
+      if (choices.length > 1) {
+        var shop = appOfficeSelect('ဆိုင်', [{id:'', name:'ဆိုင်အားလုံး'}].concat(choices), selectedShop);
+        shop.onchange = function () { selectedShop = shop.value; request(); }; appOfficeField(controls, 'ဆိုင်', shop);
+      }
+      controls.appendChild(appOfficeButton(detailed ? 'အနှစ်ချုပ် ကြည့်မယ်' : 'အသေးစိတ် ကြည့်မယ်', function () { detailed = !detailed; draw(); }));
+      controls.appendChild(appOfficeButton('ပုံနှိပ်မယ်', function () { APP.win.print(); }));
+      page.appendChild(controls);
+      page.appendChild(appH('h2', { text: report.title }));
+      if (waiting || report.missingCosts || APP.store.outbox.length) page.appendChild(appH('p', { class: 'banner', text: 'ယာယီစာရင်း · ' +
+        (report.missingCosts ? 'အရင်း မပြည့်စုံသေးပါ ' : '') + (waiting || APP.store.outbox.length ? 'ဖုန်းမှတ်တမ်းများ အပြည့်အစုံ ရောက်ရှိမှု စစ်ဆေးရန်' : '') }));
+      page.appendChild(appRenderReport(detailed ? report : syncMerge(report, { sections: [report.sections[0]] })));
+    }
+    request();
+  });
+}
+
+function appManageScreen(main, kind) {
+  appOfficePage(main, kind, function (box) {
+    var people = kind === 'people', busy = false, note = appH('p', { role: 'status' });
+    function load() {
+      APP.sync.office(kind, {}).then(function (res) {
+        appClear(box); box.appendChild(note);
+        if (!res.ok) { note.textContent = APP.sync.errorText(res.error); box.appendChild(appOfficeButton('ပြန်ယူမယ်', load)); return; }
+        var list = people ? res.people : res.shops;
+        list.forEach(function (r) {
+          box.appendChild(appOfficeButton(r.name + ' · ' + (people ? appJobNames(r.role) + (r.active === false ? ' · ပိတ်ထား' : '') : r.id + (r.active ? '' : ' · ပိတ်ထား')), function () { edit(r, res); }));
+        });
+        box.appendChild(appOfficeButton(people ? 'ဝန်ထမ်းအသစ်' : 'ဆိုင်အသစ်', function () { edit(null, res); }));
+      });
+    }
+    function edit(row, res) {
+      appClear(box);
+      var id = appH('input', { value: row ? row.id : '', disabled: !!row, autocapitalize: 'characters', placeholder: people ? 'W-001' : 'S3' });
+      var name = appH('input', { value: row ? row.name : '', maxlength: people ? 60 : 40 });
+      appOfficeField(box, people ? 'ဝန်ထမ်းနံပါတ် (W-001) သို့မဟုတ် Telegram ID' : 'ဆိုင်နံပါတ်', id); appOfficeField(box, 'အမည်', name);
+      var roles = [], shop, roleInputs = [], shopInputs = [];
+      if (people) {
+        if (row) box.appendChild(appH('p', { text: 'တာဝန် သို့မဟုတ် ဆိုင် မပြောင်းမီ ဝန်ထမ်း၏ ဖုန်းရှိ စာရင်းများကို အရင် ပို့ပါ။ ပြောင်းပြီးလျှင် ဖုန်း ပြန်ချိတ်ဆက်ရပါမည်။' }));
+        roles = ['staff', 'designer', 'tailor', 'bookkeeper', 'viewer'];
+        if (APP.store.meta.staff.role === 'owner') roles.push('access');
+        var selectedJobs = row ? row.role.split('+') : ['staff'];
+        roles.forEach(function (job) {
+          var input = appH('input', { type: 'checkbox', value: job, checked: selectedJobs.indexOf(job) >= 0 });
+          roleInputs.push(input); appOfficeField(box, APP_ROLE_NAMES[job], input);
+        });
+        shop = appOfficeSelect('အဓိကဆိုင်', res.shops, row ? row.shop : '');
+        appOfficeField(box, 'အဓိကဆိုင်', shop);
+        res.shops.forEach(function (s) {
+          var input = appH('input', { type: 'checkbox', value: s.id, checked: !!row && staffShops(row).indexOf(s.id) >= 0 });
+          shopInputs.push(input); appOfficeField(box, 'သုံးခွင့်ရှိသည့်ဆိုင် · ' + s.name, input);
+        });
+        if (row && row.active !== false) box.appendChild(appOfficeButton('ဖုန်းချိတ်ဆက်ရန် ကုဒ် ရယူမယ်', function () {
+          APP.sync.office('invite', { target: row.id }).then(function (r) { note.textContent = r.ok ? r.code : APP.sync.errorText(r.error); });
+        }));
+      } else {
+        var address = appH('input', { value: row && row.address || '', maxlength: CFG.SHOP_TEXT_MAX.address });
+        var phone = appH('input', { value: row && row.phone || '', type: 'tel', maxlength: CFG.SHOP_TEXT_MAX.phone });
+        appOfficeField(box, 'လိပ်စာ', address); appOfficeField(box, 'ဖုန်း', phone);
+      }
+      var active = appH('input', { type: 'checkbox', checked: !row || row.active !== false });
+      appOfficeField(box, people ? 'သုံးခွင့်ရှိ' : 'ဆိုင်ဖွင့်ထား', active);
+      box.appendChild(note);
+      box.appendChild(appOfficeButton('ပြန်စစ်မယ်', function () {
+        var actor = { id: id.value.trim().toUpperCase(), name: name.value.trim(), active: active.checked };
+        if (!actor.id || !actor.name) { note.textContent = 'နံပါတ်နှင့် အမည် ဖြည့်ပါ'; return; }
+        var params;
+        if (people) { actor.role = roleInputs.filter(function (c) { return c.checked; }).map(function (c) { return c.value; }).join('+');
+          actor.shop = shop.value; actor.shops = [actor.shop].concat(shopInputs.filter(function (c) { return c.checked && c.value !== actor.shop; }).map(function (c) { return c.value; })); params = { person: actor }; }
+        else params = { shop: actor.id, active: actor.active, name: actor.name, address: address.value, phone: phone.value, create: !row };
+        if (people && !actor.role) { note.textContent = 'တာဝန် ရွေးပါ'; return; }
+        appAsk({ kind: 'manage', title: 'သိမ်းမလား?', text: actor.name + ' · ' + (people ? appJobNames(actor.role) + ' · ' + actor.shops.map(function (id) { return res.shops.filter(function (s) { return s.id === id; })[0].name; }).join('၊ ') : actor.id) + ' · ' + (actor.active ? 'ဖွင့်' : 'ပိတ်'),
+          yes: 'သိမ်းမယ်', no: 'ပြန်ပြင်မယ်', onYes: function () {
+            if (busy) return; busy = true;
+            APP.sync.office(people ? 'person' : 'shop', params).then(function (result) {
+              busy = false;
+              if (!result.ok) { note.textContent = result.message || APP.sync.errorText(result.error); return; }
+              note.textContent = 'သိမ်းပြီး'; load();
+              if (!people) APP.sync.syncNow('shops');
+            });
+          } });
+      }));
+      box.appendChild(appOfficeButton('စာရင်းသို့ ပြန်သွားမယ်', load));
+    }
+    load();
+  });
+}
+
+function appStockSlips(main) {
+  appOfficePage(main, 'stockslips', function (box) {
+    var op = 'SHIP-' + appUuid(), busy = false;
+    function show() {
+      APP.sync.office('stock', {}).then(function (res) {
+        appClear(box);
+        if (!res.ok) { box.appendChild(appH('p', { text: APP.sync.errorText(res.error) })); box.appendChild(appOfficeButton('ပြန်ယူမယ်', show)); return; }
+        var tag = appH('input', { value: APP.screenArg || '', placeholder: APP.store.meta.staff.shop + '-0001' }), qty = appH('input', { type: 'number', value: '1', min: '1' });
+        var to = appOfficeSelect('လက်ခံမည့်ဆိုင်', [{ id: '', name: 'ဆိုင် ရွေးပါ' }].concat(res.shops), '');
+        appOfficeField(box, 'ပို့မည့် ပစ္စည်း Tag', tag); appOfficeField(box, 'အရေအတွက်', qty); appOfficeField(box, 'လက်ခံမည့်ဆိုင်', to);
+        function reviewTransfer(action, params, line) {
+          if (busy) return;
+          appAsk({ kind: 'stock', title: 'စာရင်း သွင်းမလား?', text: line, yes: 'သိမ်းမယ်', no: 'ပြန်စစ်မယ်', onYes: function () {
+            busy = true;
+            APP.sync.office(action, params).then(function (r) {
+              busy = false;
+              if (!r.ok) { appToast(r.message || APP.sync.errorText(r.error), true); return; }
+              op = 'SHIP-' + appUuid(); appToast('သိမ်းပြီး'); show(); APP.sync.syncNow('transfer');
+            });
+          } });
+        }
+        box.appendChild(appOfficeButton('ပို့မယ်', function () {
+          if (!tag.value.trim() || !to.value || !(Number(qty.value) > 0)) { appToast('ပစ္စည်း၊ အရေအတွက်နှင့် လက်ခံဆိုင် ဖြည့်ပါ', true); return; }
+          if (APP.store.outbox.length) { appToast(APP.tt('ui_transfer_online'), true); return; }
+          reviewTransfer('sendStock', { tag: tag.value.trim(), qty: Number(qty.value), to: to.value, slip: op }, tag.value + ' × ' + qty.value + ' → ' + to.options[to.selectedIndex].text);
+        }));
+        box.appendChild(appH('h2', { text: 'လက်ခံရန် စောင့်နေသည်' }));
+        res.incoming.forEach(function (s) {
+          var name = s.from + ' → ' + s.to + ' · ' + s.tag + ' × ' + fmtCount(s.qty);
+          box.appendChild(appH('p', { text: name }));
+          var target = appH('input', { placeholder: s.toId + '-0001' }); appOfficeField(box, 'လက်ခံဆိုင်၏ Tag အသစ်', target);
+          box.appendChild(appOfficeButton('လက်ခံရရှိ', function () { reviewTransfer('receiveStock', { tag: target.value.trim(), slip: s.id }, name + ' · ' + target.value); }));
+        });
+      });
+    }
+    show();
+  });
+}
+
+function appOfficeJobs(main, profile) {
+  var jobs = [
+    ['viewer','closing','ဆိုင်စာရင်း ကြည့်မယ်'], ['bookkeeper','expenseBook','ကုန်ကျစရိတ် သွင်းမယ်'], ['designer','designs','ပစ္စည်းအသစ်နှင့် နမူနာ'],
+    ['tailor','orders','အော်ဒါနှင့် အတိုင်းအတာ'], ['access','people','ဝန်ထမ်းနှင့် သုံးခွင့်']
+  ];
+  jobs.forEach(function (job) {
+    if (hasJob(profile, job[0]) || (job[0] === 'viewer' && hasJob(profile, 'bookkeeper'))) {
+      main.appendChild(appOfficeButton(job[2], function () { appOpenScreen(job[1]); }));
+    }
+  });
+}
+function appWorkshopScreen(main, kind) {
+  appOfficePage(main, kind, function (box) {
+    var busy = false;
+    function invoke(action, params, done) {
+      if (busy) return; busy = true;
+      APP.sync.office(action, params).then(function (r) {
+        busy = false;
+        if (!r.ok) { appToast(r.message || r.reason || APP.sync.errorText(r.error), true); return; }
+        done(r);
+      });
+    }
+    function formField(label, opts) { var el = appH('input', opts); appOfficeField(box, label, el); return el; }
+    function show() {
+      invoke(kind, {}, function (r) {
+        appClear(box);
+        if (kind === 'orders') {
+          if (!r.orders.length) box.appendChild(appH('p', { text: 'စောင့်နေသည့် အော်ဒါ မရှိပါ' }));
+          r.orders.forEach(function (o) {
+            box.appendChild(appOfficeButton([o.shop, o.id, o.customer, o.due, o.status].join(' · '), function () { orderPage(o.id); }));
+          });
+          return;
+        }
+        var tag = formField('Tag နံပါတ်', { placeholder: APP.store.meta.staff.shop + '-0001' }), name = formField('ပစ္စည်းအမည်', { maxlength: 80 });
+        var cat = appOfficeSelect('အမျိုးအစား', r.categories.map(function (c) { return { id: c, name: c }; }), '');
+        appOfficeField(box, 'အမျိုးအစား', cat);
+        var qty = formField('အရေအတွက်', { type: 'number', min: 1, value: 1 });
+        var cost = formField('အရင်း', { type: 'number', min: 0 }), price = formField('ရောင်းစျေး', { type: 'number', min: 0, placeholder: 'စျေး မသတ်မှတ်ရသေး' });
+        var sample = formField('နမူနာ', { type: 'checkbox' });
+        box.appendChild(appOfficeButton('ပစ္စည်း သိမ်းမယ်', function () {
+          invoke('piece', { tag: tag.value, name: name.value, category: cat.value, qty: qty.value, cost: cost.value, price: price.value, sample: sample.checked }, function () {
+            appToast('ပစ္စည်း သိမ်းပြီး'); photo(tag.value);
+          });
+        }));
+        r.items.forEach(function (it) { box.appendChild(appOfficeButton(it.id + ' · ' + it.name + (it.pending ? ' · စျေး မသတ်မှတ်ရသေး' : ' · နမူနာ'), function () { photo(it.id); })); });
+      });
+    }
+    function photo(id) {
+      appClear(box); var file = formField(id + ' · ဓာတ်ပုံ', { type: 'file', accept: 'image/*', capture: 'environment' });
+      file.onchange = function () {
+        if (file.files.length) appDownscalePhoto(file.files[0], 1024, 0.8).then(function (img) {
+          invoke('piecePhoto', { tag: id, data: img.dataUrl.split(',')[1] }, function () { appToast('ဓာတ်ပုံ သိမ်းပြီး'); show(); });
+        }, function () { appToast('ဓာတ်ပုံ ပြန်ရွေးပါ', true); });
+      };
+      box.appendChild(appOfficeButton('ပြီးပြီ', show));
+    }
+    function orderPage(id) {
+      invoke('order', { id: id }, function (r) {
+        appClear(box); box.appendChild(appH('p', { style: 'white-space:pre-line', text: r.text }));
+        r.next.forEach(function (n) {
+          box.appendChild(appOfficeButton(n.name, function () {
+            appAsk({ kind: 'step', title: id + ' · ' + n.name + '?', yes: 'သိမ်းမယ်', no: 'ပြန်စစ်မယ်',
+              onYes: function () { invoke('orderStep', { id: id, status: n.id }, show); } });
+          }));
+        });
+        var inputs = r.fields.map(function (f) { return { key: f.key, input: formField(f.name, { value: f.value, maxlength: 300 }) }; });
+        box.appendChild(appOfficeButton('အတိုင်းအတာ သိမ်းမယ်', function () {
+          var values = {}; inputs.forEach(function (f) { values[f.key] = f.input.value; });
+          invoke('measure', { id: id, values: values }, function () { appToast('သိမ်းပြီး'); show(); });
+        }));
+        box.appendChild(appOfficeButton('အော်ဒါစာရင်း', show));
+      });
+    }
+    box.appendChild(appOfficeButton('စာရင်း ပြန်ယူမယ်', show)); show();
+  });
+}
+
+function appExpenseBook(main) {
+  appOfficePage(main, 'expenseBook', function (box) {
+    var slip = 'BOOK-' + appUuid(), busy = false;
+    function load(shop) {
+      APP.sync.office('expenseBook', { shop: shop }).then(function (r) {
+        appClear(box);
+        if (!r.ok) { box.appendChild(appH('p', { text: r.message || APP.sync.errorText(r.error) })); box.appendChild(appOfficeButton('ပြန်ယူမယ်', function () { load(shop); })); return; }
+        var site = appOfficeSelect('ဆိုင်', r.shops, r.shop), cat = appOfficeSelect('ကုန်ကျစရိတ် အမျိုးအစား', r.categories, '');
+        var method = appOfficeSelect('ပေးချေသည့်နည်း', r.methods, 'CASH');
+        var amount = appH('input', { type: 'number', min: 1, inputmode: 'numeric' }), note = appH('input', { maxlength: 180 });
+        site.onchange = function () { load(site.value); };
+        appOfficeField(box, 'ဆိုင်', site); appOfficeField(box, 'ကုန်ကျစရိတ် အမျိုးအစား', cat); appOfficeField(box, 'ပေးချေသည့်နည်း', method);
+        appOfficeField(box, 'ငွေပမာဏ (ကျပ်)', amount); appOfficeField(box, 'မှတ်ချက်', note);
+        box.appendChild(appOfficeButton('ပြန်စစ်မယ်', function () {
+          if (!(Number(amount.value) > 0)) { appToast('ငွေပမာဏ ဖြည့်ပါ', true); return; }
+          appAsk({ kind: 'expense', title: 'ကုန်ကျစရိတ် သိမ်းမလား?',
+            text: [site.selectedOptions[0].text, cat.selectedOptions[0].text, fmtMoney(Number(amount.value)), method.selectedOptions[0].text, note.value].join(' · '),
+            yes: 'သိမ်းမယ်', no: 'ပြန်ပြင်မယ်', onYes: function () {
+              if (busy) return; busy = true;
+              APP.sync.office('recordExpense', { slip: slip, shop: r.shop, category: cat.value, method: method.value, amount: Number(amount.value), note: note.value }).then(function (result) {
+                busy = false;
+                if (!result.ok) { appToast(result.message || APP.sync.errorText(result.error), true); return; }
+                slip = 'BOOK-' + appUuid(); appToast('ကုန်ကျစရိတ် သိမ်းပြီး'); load(r.shop);
+              });
+            } });
+        }));
+      });
+    }
+    load('');
+  });
 }

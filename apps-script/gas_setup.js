@@ -415,7 +415,7 @@ function protectTab(sh) {
 }
 
 /** Pre-generate tag ids so blank QR tags can be printed before items exist. */
-function generateBlankTags(shop, from, to) {
+function generateBlankTags(shop, from, to, rev) {
   var sh = gasSheet('Items');
   var start = sh.getLastRow() + 1, values = [], formulas = [];
   var statusCol = colLetter(CFG.ITEM_COLS, 'Status'), stockCol = colLetter(CFG.ITEM_COLS, 'Stock');
@@ -428,12 +428,14 @@ function generateBlankTags(shop, from, to) {
     var row = CFG.ITEM_COLS.map(function () { return ''; });
     row[0] = id;
     row[1] = shop;
+    if (rev) { row[CFG.ITEM_COLS.indexOf('Rev')] = rev; row[CFG.ITEM_COLS.indexOf('UpdatedAt')] = new Date(); }
     values.push(row);
     formulas.push([
       '=IF(' + nameCol + r + '="","BLANK",IF(AND(' + typeCol + r + '="UNIQUE",' + stockCol + r + '<=0),"SOLD","ACTIVE"))',
       '=SUMIF(' + LItem + ',A' + r + ',' + LQty + ')'
     ]);
   }
+  gasEnsureRows(sh, start + values.length - 1);
   sh.getRange(start, 1, values.length, CFG.ITEM_COLS.length).setValues(values);
   sh.getRange(start, CFG.ITEM_COLS.indexOf('Status') + 1, formulas.length, 2).setFormulas(formulas);
   gasInvalidate();
@@ -480,10 +482,10 @@ function writeDashboard(sh) {
   function expenses(shop, dayRef) { return '=-' + sumType('Amount', shop, dayRef, 'EXPENSE'); }
   function cogs(shop, prefixRef) {
     return '=SUMPRODUCT((LEFT(' + L2('Day') + ',LEN(' + prefixRef + '))=' + prefixRef + ')*(' + L2('Shop') + '="' + shop + '")' +
-           '*(' + L2('Type') + '="SALE")*(-' + L2('Qty') + ')*IF(ISNUMBER(' + L2('CostAtSale') + '),' + L2('CostAtSale') + ',0))';
+           '*((' + L2('Type') + '="SALE")+(' + L2('Type') + '="RETURN"))*(-' + L2('Qty') + ')*IF(ISNUMBER(' + L2('CostAtSale') + '),' + L2('CostAtSale') + ',0))';
   }
   function owed(shop) { return '=SUMIF(' + CR('Shop') + ',"' + shop + '",' + CR('Owed') + ')'; }
-  var H = ['', 'Revenue', 'Pieces', 'Cash in', 'Cash in (drawer)', 'Cash in (bank)', 'Expenses', 'COGS', 'Gross profit', 'Still owed'];
+  var H = ['', 'Revenue', 'Pieces', 'Cash in', 'Cash in (drawer)', 'Cash in (bank)', 'Expenses', 'COGS', 'Operating profit', 'Still owed'];
   var W = H.length;
   function blank() { return H.map(function () { return ''; }); }
   function pad(row) { while (row.length < W) row.push(''); return row; }
@@ -494,7 +496,7 @@ function writeDashboard(sh) {
     CFG.SHOP_IDS.forEach(function (shop, i) {
       var r = r0 + 1 + i;
       numberRows.push(r);
-      // Gross profit = Revenue (B) - Expenses (G) - COGS (H)
+      // Operating profit = Revenue (B) - Expenses (G) - COGS (H)
       rows.push([shop, rev(shop, dayRef), pieces(shop, dayRef), '=' + cashIn(shop, dayRef), cashDrawer(shop, dayRef), cashBank(shop, dayRef),
                  expenses(shop, dayRef), cogs(shop, prefixRef), '=B' + r + '-G' + r + '-H' + r, owed(shop)]);
     });

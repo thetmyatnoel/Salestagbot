@@ -41,7 +41,7 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 button:active { filter: brightness(.92); transform: translateY(1px); }
 button:disabled { opacity: .5; }
 button.primary { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
-button.good { background: var(--good); color: #fff; font-weight: 600; }
+button.good { background: var(--good); color: var(--good-ink); font-weight: 600; }
 button.ghost { background: transparent; border: 1px solid var(--line); }
 button.danger { background: var(--bad-soft); color: var(--bad); }
 button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
@@ -372,7 +372,7 @@ input, textarea { font: inherit; color: inherit; background: var(--panel); borde
 /* The compact job row: the emoji over its word in small type (the full row keeps the whole label). */
 .jobs.compact button { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; padding: 4px 2px; min-height: 60px; }
 .jobs.compact button .em { font-size: 22px; line-height: 1.2; }
-.jobs.compact button .lb { font-size: 11px; font-weight: 600; line-height: 1.4; white-space: nowrap; }
+.jobs.compact button .lb { font-size: .75rem; font-weight: 600; line-height: 1.4; white-space: nowrap; }
 /* An empty number box with a hint (the optional cost) reads as a hint, not a value. */
 .fnum.empty { color: var(--muted); font-family: var(--sans); font-weight: 500; }
 @media print {
@@ -381,3 +381,25 @@ input, textarea { font: inherit; color: inherit; background: var(--panel); borde
   .main { overflow: visible; }
 }
 @media (prefers-reduced-motion: reduce) { .rec .dot { animation: none; } button:active { transform: none; } .chip.sending svg { animation: none; } .fline.flash { animation: none; } }
+
+.office-page { display: grid; gap: .75em; }
+.office-page .rep table { font-size: 1em; }
+.office-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+.office-field select { min-height: var(--tap); font: inherit; color: var(--ink); background: var(--panel); }
+.office-field input[type=checkbox] { width: 2em; }
+.report-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; }
+html[data-font="2"] { font-size: 18px; }
+html[data-font="3"] { font-size: 21px; }
+.jobs.compact button .lb { white-space: normal; }
+@media print {
+  .report-controls { display: none; }
+  .office-page { display: block; }
+  html, body, #app, .main { height: auto; max-height: none; overflow: visible; }
+  .office-page .banner { display: block !important; color: black; }
+  .office-page thead { display: table-header-group; }
+  .office-page h4 { break-after: avoid; }
+  .office-page .rep { color: black; }
+  .office-page .rep .wrap { overflow: visible; }
+  .office-page .rep td, .office-page .rep th { white-space: normal; }
+  .office-page tr { break-inside: avoid; }
+}

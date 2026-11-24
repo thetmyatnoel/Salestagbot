@@ -65,6 +65,7 @@ function newTx(ports, f) {
 
 /** Append one or more rows atomically. Returns {groupId, txs}. */
 function writeGroup(ports, txs) {
+  if (txs.some(function (tx) { return !shopAcceptsEntry(ports, tx.shop, tx.time); })) throw new Error('ဆိုင် ပိတ်ထားပါသည်');
   var groupId = txs[0].groupId;
   txs.forEach(function (tx) { tx.groupId = groupId; });
   ports.lock.run(function () {
@@ -1302,6 +1303,7 @@ function commitBasket(ports, p) {
 function commitNewItem(ports, p) {
   var item = ports.store.getItem(p.itemId);
   if (!item) return { ok: false, reason: 'missing' };
+  if (!shopAcceptsEntry(ports, item.shop, p.when || ports.clock.now())) return { ok: false, reason: 'shop_closed' };
   if (item.status !== CFG.STATUS.BLANK) return { ok: false, reason: 'not_blank' };
   if (p.staff.role !== 'owner' && item.shop !== p.staff.shop) return { ok: false, reason: 'other_shop' };
   var count = nullish(p.count) ? 1 : Number(p.count);
@@ -1382,11 +1384,12 @@ function commitReturn(ports, p) {
   var qty = Math.max(1, Math.round(Number(p.qty) || 1));
   var unitPrice = !nullish(p.unitPrice) ? Number(p.unitPrice)
     : (!nullish(p.amount) ? Math.round(Number(p.amount) / qty) : (Number(p.item.price) || 0));
+  var sale = lastLiveSale(ports, p.item.id);
   var amount = -(qty * unitPrice);
   var cash = nullish(p.refund) ? amount : -Math.abs(Math.round(Number(p.refund) || 0));
   var tx = newTx(ports, {
     shop: p.item.shop, itemId: p.item.id, type: CFG.TX.RETURN, qty: qty, unitPrice: unitPrice,
-    amount: amount, cash: cash, costAtSale: p.item.cost, customerId: p.customerId || '', note: p.note,
+    amount: amount, cash: cash, costAtSale: sale ? sale.costAtSale : p.item.cost, customerId: p.customerId || '', note: p.note,
     method: methodFor(p.method, cash),
     source: p.source, transcript: p.transcript, staffId: p.staff.id, updateId: p.updateId, when: p.when
   });
@@ -1406,7 +1409,9 @@ function commitExpense(ports, p) {
 
 /** Moves the tag (and all its stock) to the other shop. */
 function commitTransfer(ports, p) {
-  var fromShop = p.item.shop, toShop = p.toShop || otherShop(fromShop);
+  var fromShop = p.item.shop, destinations = activeShopIds(ports).filter(function (s) { return s !== fromShop; });
+  var toShop = p.toShop || (destinations.length === 1 ? destinations[0] : '');
+  if (destinations.indexOf(toShop) < 0) throw new Error('လက်ခံမည့်ဆိုင် ရွေးပါ');
   var qty = Math.max(0, Number(p.item.stock) || 0);
   var out = newTx(ports, {
     shop: fromShop, itemId: p.item.id, type: CFG.TX.TRANSFER_OUT, qty: -qty, unitPrice: null, amount: 0, cash: 0,
@@ -1510,6 +1515,7 @@ function groupRows(ports, groupId) {
 function undoGroup(ports, groupId, staff, now, opts) {
   now = now || ports.clock.now();
   opts = opts || {};
+  if (String(groupId).indexOf('SHIP-') === 0) return { ok: false, reason: 'locked' };
   var g = groupRows(ports, groupId);
   if (!g.rows.length) return { ok: false, reason: 'missing' };
   var rows = g.live;
@@ -2144,7 +2150,12 @@ function statsWhere(ports, shop, pred) {
         s.fees += r.amount;
         s.orderRevenue += r.amount;
         break;
-      case T.RETURN: s.revenue += r.amount; s.pieces -= r.qty; break;
+      case T.RETURN:
+        s.revenue += r.amount;
+        s.pieces -= r.qty;
+        if (nullish(r.costAtSale) || r.costAtSale === '') s.unknownCostPieces -= r.qty;
+        else s.cogs -= r.qty * Number(r.costAtSale);
+        break;
       case T.EXPENSE: {
         s.expenses -= r.amount;
         var key = r.category || 'other';
@@ -2365,7 +2376,7 @@ function importProducts(ports, rows, staff) {
     if (!name) { skipped.push({ code: code, reason: 'no name' }); return; }
     if (CFG.SHOP_IDS.indexOf(shop) < 0) { skipped.push({ code: code, reason: 'unknown shop ' + shop }); return; }
     var target = null, alias = '';
-    if (/^S[12]-\d{4}$/.test(code)) {
+    if (/^S[1-9]\d*-\d{4}$/.test(code)) {
       var existing = ports.store.getItem(code);
       if (existing && existing.status === CFG.STATUS.BLANK && existing.shop === shop) target = existing;
       else if (existing) { skipped.push({ code: code, reason: 'tag already in use' }); return; }

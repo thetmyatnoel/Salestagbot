@@ -984,7 +984,7 @@ function appFormRender(F) {
   F.title = appH('h2', { text: appFormTitle(F) });
   col.appendChild(appH('div', { class: 'fhead' }, [back, F.title]));
   F.stripHost = appH('div', { class: 'fstriphost' });
-  col.appendChild(F.stripHost);
+  if (F.kind !== 'sale') col.appendChild(F.stripHost);
   F.body = appH('div', { class: 'fbody' });
   col.appendChild(F.body);
   page.appendChild(col);
@@ -1059,6 +1059,8 @@ function appFormBar(F) {
       cells.push(appH('div', { class: 'fsum' }, [appH('span', { class: 'k', text: tt('ui_lbl_paid') }), appH('span', { class: 'v num', text: fmtMoney(view.needAmount ? 0 : view.paidNow) })]));
       cells.push(appH('div', { class: 'fsum owed' }, [appH('span', { class: 'k', text: tt('ui_lbl_owed') }), appH('span', { class: 'v num', text: fmtMoney(view.needAmount ? view.total : view.owed) })]));
     }
+    var method = methodLabel(APP.phone.ports, F.values.method || CFG.METHOD.CASH);
+    inner.appendChild(appH('div', { class: 'fmethod', text: (F.values.mixed ? tt('btn_split') + ' · ' : '') + (F.values.acctAdd ? F.values.addLabel : method) }));
     inner.appendChild(appH('div', { class: 'fsums' }, cells));
   }
   var msg = F.msg || (F.problems.length ? appPlain(t(APP.phone.ports, F.problems[0].key, F.problems[0].vars)) : '');
@@ -1442,7 +1444,7 @@ function appSaleRender(F, body) {
   split.appendChild(left);
   split.appendChild(right);
   body.appendChild(split);
-  appFormScanHelpers(F, left, view, true);
+
   // the lines
   var linesBox = appH('div', { class: 'flines' });
   view.lines.forEach(function (l) {
@@ -1467,6 +1469,8 @@ function appSaleRender(F, body) {
     linesBox.appendChild(row);
   });
   left.appendChild(linesBox);
+  left.appendChild(F.stripHost);
+  appFormScanHelpers(F, left, view, true);
   // the buyer
   var buyerSec = appFormSection(tt('btn_customer'), [], 'fbuyer' + (view.needBuyer && !view.buyer && !view.newBuyer ? ' fneed' : '') + (appFormBad(F, 'buyer') ? ' fbad' : ''));
   if (view.buyer) {

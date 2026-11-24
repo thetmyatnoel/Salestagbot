@@ -45,7 +45,7 @@ var APP_MSG = {
   // the card, the stepper, inputs
   ui_sell_n: '✅ ရောင်း {n} ထည်',
   ui_qty_hint: 'ဂဏန်းကို နှိပ်ရင် ကီးဘုတ် ပွင့်မည်',
-  ui_history: '⌃ မှတ်တမ်း',
+  ui_history: '⌃ ဒီဖုန်း၏ မှတ်တမ်း',
   ui_history_title: '🕘 မှတ်တမ်း',
   ui_history_empty: 'မှတ်တမ်း မရှိသေးပါ',
   ui_text_placeholder: '✏️ ရိုက်ပါ',

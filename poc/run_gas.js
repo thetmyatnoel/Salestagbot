@@ -2300,6 +2300,23 @@ section('35. Round 6b: the photo job\'s list of item categories (gasSyncHooks().
     s4.d.error ? s4.d.error.message : { asked: s4.asked, item: [s4.item.name, s4.item.category] });
 });
 
+section('Shop access across separate Apps Script requests', () => {
+  const { fake } = enrolledBook('shop-access');
+  const minted = fake.newExecution().syncMintEnrollCode('1009', 'S1', 'owner', 'Owner');
+  const enrolled = request(fake, { api: 'enroll' }, { code: minted.code }).json.device;
+  const call = (action, fields = {}) => request(fake, { api: 'office' }, { device: enrolled.id, token: enrolled.token, action, ...fields }).json;
+  const shop = call('shop', { shop: 'S10', name: 'Market', address: '10 Market St', phone: '09123', create: true });
+  check(shop.ok && call('shops').shops.some(s => s.id === 'S10' && s.phone === '09123'), 'new shop and its phone number survive the next execution', shop);
+  const user = { id: 'W-001', name: 'May', role: 'viewer+bookkeeper', shop: 'S10', shops: ['S10', 'S1'], active: true };
+  const saved = call('person', { person: user });
+  check(saved.ok && call('people').people.some(p => p.id === user.id && p.shops.length === 2), 'an app-only staff number keeps two shops on the Staff sheet', saved);
+  const invite = call('invite', { target: user.id });
+  const phone = request(fake, { api: 'enroll' }, { code: invite.code }).json;
+  check(phone.ok && phone.bootstrap === false, 'a bookkeeper can enrol with a code given by the rights administrator', phone.error);
+  const report = request(fake, { api: 'office' }, { device: phone.device.id, token: phone.device.token, action: 'close', period: '2026', shop: 'S10' }).json;
+  check(report.ok && report.report.sections.length > 7, 'the shop yearly close is available over doPost', report.message);
+});
+
 section('17. Over the whole run', () => {
   const bad = { nested: [], stray: [], leaked: [], held: [], checkboxes: [], unmodelled: [] };
   books.forEach(b => {

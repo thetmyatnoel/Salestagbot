@@ -250,25 +250,25 @@ function saleFlow(ports) {
 /* ------------------------------ custom orders: id helpers ------------------------------ */
 
 /** 'V1-2532' (shop digit, dash, the voucher number of that shop's paper series). */
-function isOrderId(s) { return /^V\d-\d{1,8}$/.test(String(s || '')); }
+function isOrderId(s) { return /^V\d+-\d{1,8}$/.test(String(s || '')); }
 
 /** 'V1-2532-1': a voucher line, used as the ledger ItemID when no tag is attached and as the tag's Alias when one is. */
-function isOrderLineId(s) { return /^V\d-\d{1,8}-\d{1,3}$/.test(String(s || '')); }
+function isOrderLineId(s) { return /^V\d+-\d{1,8}-\d{1,3}$/.test(String(s || '')); }
 
 function orderIdOfLine(lineId) {
-  var m = String(lineId || '').match(/^(V\d-\d{1,8})-\d{1,3}$/);
+  var m = String(lineId || '').match(/^(V\d+-\d{1,8})-\d{1,3}$/);
   return m ? m[1] : null;
 }
 
 /** The voucher number the family knows (2532) from the id V1-2532. */
 function orderNo(orderId) {
-  var m = String(orderId || '').match(/^V\d-(\d+)$/);
+  var m = String(orderId || '').match(/^V\d+-(\d+)$/);
   return m ? String(Number(m[1])) : String(orderId || '');
 }
 
 /** Shop of an order id: V1-... -> S1. */
 function orderShop(orderId) {
-  var m = String(orderId || '').match(/^V(\d)-/);
+  var m = String(orderId || '').match(/^V(\d+)-/);
   return m ? 'S' + m[1] : '';
 }
 
@@ -287,4 +287,41 @@ function normDesignCode(code) {
   var m = s.match(/^([A-Z]*)(\d*)$/);
   if (!m || (!m[1] && !m[2])) return '';
   return m[1] + '-' + (m[2] ? String(Number(m[2])) : '');
+}
+
+function shopRegistry(ports) {
+  var raw = ports.store.getSetting && ports.store.getSetting('shop_registry', '');
+  if (typeof raw === 'string' && /^\[/.test(raw)) return JSON.parse(raw);
+  return ['S1', 'S2'].map(function (id) { return { id: id, active: true }; });
+}
+
+/** Called at each request and app render, after the local Settings mirror is available. */
+function loadShopRegistry(ports) {
+  if (!ports || !ports.store || !ports.store.getSetting) return;
+  var raw = ports.store.getSetting('shop_registry', '');
+  if ((typeof raw !== 'string' || !/^\[/.test(raw)) && !CFG.registryLoaded) return;
+  CFG.SHOP_IDS = shopRegistry(ports).map(function (s) { return s.id; });
+  CFG.registryLoaded = !!raw;
+}
+
+function activeShopIds(ports) {
+  return shopRegistry(ports).filter(function (s) { return s.active; }).map(function (s) { return s.id; });
+}
+
+function officeRole(role) {
+  return !!role && role !== 'owner' && String(role).split('+').indexOf('staff') < 0;
+}
+
+function hasJob(staff, job) {
+  return !!staff && (staff.role === 'owner' || String(staff.role).split('+').indexOf(job) >= 0);
+}
+function staffShops(staff) {
+  return staff.role === 'owner' ? CFG.SHOP_IDS.slice() : (staff.shops && staff.shops.length ? staff.shops.slice() : [staff.shop]);
+}
+
+// A phone may deliver a saved entry after its shop has closed.
+function shopAcceptsEntry(ports, id, time) {
+  return !shopRegistry(ports).some(function (s) {
+    return s.id === id && !s.active && (!s.closedAt || !time || new Date(time).getTime() >= new Date(s.closedAt).getTime());
+  });
 }

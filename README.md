@@ -1,4 +1,4 @@
-# SalesTagBot: a zero-cost POS for two family clothing shops in Myanmar
+# SalesTagBot: a POS for family clothing shops in Myanmar
 
 Three faces of one program, all in Burmese, all running the same shared core:
 
@@ -9,9 +9,31 @@ Three faces of one program, all in Burmese, all running the same shared core:
 - **The simulator**: the whole system (both shops, every role, phone and laptop, the Sheet) in one HTML file,
   for trying every function before anything is published.
 
-No server, no monthly cost, nothing for the family to install except Telegram and the app's home-screen icon.
+A worker can enrol directly in the phone app with a code from the owner or access administrator. Telegram remains available for the existing bot and scheduled messages.
 The plan, the history of every design round and the build status live in [POS-PROJECT-PLAN.md](POS-PROJECT-PLAN.md)
 (Appendix F is the build log).
+
+## Shops, staff and closing the books
+
+The owner can open **Settings → ဆိုင် ဖွင့် / ပိတ်** to add a shop, change its name, address or phone number, or close it. S1 and S2 are the initial shops. A new shop receives 20 blank tag records. Its shop number stays with historical transactions.
+
+Open **Settings → ဝန်ထမ်းနှင့် သုံးခွင့်** to assign a worker one or more jobs, a primary shop and additional shops. Use an app-only staff number such as `W-001`, or the worker’s Telegram user ID when linking that account. Give the worker the single-use phone enrolment code. The owner appoints access administrators. An access administrator can manage ordinary staff across the business.
+
+| Job | Work in the phone app |
+| --- | --- |
+| Seller | Scan and record sales offline. Send stock to another shop or confirm its arrival while online. |
+| Designer | Register pieces and samples, leave the selling price pending, and attach a photo. |
+| Tailor | Find an open voucher, check the due date, record measurements and update progress. |
+| Bookkeeper | Record an expense against a shop and payment account, check balances and print reports. |
+| Report reader | Read and print reports for assigned shops. |
+| Access administrator | Assign jobs and shops, disable accounts and issue phone enrolment codes. |
+| Owner | Review all shops, manage their details, assign access administrators and use the operational screens. |
+
+Existing seller accounts keep their previous shared-ledger behaviour until the owner or access administrator saves their assignment in the staff screen. Sync their phones first. After a change of access, use a fresh code to enrol the phone with its assigned shops. Telegram-linked accounts keep their ID. App-only accounts can use a code supplied in person.
+
+For a closing report, open **ဆိုင်စာရင်း ကြည့်မယ်**, choose the day, month or year, and select a shop if needed. The first page shows sales after refunds, money received and paid, outstanding balances, costs and profit or loss in kyat. **အသေးစိတ် ကြည့်မယ်** opens the shop, category, payment, product, transfer and transaction tables. **ပုံနှိပ်မယ်** prints the selected view. An offline seller’s copy uses the phone’s local records and carries a provisional notice. Management, workshop, bookkeeping, shipment and shared report screens use the server.
+
+For a partial transfer, enter the sending tag, quantity and destination. The receiver chooses a blank tag belonging to the destination and confirms the quantity shown. A shipment in transit appears on the report before it appears in the receiving shop’s stock.
 
 ## What is in this repository
 
@@ -51,6 +73,7 @@ node poc/run_round4.js
 node poc/run_lists.js
 node poc/run_gas.js
 node poc/run_sync.js
+node poc/run_shop_workflows.js
 node poc/run_app.js
 node poc/run_wizard.js
 node poc/check_simulator.js

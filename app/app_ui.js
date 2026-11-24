@@ -177,7 +177,7 @@ function appMeasSplit(value, multi) {
 function appMeasVoucher(text, shop) {
   var s = normMeasValue({ type: 'text' }, text).toUpperCase().replace(/\s+/g, '');
   if (!s) return { id: '', bad: false };
-  var m = /^V(\d)-0*(\d{1,8})$/.exec(s), id = s;
+  var m = /^V(\d+)-0*(\d{1,8})$/.exec(s), id = s;
   if (/^\d+$/.test(s)) id = Number(s) > 0 ? orderIdFor(shop, Number(s)) : '';
   else if (m) id = Number(m[2]) > 0 ? orderIdFor('S' + m[1], Number(m[2])) : '';
   return isOrderId(id) ? { id: id, bad: false } : { id: '', bad: true };
@@ -487,6 +487,13 @@ function appState() { return APP.store.meta.deviceId ? getState(APP.phone.ports,
 function appRender() {
   if (!APP || !APP.doc) return;
   if (APP.screen === 'home') appNavCardSync();           // the card rule (13.4): a card layer exactly while the home shows a card
+  loadShopRegistry(APP.phone.ports);
+  var profile = APP.store.meta.staff;
+  if (profile && officeRole(profile.role) && APP.store.meta.deviceId) {
+    if (['people','expenseBook','closing','orders','designs','settings','work'].indexOf(APP.screen) < 0) APP.screen = 'work';
+    APP.showScanner = false;
+  }
+  if (APP.officePage && APP.officePage.kind !== APP.screen) APP.officePage = null;
   appRenderHeader();
   appRenderBanner();
   var main = APP.$('main');
@@ -500,6 +507,12 @@ function appRender() {
   else if (APP.screen === 'home') appRenderHome(main);
   else if (APP.screen === 'history') appHistoryScreen(main);
   else if (APP.screen === 'entry') appEntryScreen(main);
+  else if (APP.screen === 'work') appOfficeJobs(main, profile);
+  else if (APP.screen === 'orders' || APP.screen === 'designs') appWorkshopScreen(main, APP.screen);
+  else if (APP.screen === 'expenseBook') appExpenseBook(main);
+  else if (APP.screen === 'stockslips') appStockSlips(main);
+  else if (APP.screen === 'people' || APP.screen === 'shops') appManageScreen(main, APP.screen);
+  else if (APP.screen === 'closing') appClosingScreen(main);
   else if (APP.screen === 'buyers') appBuyersScreen(main);
   else if (APP.screen === 'buyer') appBuyerScreen(main);
   else if (APP.screen === 'receipt') appReceiptScreen(main);
@@ -627,6 +640,8 @@ function appRenderHome(main) {
   var handle = function () { return appHi('button', { class: 'handle', text: tt('ui_history'), onclick: function () { appOpenScreen('history'); } }, 'history'); };
   if (APP.showScanner || !m) {
     if (jobs) main.appendChild(appJobRow(false));
+    main.appendChild(appOfficeButton('ဆိုင်ပြောင်း ပို့ / လက်ခံ', function () { appOpenScreen('stockslips'); }));
+    main.appendChild(appH('button', { text: 'ဆိုင်စာရင်း ကြည့်မယ်', onclick: function () { appOpenScreen('closing'); } }));
     if (!APP.form) main.appendChild(appScannerPanel());     // a form owns the one video while it is open (U1)
     if (jobs) main.appendChild(appH('div', { class: 'muted small center', text: tt('ui_home_scan_hint') }));
     main.appendChild(appH('div', { class: 'scanrow' }, [
@@ -976,6 +991,7 @@ function appTapSend(m, data, btn) {
   var tt = APP.tt, parts = String(data || '').split('|');
   if (parts[0] === 'X') {
     if (!APP.sync.online() || APP.store.outbox.length || APP.store.meta.lastSyncOk === null) { appToast(tt('ui_transfer_online'), true); return; }
+    appOpenScreen('stockslips', parts[1]); return;
   }
   if (btn) btn.className += ' busy';
   APP.tapStart = APP.win && APP.win.performance ? APP.win.performance.now() : 0;
@@ -1044,10 +1060,35 @@ function appRenderSettings(main) {
   if (meta.staff) { p.appendChild(appKv(tt('ui_lbl_staff'), meta.staff.name)); p.appendChild(appKv(tt('ui_lbl_shop'), shopName(ports, meta.staff.shop))); }
   if (meta.deviceId) { p.appendChild(appKv(tt('ui_lbl_device'), meta.label)); p.appendChild(appKv(tt('ui_lbl_letter'), meta.receiptLetter || '-', { cls: 'num' })); }
   main.appendChild(p);
+  if (meta.deviceId && officeRole(meta.staff.role)) {
+    appOfficeJobs(main, meta.staff);
+    main.appendChild(appOfficeButton('ဖုန်း ပြန်ချိတ်ဆက်', function () {
+      appAsk({ kind: 'disconnect', title: tt('ui_ask_reenroll'), yes: tt('ui_ask_reenroll_yes'), no: tt('ui_w_cancel'),
+        onYes: function () { APP.store.wipe().then(function () { appNavReset(); APP.officePage = null; APP.screen = 'enroll'; appRender(); }); } });
+    })); return;
+  }
   if (meta.deviceId) {
+    if (meta.staff.role !== 'owner' && hasJob(meta.staff, 'staff') && meta.scope && meta.scope.length > 1) {
+      var site = appOfficeSelect('လက်ရှိဆိုင်', meta.scope.map(function (id) { return { id: id, name: shopName(ports, id) }; }), meta.staff.shop);
+      site.onchange = function () {
+        clearState(ports, appUid()); APP.store.setMeta({ staff: syncMerge(meta.staff, { shop: site.value }) });
+        APP.phone.commit('shop').then(function () { appNavReset(); APP.screen = 'home'; APP.showScanner = true; appRender(); });
+      };
+      appOfficeField(main, 'လက်ရှိဆိုင်', site);
+    }
+    if (meta.staff.role !== 'owner') appOfficeJobs(main, meta.staff);
+    else {
+      main.appendChild(appOfficeButton('အော်ဒါနှင့် အတိုင်းအတာ', function () { appOpenScreen('orders'); }));
+      main.appendChild(appOfficeButton('ပစ္စည်းအသစ်နှင့် နမူနာ', function () { appOpenScreen('designs'); }));
+    }
     var aiBox = appH('div', { class: 'panel' });
+    if (meta.staff.role === 'owner') {
+      main.appendChild(appOfficeButton('ဝန်ထမ်းနှင့် သုံးခွင့်', function () { appOpenScreen('people'); }));
+      main.appendChild(appOfficeButton('ဆိုင် ဖွင့် / ပိတ်', function () { appOpenScreen('shops'); }));
+    }
     appSettingsAi(aiBox);                                    // the owner's AI switch (13.11)
     main.appendChild(aiBox);
+    main.appendChild(appH('button', { text: 'ဆိုင်စာရင်း ကြည့်မယ်', onclick: function () { appOpenScreen('closing'); } }));
     appSettingsShops(main);                                  // the owner's Shops section (13.12)
   }
   p = appH('div', { class: 'panel' });
@@ -1516,7 +1557,7 @@ function appAsk(spec) {
   var tt = APP.tt, o = APP.$ && APP.$('overlay');
   if (!o) return false;
   appClear(o);
-  var sheet = appH('div', { class: 'sheet ask', role: 'alertdialog', 'aria-modal': 'true', 'data-ask': spec.kind || 'ask' }, [appH('h3', { text: spec.title })]);
+  var sheet = appH('div', { class: 'sheet ask', role: 'alertdialog', 'aria-label': spec.title, 'aria-modal': 'true', 'data-ask': spec.kind || 'ask' }, [appH('h3', { text: spec.title })]);
   if (spec.text) sheet.appendChild(appH('div', { class: 'muted asktext', text: spec.text }));
   sheet.appendChild(appH('div', { class: 'actions askacts' }, [
     appH('button', { type: 'button', class: spec.danger ? 'danger' : 'primary', 'data-f': 'ask:yes', text: spec.yes, onclick: function () { appAskClose(spec, true); } }),
@@ -1524,6 +1565,17 @@ function appAsk(spec) {
   ]));
   o.appendChild(sheet);
   appOpenSheet(o);
+  spec.opener = APP.doc && APP.doc.activeElement;
+  var choices = sheet.querySelectorAll ? sheet.querySelectorAll('button') : [];
+  if (choices.length === 2 && choices[1].focus) {
+    choices[1].focus();
+    sheet.addEventListener('keydown', function (event) {
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        choices[APP.doc.activeElement === choices[0] ? 1 : 0].focus();
+      }
+    });
+  }
   return true;
 }
 /** The sheet's answer: the sheet and its layer go first (no history call), the choice runs, then ONE history sync. */
@@ -1531,6 +1583,7 @@ function appAskClose(spec, yes) {
   appCloseOverlay({ fromNav: true });
   var top = appNavTop();
   if (top && top.kind === 'sheet') APP.nav.pop();
+  if (spec.opener && spec.opener.focus) spec.opener.focus();
   if (yes) { if (spec.onYes) spec.onYes(); }
   else if (spec.onNo) spec.onNo();
   appNavSync();

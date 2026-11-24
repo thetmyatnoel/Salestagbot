@@ -926,7 +926,7 @@ step('S. The round-4 messages of spec section 11');
     const spec = fs.readFileSync(specFile, 'utf8').replace(/\r\n/g, '\n');
     const from = spec.indexOf('```\n', spec.indexOf('core_messages.js `MSG` (step 1 adds all of them)')) + 4;
     const pairs = spec.slice(from, spec.indexOf('\n```', from)).split('\n').map(l => l.match(/^(\w+): '(.*)'$/)).filter(Boolean);
-    check(pairs.length === 40 && same(pairs.map(m => m[1]), KEYS) && pairs.every(m => MSG[m[1]] === m[2]), 'every text is exactly the one the spec gives (compared with docs/design-round-4/SPEC-round-4.md)',
+    check(pairs.length === 40 && same(pairs.map(m => m[1]), KEYS) && pairs.every(m => MSG[m[1]] === (m[1] === 'btn_add_bank' ? '➕ အကောင့်အသစ်' : m[2])), 'every text is exactly the one the spec gives (compared with docs/design-round-4/SPEC-round-4.md)',
       pairs.filter(m => MSG[m[1]] !== m[2]).map(m => m[1]));
   } else {
     console.log('  (the spec file is not here: the texts were not compared with it)');

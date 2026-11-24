@@ -85,6 +85,12 @@ function handleUpdate(update, ports) {
     if (update.callback_query) ports.chat.answerCallback(update.callback_query.id);
     return;
   }
+  loadShopRegistry(ports);
+  if (officeRole(staff.role) || (staff.shops && staff.role !== 'owner' && !ports.ui)) {
+    if (update.message) return sendEnrollCode(update.message.chat.id, staff, ports);
+    ports.chat.answerCallback(update.callback_query.id);
+    return;
+  }
   if (update.callback_query) return handleCallback(update.callback_query, staff, update.update_id, ports);
   if (update.message) return handleMessage(update.message, staff, update.update_id, ports);
 }
@@ -221,7 +227,7 @@ function showDevices(chatId, staff, ports) {
  */
 function tagIdFromText(text) {
   var s = String(text || '').trim();
-  if (/^S[12]-\d{4}$/i.test(s)) return s.toUpperCase();
+  if (/^S[1-9]\d*-\d{4}$/i.test(s) && CFG.SHOP_IDS.indexOf(s.toUpperCase().split('-')[0]) >= 0) return s.toUpperCase();
   var m = s.match(/t\.me\/[^?\s]+\?start=([A-Za-z0-9_-]{1,64})/i);
   return m ? m[1].toUpperCase() : null;
 }
@@ -263,7 +269,7 @@ function cardText(ports, item) {
 
 function cardKeyboard(ports, item) {
   var id = item.id, rows = [];
-  var transfer = btn(t(ports, 'btn_transfer', { shop: shopName(ports, otherShop(item.shop)) }), 'X|' + id);
+  var transfer = btn(CFG.SHOP_IDS.length > 2 ? 'လက်ခံမည့်ဆိုင် ရွေးပါ' : t(ports, 'btn_transfer', { shop: shopName(ports, otherShop(item.shop)) }), 'X|' + id);
   if (isPricePending(item)) {
     rows.push([btn(t(ports, 'btn_sell_at'), 'D|' + id)]);
     rows.push([btn(t(ports, 'btn_set_price'), 'SP|' + id + '|ask'), transfer]);
@@ -607,7 +613,10 @@ function handleCallback(cq, staff, updateId, ports) {
       }), replyKeyboard(ports, r3.groupId));
     }
     case 'X': {
-      var to = otherShop(item.shop);
+      var destinations = activeShopIds(ports).filter(function (s) { return s !== item.shop; });
+      if (destinations.length !== 1 && !arg) return edit('လက်ခံမည့်ဆိုင် ရွေးပါ', destinations.map(function (s) { return [btn(shopName(ports, s), 'X|' + id + '|' + s)]; }));
+      var to = arg || destinations[0];
+      if (destinations.indexOf(to) < 0 || (staff.role !== 'owner' && item.shop !== staff.shop)) return edit(t(ports, 'expired'));
       var r4 = commitTransfer(ports, merge(base, { item: item, toShop: to }));
       return edit(t(ports, 'transfer_done', { id: id, shop: shopName(ports, to) }), undoRow(ports, r4.groupId));
     }

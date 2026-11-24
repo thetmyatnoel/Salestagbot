@@ -505,6 +505,9 @@ function createAppSync(phone, opts) {
   };
 
   /* ---------- server jobs: PDF to Telegram, item thumbnails ---------- */
+  sync.office = function (action, params) {
+    return call('office', authBody(syncMerge(params || {}, { action: action })));
+  };
   sync.requestReport = function (kind, groupId, inline) {
     if (!store.meta.deviceId) return Promise.resolve({ ok: false, error: 'not_enrolled' });
     return call('report', authBody({ kind: kind, groupId: groupId || null, inline: !!inline }));

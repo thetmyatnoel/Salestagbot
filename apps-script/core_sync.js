@@ -38,7 +38,7 @@
 
 var SYNC = {
   VERSION: 1,                     // protocol version in ping
-  API: ['ping', 'enroll', 'sync', 'bootstrap', 'ai', 'photo', 'report', 'devices'],
+  API: ['ping', 'enroll', 'sync', 'bootstrap', 'ai', 'photo', 'report', 'devices', 'office'],
   PAGE_ROWS: 500,                 // ledger rows per pull or bootstrap page (Settings pull_page_rows)
   PUSH_MAX_ROWS: 200,             // ledger rows per push (Settings push_max_rows)
   CODE_LEN: 8,                    // typed one-time enrollment code
@@ -305,7 +305,8 @@ function syncEnroll(sp, body, now) {
   }
   var d = v.match;
   var token = syncRandomHex(sp, SYNC.TOKEN_HEX);
-  var staff = sp.store.getStaff(d.staffId) || { id: d.staffId, name: d.label || d.staffId, shop: d.shop, role: d.role };
+  var staff = sp.store.getStaff(d.staffId);
+  if (!staff || staff.role !== d.role || staff.shop !== d.shop) return syncError('revoked', 'staff assignment changed');
   var letter = syncNextLetter(sp.devices.list());
   var fields = {
     tokenHash: sp.hash(token), status: SYNC.STATUS.ACTIVE, platform: String(body.platform || ''),
@@ -315,12 +316,12 @@ function syncEnroll(sp, body, now) {
   };
   sp.devices.update(d.id, fields);
   var owners = sp.store.listStaff().filter(function (s) { return s.role === 'owner'; }).map(function (s) { return String(s.id); });
-  var scope = (d.role === 'owner' || staff.role === 'owner') ? CFG.SHOP_IDS.slice() : [d.shop];
+  var scope = staffShops(staff);
   return {
     ok: true,
     device: { id: d.id, token: token, receiptLetter: letter, staff: { id: String(staff.id), name: staff.name, shop: staff.shop || d.shop, role: staff.role || d.role },
               scope: scope, owners: owners, label: fields.label },
-    bootstrap: true
+    bootstrap: !officeRole(staff.role)
   };
 }
 
@@ -351,6 +352,8 @@ function syncAuthenticate(sp, body, now) {
   }
   if (d.status === SYNC.STATUS.PENDING) return syncError('auth', 'device not enrolled');
   if (d.status === SYNC.STATUS.DRAIN && syncDrainExpired(sp, d, now)) return syncError('drain', 'drain period over; ask the owner');
+  var current = sp.store.getStaff(d.staffId);
+  if (!current || current.shop !== d.shop || current.role !== d.role) return syncError('revoked', 'staff assignment changed');
   var minVersion = syncSetting(sp, 'app_min_version', 0);
   if (minVersion && body.appVersion !== undefined && Number(body.appVersion) < Number(minVersion)) return syncError('version', 'app too old; update first');
   var fields = { lastSeen: now.toISOString() };
@@ -358,7 +361,7 @@ function syncAuthenticate(sp, body, now) {
   if (body.pendingCount !== undefined) fields.pendingCount = Number(body.pendingCount) || 0;
   sp.devices.update(d.id, fields);
   for (var k in fields) d[k] = fields[k];
-  return { ok: true, device: d };
+  return { ok: true, device: d, staff: current };
 }
 
 /* ------------------------------ push: validation (structural only) ------------------------------ */
@@ -371,6 +374,7 @@ function syncIsTransfer(type) { return type === CFG.TX.TRANSFER_OUT || type === 
  * Transfer rows span shops by nature when the group touches the device's own shop. Owners see both.
  */
 function syncGroupInScope(device, txs) {
+  if (device.scope) return txs.every(function (tx) { return device.scope.indexOf(tx.shop) >= 0; });
   if (device.role === 'owner' || device.shop === 'BOTH') return true;
   var anyOwn = txs.some(function (tx) { return tx.shop === device.shop; });
   return txs.every(function (tx) {
@@ -425,7 +429,8 @@ function syncValidateBatch(sp, device, batch) {
           var tx = e.txs[k];
           reason = syncValidateTx(tx);
           if (reason) break;
-          if (String(tx.staffId) !== String(device.staffId)) reason = SYNC.REASON.STAFF;
+          if (/^(SHIP|BOOK)-/.test(tx.groupId) || !shopAcceptsEntry(sp, tx.shop, tx.time)) reason = SYNC.REASON.SCOPE;
+          else if (String(tx.staffId) !== String(device.staffId)) reason = SYNC.REASON.STAFF;
           else if (tx.itemId && !itemExists(String(tx.itemId))) reason = SYNC.REASON.ITEM_MISSING;
         }
         if (!reason && !syncGroupInScope(device, e.txs)) reason = SYNC.REASON.SCOPE;
@@ -433,16 +438,20 @@ function syncValidateBatch(sp, device, batch) {
       }
     } else if (e.kind === 'item') {
       if (!syncStr(e.id) || !e.fields || typeof e.fields !== 'object') reason = SYNC.REASON.MALFORMED;
+      else if (device.scope && e.fields.shop && device.scope.indexOf(e.fields.shop) < 0) reason = SYNC.REASON.SCOPE;
       else if (!itemExists(e.id)) reason = SYNC.REASON.ITEM_MISSING;
       else if (!Object.keys(e.fields).some(function (f) { return SYNC.ITEM_FIELDS.indexOf(f) >= 0; })) reason = SYNC.REASON.MALFORMED;
       else if (device.role !== 'owner' && e.fields.shop !== undefined && CFG.SHOP_IDS.indexOf(e.fields.shop) < 0) reason = SYNC.REASON.MALFORMED;
     } else if (e.kind === 'customer') {
       var r = e.rec;
-      if (!r || typeof r !== 'object' || !syncStr(r.id) || !/^C-[0-9a-zA-Z]{4,12}$/.test(r.id) || !syncStr(r.name)) reason = SYNC.REASON.MALFORMED;
+      if (device.scope && r && sp.store.foreignCustomer(r.id)) reason = SYNC.REASON.SCOPE;
+      else if (!r || typeof r !== 'object' || !syncStr(r.id) || !/^C-[0-9a-zA-Z]{4,12}$/.test(r.id) || !syncStr(r.name)) reason = SYNC.REASON.MALFORMED;
     } else if (e.kind === 'list') {
       reason = sp.store.addListOption ? syncListRecReason(e.rec) : SYNC.REASON.BAD_KIND;
+      if (!reason && device.scope && e.rec.shop && device.scope.indexOf(e.rec.shop) < 0) reason = SYNC.REASON.SCOPE;
     } else if (e.kind === 'measurement') {
       reason = sp.store.addMeasurement ? syncMeasRecReason(device, e.rec) : SYNC.REASON.BAD_KIND;
+      if (!reason && device.scope && (sp.store.foreignCustomer(e.rec.customerId) || (e.rec.orderId && !sp.store.getOrder(e.rec.orderId)))) reason = SYNC.REASON.SCOPE;
     } else if (e.kind === 'setting') {
       reason = sp.store.setSetting ? syncSettingReason(device, e) : SYNC.REASON.BAD_KIND;
     } else if (e.kind === 'notice') {
@@ -535,9 +544,10 @@ function syncMeasRecReason(device, rec) {
  */
 function syncSettingReason(device, e) {
   var bad = SYNC.REASON.MALFORMED;
-  if (!e || !syncStr(e.key) || SYNC.SETTING_KEYS.indexOf(e.key) < 0 || !syncStr(e.value)) return bad;
+  if (!e || !syncStr(e.key) || (SYNC.SETTING_KEYS.indexOf(e.key) < 0 && !/^shop_(name|address|phone)_S[1-9]\d*$/.test(e.key)) || !syncStr(e.value)) return bad;
   var m = /^shop_(name|address|phone)_/.exec(e.key);
   if (m) {
+    if (CFG.SHOP_IDS.indexOf(e.key.slice(m[0].length)) < 0) return bad;
     if (e.value.length > CFG.SHOP_TEXT_MAX[m[1]]) return bad;
     if (m[1] === 'name' && !e.value.trim()) return bad;
   } else if (e.value !== 'TRUE' && e.value !== 'FALSE') return bad;
@@ -1165,7 +1175,7 @@ function syncBootstrap(sp, device, opts) {
     out.masterRev = counters.rev || 0;
     out.staff = { id: String(staff.id), name: staff.name, shop: staff.shop, role: staff.role };
     out.owners = owners;
-    out.scope = device.role === 'owner' ? CFG.SHOP_IDS.slice() : [device.shop];
+    out.scope = staffShops(staff);
     out.receiptLetter = device.receiptLetter || '';
   }
   if (!more) out.checksums = syncChecksums(all, [syncIsoDay(now), syncYesterday(now)]);
@@ -1232,8 +1242,10 @@ function syncIngestDocument(sp, text, staff, now, hooks) {
   var doc = parsed.doc;
   var device = sp.devices.get(doc.device);
   if (!device || !staff || String(device.staffId) !== String(staff.id)) return { ok: false, error: 'wrong_device', text: t(sp, 'ingest_wrong_device') };
-  if (device.status === SYNC.STATUS.REVOKED || device.status === SYNC.STATUS.PENDING) return { ok: false, error: 'revoked', text: t(sp, 'ingest_revoked') };
+  var registered = sp.store.getStaff(device.staffId);
+  if (!registered || officeRole(registered.role) || registered.role !== device.role || registered.shop !== device.shop || device.status === SYNC.STATUS.REVOKED || device.status === SYNC.STATUS.PENDING) return { ok: false, error: 'revoked', text: t(sp, 'ingest_revoked') };
   var t0 = now.getTime();
+  sp = syncSellerPorts(sp, device, registered);
   var applied = syncApplyPush(sp, device, { batchId: doc.batchId || ('doc-' + now.getTime()), entries: doc.entries }, now);
   sp.devices.update(device.id, { lastSeen: now.toISOString() });
   syncDeliver(sp, applied, hooks);
@@ -1273,6 +1285,35 @@ function syncSanitizeDevice(sp, d) {
            pendingCount: Number(d.pendingCount) || 0, receiptLetter: d.receiptLetter };
 }
 
+// A managed seller's phone keeps only the customers, stock and entries used by its shops.
+function syncSellerPorts(sp, device, staff) {
+  if (staff.role === 'owner' || !staff.shops || !staff.shops.length) return sp;
+  var allowed = staffShops(staff), base = sp.store, store = syncCopy(base);
+  device.scope = allowed;
+  function inShop(row) { return row && allowed.indexOf(row.shop) >= 0; }
+  store.ledgerRows = function () { return base.ledgerRows().filter(inShop); };
+  store.listItems = function (shop) { return base.listItems(shop).filter(inShop); };
+  store.getItem = function (id) { var r = base.getItem(id); return inShop(r) ? r : null; };
+  if (base.getOrder) store.getOrder = function (id) { var r = base.getOrder(id); return inShop(r) ? r : null; };
+  if (base.listOrders) store.listOrders = function (shop) { return base.listOrders(shop).filter(inShop); };
+  function customers() {
+    var ids = {};
+    store.ledgerRows().concat(store.listOrders ? store.listOrders(null) : []).forEach(function (r) { if (r.customerId) ids[r.customerId] = true; });
+    return ids;
+  }
+  store.listCustomers = function () { var ids = customers(); return base.listCustomers().filter(function (c) { return ids[c.id]; }); };
+  store.getCustomer = function (id) { return customers()[id] ? base.getCustomer(id) : null; };
+  store.foreignCustomer = function (id) { return !!base.getCustomer(id) && !customers()[id]; };
+  if (base.listAllMeasurements) store.listAllMeasurements = function () {
+    var ids = customers();
+    return base.listAllMeasurements().filter(function (m) { return m.orderId ? !!store.getOrder(m.orderId) : ids[m.customerId]; });
+  };
+  if (base.listOptions) store.listOptions = function (name) {
+    return base.listOptions(name).filter(function (r) { return !r.shop || inShop(r); });
+  };
+  return syncMerge(sp, { store: store });
+}
+
 /**
  * One entry point for every api. gasSyncHandle and the fake server both call this; they only
  * differ in serverPorts and hooks. Always returns a JSON-able object with ok:true|false.
@@ -1286,6 +1327,7 @@ function syncHandle(sp, api, body, now, hooks) {
   var skew = syncSkewSec(now, body.clientTime);
   if (skew !== null) base.clockSkewSec = skew;
   if (api === 'ping') return syncMerge(base, { version: SYNC.VERSION });
+  loadShopRegistry(sp);
   if (api === 'enroll') return syncMerge(base, syncEnroll(sp, body, now));
   if (SYNC.API.indexOf(api) < 0) return syncMerge(base, syncError('bad_request', 'unknown api ' + api));
 
@@ -1298,6 +1340,12 @@ function syncHandle(sp, api, body, now, hooks) {
     try { sp.store.logError('clock_skew', 'device ' + device.id + ' clock off by ' + skew + ' s', '', String(body.clientTime)); } catch (ignore) {}
   }
 
+  if (api === 'office' && !drain) return syncMerge(base, syncOffice(sp, device, body, now, hooks));
+  if (officeRole(device.role)) {
+    if (api === 'sync' && !body.push) return syncMerge(base, { device: deviceOut, pull: null });
+    return syncMerge(base, syncError('auth', 'ဤလုပ်ငန်းကို ပြုလုပ်ခွင့် မရှိပါ'));
+  }
+  if (auth.staff) sp = syncSellerPorts(sp, device, auth.staff);
   if (api === 'sync') {
     var out = { push: null, pull: null, device: deviceOut };
     if (body.push && body.push.entries && body.push.entries.length) {
@@ -1337,7 +1385,10 @@ function syncHandle(sp, api, body, now, hooks) {
     if (drain) return syncMerge(base, syncError('drain', 'device is draining; AI refused'));
     var job = body.job;
     if (!job || !syncStr(job.id) || !syncStr(job.kind)) return syncMerge(base, syncError('bad_request', 'job.id and job.kind required'));
+    if (device.scope && ((job.itemId && !sp.store.getItem(String(job.itemId))) ||
+        (job.kind === 'sketch' && !sp.store.listAllMeasurements().some(function (m) { return m.entryId === job.entryId; })))) return syncMerge(base, syncError('auth', 'ဆိုင် မမှန်ပါ'));
     var cached = sp.sync.aiJob(job.id);
+    if (device.scope && cached && cached.deviceId !== device.id) return syncMerge(base, syncError('auth', 'သုံးခွင့် မရှိပါ'));
     if (cached && cached.status === 'done') return syncMerge(base, { job: cached, cached: true });
     // A drawing's picture (sketch) and a new piece's photo without AI (pic) are not AI jobs (round 6, revision 3): they run
     // whatever the owner's AI switch says. An AI job while the switch is off is refused without calling the hook.
@@ -1379,6 +1430,7 @@ function syncHandle(sp, api, body, now, hooks) {
   if (api === 'photo') {
     if (drain) return syncMerge(base, syncError('drain', 'device is draining'));
     var ids = Array.isArray(body.itemIds) ? body.itemIds.slice(0, SYNC.PHOTO_MAX).map(String) : [];
+    if (device.scope) ids = ids.filter(function (id) { return !!sp.store.getItem(id); });
     var thumbs = {};
     ids.forEach(function (id) { thumbs[id] = null; });
     if (hooks.photo) {
@@ -1609,4 +1661,198 @@ function syncSettingsQuick(map) {
 /** Per-device receipt number: R1-A-000231 (shop digit, device letter, gap-free counter). */
 function syncReceiptNo(shop, letter, counter) {
   return 'R' + String(shop).replace(/\D/g, '') + '-' + letter + '-' + ('000000' + counter).slice(-6);
+}
+
+/** Online management. Read current staff permissions under the same lock as the mutation. */
+function syncOffice(sp, device, body, now, hooks) {
+  function perform() {
+    var actor = sp.store.getStaff(device.staffId);
+    if (!actor || actor.role !== device.role || actor.shop !== device.shop) return syncError('revoked', 'ချိတ်ဆက်မှု သက်တမ်းကုန်ပါပြီ');
+    var owner = actor.role === 'owner', admin = hasJob(actor, 'access');
+    var action = body.action, shops = shopRegistry(sp);
+    var shopIds = shops.map(function (s) { return s.id; });
+    var scope = staffShops(actor);
+    if (['designs','piece','piecePhoto','orders','order','orderStep','measure'].indexOf(action) >= 0) return syncWorkshop(sp, actor, body, hooks);
+    if (['stock', 'sendStock', 'receiveStock'].indexOf(action) >= 0) return syncStockSlip(sp, actor, body, now);
+    if (action === 'expenseBook' || action === 'recordExpense') {
+      if (!hasJob(actor, 'bookkeeper')) return syncError('auth', 'သုံးခွင့် မရှိပါ');
+      var open = scope.filter(function (id) { return activeShopIds(sp).indexOf(id) >= 0; });
+      var site = String(body.shop || open[0] || '');
+      if (open.indexOf(site) < 0) return syncError('bad_request', 'ဖွင့်ထားသည့်ဆိုင် ရွေးပါ');
+      var cats = expenseCategories(sp, site), methods = payMethods(sp, site);
+      if (action === 'expenseBook') return { ok: true, shop: site, shops: open.map(function (id) { return { id: id, name: shopName(sp, id) }; }),
+        categories: cats.map(function (c) { return { id: c[0], name: c[1] }; }),
+        methods: methods.map(function (m) { return { id: m, name: methodLabel(sp, m) }; }) };
+      var amount = Number(body.amount), note = String(body.note || '').trim();
+      if (!Number.isSafeInteger(amount) || amount <= 0 || amount > SYNC.MAX_AMOUNT || note.length > 180 ||
+          !/^BOOK-[a-zA-Z0-9-]{8,80}$/.test(body.slip) || !cats.some(function (c) { return c[0] === body.category; }) ||
+          methods.indexOf(body.method) < 0) return syncError('bad_request', 'ငွေပမာဏနှင့် အမျိုးအစား ပြန်စစ်ပါ');
+      var prior = sp.store.ledgerRows().filter(function (r) { return r.groupId === body.slip; })[0];
+      if (prior) return prior.staffId === String(actor.id) && prior.shop === site && prior.amount === -amount &&
+        prior.category === body.category && prior.method === body.method && prior.note === note ? { ok: true } : syncError('bad_request', 'ဘောက်ချာနံပါတ် ရှိပြီးသား');
+      writeGroup(sp, [newTx(sp, { groupId: body.slip, type: CFG.TX.EXPENSE, shop: site, amount: -amount, cash: -amount,
+        category: body.category, method: body.method, staffId: String(actor.id), note: note, when: now })]);
+      return { ok: true };
+    }
+    if (action === 'close') {
+      if (!hasJob(actor, 'staff') && !hasJob(actor, 'bookkeeper') && !hasJob(actor, 'viewer')) return syncError('auth', 'စာရင်း ကြည့်ခွင့် မရှိပါ');
+      var period = String(body.period || dayKey(now));
+      if (!/^\d{4}(-(0[1-9]|1[012])(-(0[1-9]|[12]\d|3[01]))?)?$/.test(period)) return syncError('bad_request', 'ရက်စွဲ ပြန်ရွေးပါ');
+      var selected = body.shop ? [String(body.shop)] : scope;
+      if (selected.some(function (id) { return scope.indexOf(id) < 0; })) return syncError('auth', 'ဆိုင် မမှန်ပါ');
+      var report = closingReport(sp, period, selected, now);
+      var stale = sp.devices.list().filter(function (d) {
+        var worker = sp.store.getStaff(d.staffId);
+        return worker && hasJob(worker, 'staff') && (d.status === SYNC.STATUS.ACTIVE || d.status === SYNC.STATUS.DRAIN) &&
+          staffShops(worker).some(function (id) { return selected.indexOf(id) >= 0; }) &&
+          (Number(d.pendingCount) > 0 || !d.lastSeen || dayKey(new Date(d.lastSeen)) < dayKey(now));
+      });
+      return { ok: true, report: report, unconfirmed: stale.length, shops: scope.map(function (id) { return { id: id, name: shopName(sp, id) }; }) };
+    }
+    if (!admin) return syncError('auth', 'ပြောင်းလဲခွင့် မရှိပါ');
+    if (action === 'shops') return { ok: true, shops: shops.map(function (s) { return { id: s.id, name: shopName(sp, s.id), address: shopAddress(sp, s.id), phone: shopPhone(sp, s.id), active: s.active }; }) };
+    if (action === 'shop' && owner) {
+      var name = String(body.name || '').trim(), id = String(body.shop || '');
+      if (!name || name.length > CFG.SHOP_TEXT_MAX.name || !/^S[1-9]\d*$/.test(id)) return syncError('bad_request', 'ဆိုင်အမည်နှင့် နံပါတ် စစ်ပါ');
+      var found = shops.filter(function (s) { return s.id === id; })[0];
+      if (found && body.create) return syncError('bad_request', 'ဆိုင်နံပါတ် ရှိပြီးသားပါ');
+      if (!found && body.active === false) return syncError('bad_request', 'ဆိုင် မရှိပါ');
+      if (!found && sp.store.prepareShopTags) sp.store.prepareShopTags(id);
+      if (!found) shops.push({ id: id, active: true });
+      else {
+        if (found.active && body.active === false) found.closedAt = now.toISOString();
+        if (body.active !== false) delete found.closedAt;
+        found.active = body.active !== false;
+      }
+      if (!shops.some(function (s) { return s.active; })) return syncError('bad_request', 'ဆိုင်တစ်ဆိုင် ဖွင့်ထားရန် လိုပါသည်');
+      if (body.address !== undefined) sp.store.setSetting('shop_address_' + id, String(body.address).trim().slice(0, CFG.SHOP_TEXT_MAX.address));
+      if (body.phone !== undefined) sp.store.setSetting('shop_phone_' + id, String(body.phone).trim().slice(0, CFG.SHOP_TEXT_MAX.phone));
+      sp.store.setSetting('shop_name_' + id, name);
+      sp.store.setSetting('shop_registry', JSON.stringify(shops));
+      loadShopRegistry(sp);
+      return { ok: true };
+    }
+    if (action === 'people') return { ok: true, people: sp.store.listStaff(true), shops: activeShopIds(sp).map(function (id) { return { id: id, name: shopName(sp, id) }; }) };
+    if (action === 'invite') {
+      var target = sp.store.getStaff(String(body.target));
+      if (!target || (target.role === 'owner' && actor.id !== target.id) || (!owner && hasJob(target, 'access'))) return syncError('auth', 'သုံးခွင့် မရှိပါ');
+      return { ok: true, code: syncMintCode(sp, target, target.name, now).display };
+    }
+    if (action !== 'person') return syncError('bad_request', 'လုပ်ငန်း မမှန်ပါ');
+    var person = body.person || {}, old = sp.store.listStaff(true).filter(function (s) { return String(s.id) === String(person.id); })[0];
+    var jobs = String(person.role || '').split('+'), allowedJobs = ['staff','access','bookkeeper','viewer','designer','tailor'];
+    var assigned = person.shops || [person.shop];
+    if (!Array.isArray(assigned) || !assigned.length || assigned.indexOf(person.shop) < 0 || assigned.some(function (id) { return activeShopIds(sp).indexOf(id) < 0; }))
+      return syncError('bad_request', 'ဆိုင် ရွေးပါ');
+    if (!/^(?:\d{1,18}|W-[A-Z0-9]{1,12})$/.test(String(person.id)) || !String(person.name || '').trim() || String(person.name).length > 60 ||
+        jobs.some(function (j) { return allowedJobs.indexOf(j) < 0; }) || activeShopIds(sp).indexOf(person.shop) < 0)
+      return syncError('bad_request', 'အမည်၊ ဆိုင်နှင့် တာဝန် ပြန်စစ်ပါ');
+    if (String(actor.id) === String(person.id) || (old && old.role === 'owner') ||
+        (!owner && (hasJob(old, 'access') || hasJob(person, 'access')))) return syncError('auth', 'ပြောင်းလဲခွင့် မရှိပါ');
+    person = { name: String(person.name).trim(), id: String(person.id), shop: person.shop, shops: assigned, role: jobs.sort().join('+'), active: person.active === true };
+    var reset = !person.active || (old && (!old.shops || old.role !== person.role || old.shop !== person.shop || staffShops(old).join() !== assigned.join()));
+    if (reset && sp.devices.list().some(function (d) {
+      return String(d.staffId) === person.id && d.status === SYNC.STATUS.ACTIVE && Number(d.pendingCount) > 0;
+    })) return syncError('bad_request', 'ဝန်ထမ်းဖုန်းရှိ စာရင်းများကို အရင် ပို့ပါ');
+    sp.store.saveStaff(person);
+    if (reset) {
+      sp.devices.list().forEach(function (d) {
+        if (String(d.staffId) === String(person.id)) sp.devices.update(d.id, { status: SYNC.STATUS.REVOKED });
+      });
+    }
+    return { ok: true };
+  }
+  var reads = ['close', 'expenseBook', 'people', 'shops', 'stock', 'designs', 'orders', 'order'];
+  return reads.indexOf(body.action) >= 0 ? perform() : sp.lock.run(perform);
+}
+
+function syncStockSlip(sp, actor, body, now) {
+  var scope = staffShops(actor);
+  if (!hasJob(actor, 'staff')) return syncError('auth', 'သုံးခွင့် မရှိပါ');
+  var active = activeShopIds(sp), slips = {}, rows = sp.store.ledgerRows();
+  rows.forEach(function (r) {
+    if (String(r.groupId).indexOf('SHIP-') !== 0) return;
+    var slip = slips[r.groupId] || (slips[r.groupId] = {});
+    if (r.type === CFG.TX.TRANSFER_OUT) slip.out = r;
+    if (r.type === CFG.TX.TRANSFER_IN) slip.received = r;
+  });
+  if (body.action === 'stock') {
+    var incoming = [];
+    Object.keys(slips).forEach(function (k) {
+      var s = slips[k], r = s.out;
+      if (!r) return;
+      var to = r.note.slice(3), item = s.received && sp.store.getItem(s.received.itemId);
+      if ((scope.indexOf(to) >= 0) && (!s.received || (item && !item.createdAt))) incoming.push({ id: k, from: shopName(sp, r.shop), to: shopName(sp, to), toId: to, tag: r.itemId, qty: -r.qty });
+    });
+    return { ok: true, shops: active.map(function (id) { return { id: id, name: shopName(sp, id) }; }), incoming: incoming };
+  }
+  var id = String(body.slip || ''), existing = slips[id];
+  if (!/^SHIP-[a-zA-Z0-9-]{8,80}$/.test(id)) return syncError('bad_request', 'ဘောက်ချာနံပါတ် မမှန်ပါ');
+  var item = sp.store.getItem(String(body.tag || '').toUpperCase());
+  if (!item) return syncError('bad_request', 'Tag မတွေ့ပါ');
+  if (body.action === 'sendStock') {
+    if (existing) return existing.out && existing.out.staffId === String(actor.id) && existing.out.itemId === item.id && -existing.out.qty === Number(body.qty) && existing.out.note === 'to ' + body.to ? { ok: true } : syncError('bad_request', 'ဘောက်ချာ ရှိပြီးသား');
+    var qty = Number(body.qty);
+    if ((scope.indexOf(item.shop) < 0) || active.indexOf(item.shop) < 0 || active.indexOf(body.to) < 0 || item.shop === body.to ||
+        !(qty > 0 && qty === Math.floor(qty) && qty <= item.stock) || item.status === CFG.STATUS.BLANK) return syncError('bad_request', 'ဆိုင်နှင့် လက်ကျန် စစ်ပါ');
+    var fields = syncPick(item, ['name','category','type','price','cost','sample','photoUrl','photoFileId']);
+    sp.store.appendLedger(newTx(sp, { groupId: id, itemId: item.id, qty: -qty, shop: item.shop, type: CFG.TX.TRANSFER_OUT,
+      note: 'to ' + body.to, transcript: JSON.stringify(fields), staffId: String(actor.id), when: now }));
+    return { ok: true };
+  }
+  if (!existing || !existing.out) return syncError('bad_request', 'ပို့စာ မတွေ့ပါ');
+  var out = existing.out, dest = out.note.slice(3);
+  if ((scope.indexOf(dest) < 0) || dest !== item.shop || (existing.received && existing.received.itemId !== item.id))
+    return syncError('bad_request', 'လက်ခံမည့်ဆိုင်၏ Tag ကို သုံးပါ');
+  if (existing.received && item.createdAt) return { ok: true };
+  if (!existing.received && item.status !== CFG.STATUS.BLANK) return syncError('bad_request', 'Tag အသစ် လိုပါသည်');
+  var data = JSON.parse(out.transcript);
+  data.createdBy = actor.id; data.createdAt = now.toISOString();
+  if (!existing.received) sp.store.appendLedger(newTx(sp, { groupId: id, itemId: item.id, qty: -out.qty, shop: dest,
+    type: CFG.TX.TRANSFER_IN, note: 'from ' + out.shop, staffId: String(actor.id), when: now }));
+  sp.store.updateItem(item.id, data);
+  return { ok: true };
+}
+
+function syncWorkshop(sp, actor, body, hooks) {
+  var a = body.action, scope = staffShops(actor), designer = ['designs','piece','piecePhoto'].indexOf(a) >= 0;
+  if (!hasJob(actor, designer ? 'designer' : 'tailor')) return syncError('auth', 'တာဝန်နှင့် မကိုက်ညီပါ');
+  if (designer) {
+    if (a === 'designs') {
+      return { ok: true, categories: itemCategoryRows(sp).map(function (r) { return r.label; }),
+        items: sp.store.listItems(null).filter(function (it) { return scope.indexOf(it.shop) >= 0 && it.status !== CFG.STATUS.BLANK && (it.sample || isPricePending(it)); })
+          .map(function (it) { return { id: it.id, name: it.name, sample: it.sample, pending: isPricePending(it) }; }) };
+    }
+    var item = sp.store.getItem(String(body.tag || '').trim().toUpperCase());
+    if (!item || scope.indexOf(item.shop) < 0 || activeShopIds(sp).indexOf(item.shop) < 0) return syncError('bad_request', 'Tag နှင့် ဆိုင် စစ်ပါ');
+    if (a === 'piecePhoto') {
+      if (!hooks.ai || item.status === CFG.STATUS.BLANK || !body.data || body.data.length > 3000000 || !/^[A-Za-z0-9+/=]+$/.test(body.data)) return syncError('bad_request', 'ဓာတ်ပုံ စစ်ပါ');
+      hooks.ai({ id: sp.uuid(), kind: 'pic', mime: 'image/jpeg', data: body.data, itemId: item.id }, { shop: item.shop, staffId: actor.id });
+      return { ok: true };
+    }
+    if (!String(body.name || '').trim() || String(body.name).length > 80) return syncError('bad_request', 'ပစ္စည်းအမည် ဖြည့်ပါ');
+    var worker = syncMerge(actor, { shop: item.shop });
+    return commitNewItem(sp, { staff: worker, itemId: item.id, name: body.name, category: body.category, cost: body.cost,
+      price: body.price, count: Number(body.qty), sample: body.sample === true, source: CFG.SOURCE.BUTTON });
+  }
+  if (!sp.store.listOrders) return syncError('bad_request', 'အော်ဒါစာရင်း မရရှိပါ');
+  if (a === 'orders') {
+    return { ok: true, orders: openOrders(sp, null).filter(function (o) { return scope.indexOf(o.shop) >= 0; }).map(function (o) {
+      return { id: o.id, shop: shopName(sp, o.shop), customer: customerName(sp, o.customerId), due: o.dueDay, status: orderStatusLabel(sp, o.status) };
+    }) };
+  }
+  var order = sp.store.getOrder(String(body.id || ''));
+  if (!order || scope.indexOf(order.shop) < 0 || !orderIsOpen(order)) return syncError('bad_request', 'အော်ဒါကို ပြန်စစ်ပါ');
+  if (a === 'order') {
+    var last = order.measId && sp.store.getMeasurement ? sp.store.getMeasurement(order.measId) : null;
+    return { ok: true, text: orderCardText(sp, order), next: nextStatuses(order).map(function (k) { return { id: k, name: orderStatusLabel(sp, k) }; }),
+      fields: measureFields(sp, true).map(function (f) { return { key: f.key, name: f.labelMy, value: last && last.fields[f.key] || '' }; }) };
+  }
+  if (activeShopIds(sp).indexOf(order.shop) < 0) return syncError('bad_request', 'ဆိုင် ပိတ်ထားပါသည်');
+  if (a === 'orderStep') return setOrderStatus(sp, order.id, String(body.status), syncMerge(actor, { shop: order.shop }));
+  var values = {}, any = false;
+  measureFields(sp, true).forEach(function (f) { var v = String((body.values || {})[f.key] || '').trim().slice(0, 300); values[f.key] = v; if (v) any = true; });
+  if (!any) return syncError('bad_request', 'အတိုင်းအတာ ဖြည့်ပါ');
+  saveMeasurement(sp, { customerId: order.customerId, orderId: order.id, values: values, source: CFG.MEAS_SOURCE.FORM }, actor);
+  return { ok: true };
 }

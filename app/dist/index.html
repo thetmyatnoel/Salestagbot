@@ -15,7 +15,7 @@
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="fonts/fonts.css">
-  <link rel="stylesheet" href="app.css?v=1.0.0+29f689e93e">
+  <link rel="stylesheet" href="app.css?v=1.0.0+1f6d909b84">
   <!-- Everything this page loads comes from its own origin or the Apps Script URL in config.js: no CDN, no third-party script. -->
 </head>
 <body>
@@ -35,15 +35,15 @@
     </nav>
   </div>
   <div id="overlay" class="overlay" hidden></div>
-  <div id="toast" class="toast" hidden></div>
+  <div id="toast" role="status" aria-live="polite" class="toast" hidden></div>
   <input id="photoInput" class="sr" type="file" accept="image/*" capture="environment" tabindex="-1">
   <noscript><p style="padding:20px">JavaScript ဖွင့်ပေးပါ · This app needs JavaScript.</p></noscript>
   <script src="config.js"></script>
-  <script src="app.29f689e93e.js"></script>
+  <script src="app.1f6d909b84.js"></script>
   <script>
     (function () {
       var cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {};
-      cfg.version = '1.0.0+29f689e93e';
+      cfg.version = '1.0.0+1f6d909b84';
       if (typeof bootApp === 'function') bootApp(cfg);
       else document.getElementById('main').textContent = 'app bundle missing: run node tools/build_app.js';
     })();
