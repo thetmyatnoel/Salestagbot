@@ -96,6 +96,7 @@ PC, serve the project folder (`python -m http.server 8080`) and open `http://loc
 - [apps-script/README.md](apps-script/README.md): installing the bot (the Sheet, the Apps Script project, BotFather, the webhook), step by step.
 - [app/README.md](app/README.md): how the app works, enrolling a phone, hosting on Firebase.
 - [docs/AUTO-PUBLISH-SETUP.html](docs/AUTO-PUBLISH-SETUP.html): `tools/publish.js`, which publishes the bot (clasp) and the app (Firebase Hosting) and logs each publish to `tools/publish-log.jsonl` on the publishing PC (not in the repository).
+- [docs/AI-RELEASE.md](docs/AI-RELEASE.md): letting an AI agent publish a release: where it may run, what access it needs, the rules, the release steps, rollback and troubleshooting. **An AI asked to publish reads this first.**
 - [docs/USER-GUIDE.html](docs/USER-GUIDE.html): the guide for the people in the shops.
 
 ## Secrets and private files
