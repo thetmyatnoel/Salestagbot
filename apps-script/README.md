@@ -385,12 +385,14 @@ version, run these once from the function dropdown, in this order:
    It also marks old rows where cash moved as paid in cash.
 2. `backfillSync`: numbers the existing ledger rows so the phone app can sync them.
 3. `rebuildViews`: refills the Credits, Deposits and customer summary columns.
-4. In the Settings tab, set `order_next_no_S1` and `order_next_no_S2` to the next unused page
+4. Place one test order end to end on the bot (new order, advance, deliver, undo) before
+   telling the family. Do it before step 5: every order takes the shop's next voucher number and the
+   counter never goes back, not even after an undo, so a test order placed after step 5 would use up
+   a real page of the voucher book.
+5. In the Settings tab, set `order_next_no_S1` and `order_next_no_S2` to the next unused page
    of each shop's paper voucher book, and fill `shop_brand_S1/S2`, `shop_address_S1/S2` and
    `shop_phone_S1/S2` for the voucher and measurement PDFs (the name, the address and the phone can
    also be set on the owner's phone: Settings > ဆိုင်များ, section H).
-5. Place one test order end to end on the bot (new order, advance, deliver, undo) before
-   telling the family.
 
 ### Publishing from this PC (instead of pasting)
 
@@ -410,8 +412,11 @@ published it), and within 15 minutes of the 21:00 summary, the Sunday 22:00 back
 monthly report at 08:00 on the 1st, Yangon time. Each publish is recorded in
 `tools/publish-log.jsonl`.
 
-- `node C:/Users/USER/Desktop/Noel/tools/publish.js rollback` moves the web app back to the
-  version it ran before the last publish (or `rollback N` for version N).
+- `node C:/Users/USER/Desktop/Noel/tools/publish.js rollback N` moves the web app back to
+  version N. Always give N: a bare `rollback` takes the version from the last line of
+  `tools/publish-log.jsonl`, so after `publish.js app` it stops, and after a rollback it moves
+  forward again. A rollback moves only the web app: the scheduled jobs, onEdit and the editor
+  keep running the newest upload.
 - `node C:/Users/USER/Desktop/Noel/tools/publish.js status` shows the signed-in account, the live
   version and the web app check.
 
