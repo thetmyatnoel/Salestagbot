@@ -108,9 +108,10 @@ reply, which is what you want for a bot whose tags hang in a public shop.
    not on the staff list.
 6. Open the sheet's Errors tab, find the row that says "Not in Staff tab" with a number,
    and put that number in the Staff tab: TelegramUserID, your name, DefaultShop `S1`,
-   Role `owner` for the business owner or `staff` for everyone else, Active `TRUE`.
-   Repeat for each family member when they first press START.
-7. Send `/start` to the bot again. The menu appears. You are live.
+   Role `owner` and Active `TRUE`. This sets up the first owner.
+7. Send `/start` to the bot again. Use the app button to get the owner’s phone enrolment code.
+   Once enrolled, open **Settings → ဝန်ထမ်းနှင့် သုံးခွင့်** in the phone app to add each worker,
+   choose their jobs and shops, and issue their code.
 8. In the function dropdown choose `installTriggers` and Run, once. This sets the 21:00
    daily summary, the monthly PDF on the 1st and the Sunday backup.
 

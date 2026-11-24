@@ -29,7 +29,7 @@ Open **Settings → ဝန်ထမ်းနှင့် သုံးခွင�
 | Access administrator | Assign jobs and shops, disable accounts and issue phone enrolment codes. |
 | Owner | Review all shops, manage their details, assign access administrators and use the operational screens. |
 
-Existing seller accounts keep their previous shared-ledger behaviour until the owner or access administrator saves their assignment in the staff screen. Sync their phones first. After a change of access, use a fresh code to enrol the phone with its assigned shops. Telegram-linked accounts keep their ID. App-only accounts can use a code supplied in person.
+For a new installation, set up the first owner using the [Apps Script setup guide](apps-script/README.md). Create each worker through the app’s staff screen and assign their jobs and shops before issuing an enrolment code. Those assignments apply on the worker’s first sign-in.
 
 For a closing report, open **ဆိုင်စာရင်း ကြည့်မယ်**, choose the day, month or year, and select a shop if needed. The first page shows sales after refunds, money received and paid, outstanding balances, costs and profit or loss in kyat. **အသေးစိတ် ကြည့်မယ်** opens the shop, category, payment, product, transfer and transaction tables. **ပုံနှိပ်မယ်** prints the selected view. An offline seller’s copy uses the phone’s local records and carries a provisional notice. Management, workshop, bookkeeping, shipment and shared report screens use the server.
 
@@ -46,9 +46,9 @@ For a partial transfer, enter the sending tag, quantity and destination. The rec
 | `tools/` | `publish.js` (publishes the bot and the app from this PC), the two bundlers, `make_tags.py` (A4 PDF of QR hang tags), `make_icons.js`, `fetch_fonts.js`, `score_voice.js`. | Setup of the publish tool: [docs/AUTO-PUBLISH-SETUP.html](docs/AUTO-PUBLISH-SETUP.html). |
 | `docs/` | [USER-GUIDE.html](docs/USER-GUIDE.html) for the sellers and the owner (Burmese first), `system-map.html`, and `design-round-2` … `design-round-6`: briefs, specs, designs, reviews and the owner's feedback for every round. | `docs/USER-GUIDE.pdf` is older than the HTML. |
 
-## Status (2026-11-19)
+## Development status
 
-- **Live in the shops:** bot version 3.
+The project is in development and has no shop users as of 24 November 2026. The simulator uses sample staff and transactions.
 - **Built and verified, not yet published:** rounds 4, 5, 6, 6b and 6c (lists, bank accounts and split payments,
   the one-screen forms, a sale of several pieces, the phone's back button, buyers and history pages, receipts,
   the measurement form with its figure, the Shops screen, growable item categories, in-app questions instead of
