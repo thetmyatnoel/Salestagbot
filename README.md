@@ -13,6 +13,10 @@ A worker can enrol directly in the phone app with a code from the owner or acces
 The plan, the history of every design round and the build status live in [POS-PROJECT-PLAN.md](POS-PROJECT-PLAN.md)
 (Appendix F is the build log).
 
+## Installation and deployment
+
+Use the [installation manual](docs/INSTALL-AND-DEPLOY.md) or [download the printable PDF](docs/INSTALL-AND-DEPLOY.pdf). Page 1 is the Burmese phone handout. Pages 2–4 cover owner setup, deployment and release checks.
+
 ## Shops, staff and closing the books
 
 The owner can open **Settings → ဆိုင် ဖွင့် / ပိတ်** to add a shop, change its name, address or phone number, or close it. S1 and S2 are the initial shops. A new shop receives 20 blank tag records. Its shop number stays with historical transactions.
